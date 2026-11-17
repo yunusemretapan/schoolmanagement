@@ -34,6 +34,8 @@ export function scaleVariables(source: Tokens = tokens): Record<string, string> 
   px('layout', source.layout);
   px('radius', source.radius);
   px('border', source.borderWidth);
+  for (const [name, value] of Object.entries(source.layer))
+    vars[`--sos-layer-${kebab(name)}`] = String(value);
   for (const [name, value] of Object.entries(source.opacity))
     vars[`--sos-opacity-${kebab(name)}`] = String(value);
   for (const [name, value] of Object.entries(source.motion.durationMs)) {

@@ -4,6 +4,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { ApiProvider } from '../../api/ApiProvider';
+import { AppearanceProvider } from '../../appearance/AppearanceProvider';
+import { createMemoryStorage } from '../../test/fakes';
 import { StatusScreen } from './StatusScreen';
 
 function renderWith(getSystemStatus: ApiClient['getSystemStatus']) {
@@ -16,11 +18,13 @@ function renderWithContainer(getSystemStatus: ApiClient['getSystemStatus']) {
     defaultOptions: { queries: { retry: false, gcTime: Infinity } },
   });
   return render(
-    <QueryClientProvider client={client}>
-      <ApiProvider client={{ getSystemStatus }}>
-        <StatusScreen />
-      </ApiProvider>
-    </QueryClientProvider>,
+    <AppearanceProvider storage={createMemoryStorage()} configuredBrand={null}>
+      <QueryClientProvider client={client}>
+        <ApiProvider client={{ getSystemStatus }}>
+          <StatusScreen />
+        </ApiProvider>
+      </QueryClientProvider>
+    </AppearanceProvider>,
   );
 }
 
@@ -89,6 +93,8 @@ describe('StatusScreen (web)', () => {
     await screen.findByRole('button', { name: 'Tekrar dene' });
 
     answer = async () => up;
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'Görünüm' })).toHaveFocus();
     await user.tab();
     expect(screen.getByRole('button', { name: 'Tekrar dene' })).toHaveFocus();
     await user.keyboard('{Enter}');

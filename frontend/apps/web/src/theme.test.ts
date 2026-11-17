@@ -9,6 +9,7 @@ describe('web theme (spec 0001 AC-7, spec 0002)', () => {
     expect(scale['--sos-text-xl']).toBe(`${tokens.typography.scale.xl.size}px`);
     expect(scale['--sos-text-xl-line-height']).toBe(`${tokens.typography.scale.xl.lineHeight}px`);
     expect(scale['--sos-layout-card-max-width']).toBe(`${tokens.layout.cardMaxWidth}px`);
+    expect(scale['--sos-layer-overlay']).toBe(String(tokens.layer.overlay));
     expect(scale['--sos-duration-fast']).toBe(`${tokens.motion.durationMs.fast}ms`);
     expect(scale['--sos-ease-standard']).toBe(`cubic-bezier(${tokens.motion.easing.standard.join(', ')})`);
 

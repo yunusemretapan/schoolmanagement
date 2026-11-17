@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { AppearancePanel } from '../../appearance/AppearancePanel';
 import { useSystemStatus, type StatusView } from './useSystemStatus';
 
 const DOT: Record<StatusView['kind'], string> = {
@@ -22,10 +23,11 @@ export function StatusScreen() {
           <span className="grid size-logo place-items-center rounded-md bg-brand text-lg font-bold text-on-brand">
             {t('app.name').charAt(0)}
           </span>
-          <div>
+          <div className="grow">
             <p className="text-md font-bold">{t('app.name')}</p>
             <p className="text-sm text-ink-muted">{t('app.tagline')}</p>
           </div>
+          <AppearancePanel />
         </header>
 
         <div role="status" aria-live="polite" className="flex items-center gap-md">

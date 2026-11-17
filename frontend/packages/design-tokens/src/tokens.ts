@@ -125,6 +125,10 @@ export const tokens = {
     contentMaxWidth: 1120,
     glowOffset: 160,
   },
+  /** Stacking order (z-index). */
+  layer: {
+    overlay: 50,
+  },
   radius: {
     sm: 8,
     md: 12,

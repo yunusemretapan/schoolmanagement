@@ -30,7 +30,8 @@ export const RULES = [
     id: 'tailwind-arbitrary',
     applies: (file) => /\.(tsx?|jsx?)$/.test(file),
     // An arbitrary value is allowed only when it reads a design token variable.
-    pattern: /[a-z0-9]-\[(?!(?:length:|color:|number:)?var\(--sos-)[^\]\s]*\]/g,
+    // Variant selectors such as data-[state=checked]: are not values and end in "]:".
+    pattern: /[a-z0-9]-\[(?!(?:length:|color:|number:)?var\(--sos-)[^\]\s]*\](?!:)/g,
     message: 'Tailwind arbitrary value — use a token utility or var(--sos-…)',
   },
   {

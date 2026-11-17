@@ -33,6 +33,13 @@ test('flags Tailwind arbitrary values unless they read a token variable', () => 
   );
 });
 
+test('allows variant selectors such as data-[state=checked]:', () => {
+  assert.deepEqual(
+    rules(`<div className="data-[state=checked]:bg-surface aria-[selected=true]:text-ink" />`, web),
+    [],
+  );
+});
+
 test('flags Tailwind default-scale numbers, keeps token names and fractions', () => {
   assert.deepEqual(rules(`<div className="p-4 size-10 -top-40 hover:opacity-60 text-2xl" />`, web), [
     'tailwind-numeric',
