@@ -45,3 +45,6 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
   mobilde `MOTION_DISABLED` benzeri bayrak yok (`ActivityIndicator` reduce-motion altında da dönüyor) — Source: spec 0001,
   VERIFY round 1 (V-O1; docs/testing.md, Determinism) — Severity: low — Recommendation: "Tasarım sistemi v1" hareket ilkeleriyle
   birlikte, iki uygulamada da çalışma zamanında açılabilir hareket kapatma anahtarı — Deferred by: yunusemretapan, 2026-11-17
+- **B-10** — Tasarım vitrini (web `/tasarim`, mobil bağlantı) giriş sistemi olmadığı için her build'de herkese açık
+  — Source: spec 0002, self-critique G3 — Severity: low — Recommendation: yetkilendirme spec'inde vitrini yönetici rolüne ve
+  geliştirme ortamına kısıtla — Deferred by: yunusemretapan, 2026-11-17, giriş sistemi henüz yok
