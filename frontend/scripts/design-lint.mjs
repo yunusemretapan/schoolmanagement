@@ -17,7 +17,8 @@ const TAILWIND_NUMERIC_PREFIXES =
   'p|px|py|pt|pb|pl|pr|ps|pe|m|mx|my|mt|mb|ml|mr|ms|me|gap|gap-x|gap-y|space-x|space-y|size|w|h|min-w|min-h|max-w|max-h|' +
   'top|left|right|bottom|inset|inset-x|inset-y|start|end|text|leading|tracking|rounded|rounded-[trbl]{1,2}|border|border-[trblxy]|' +
   'outline|outline-offset|ring|ring-offset|opacity|duration|delay|blur|brightness|contrast|saturate|scale|scale-[xy]|rotate|' +
-  'translate-[xy]|z|basis|grow|shrink|order|columns|aspect|stroke|underline-offset|decoration';
+  'translate-[xy]|z|basis|order|columns|aspect|stroke|underline-offset|decoration';
+// grow-0 / shrink-0 are structural flex switches (like RN flex: 1), not visual sizes, so they are not listed.
 
 export const RULES = [
   {
@@ -42,6 +43,14 @@ export const RULES = [
       'g',
     ),
     message: 'Tailwind default-scale value — use a token name (p-md, size-logo, rounded-lg…)',
+  },
+  {
+    id: 'tailwind-breakpoint',
+    applies: (file) => /\.(tsx?|jsx?)$/.test(file) && !file.includes(`${sep}mobile${sep}`),
+    // Breakpoints are Tailwind's default sizes and media queries cannot read token variables: lay out with
+    // flex-wrap + basis-[var(--sos-…)] instead.
+    pattern: /(?<![\w-])(?:sm|md|lg|xl|2xl):(?=[a-z-])/g,
+    message: 'Tailwind default breakpoint — use a token-width flex layout',
   },
   {
     id: 'rn-style-number',

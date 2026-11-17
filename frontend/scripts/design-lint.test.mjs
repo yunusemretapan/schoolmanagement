@@ -51,6 +51,18 @@ test('flags Tailwind default-scale numbers, keeps token names and fractions', ()
   assert.deepEqual(rules(`<div className="p-md size-logo left-1/2 -translate-x-1/2 max-w-card" />`, web), []);
 });
 
+test('allows structural flex switches grow-0 / shrink-0', () => {
+  assert.deepEqual(rules(`<div className="shrink-0 grow-0 grow" />`, web), []);
+});
+
+test('flags Tailwind default breakpoints but not object keys', () => {
+  assert.deepEqual(rules(`<ul className="grid sm:grid-cols-2 lg:gap-md" />`, web), [
+    'tailwind-breakpoint',
+    'tailwind-breakpoint',
+  ]);
+  assert.deepEqual(rules(`const TEXT = { sm: 'text-sm', md: 'text-md' };`, web), []);
+});
+
 test('flags React Native style numbers except 0 and 1', () => {
   assert.deepEqual(rules(`const s = StyleSheet.create({ a: { width: 40, flex: 1, opacity: 0 } });`, mobile), [
     'rn-style-number',

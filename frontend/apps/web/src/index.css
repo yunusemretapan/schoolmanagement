@@ -77,6 +77,7 @@
   --spacing-swatch: var(--sos-size-swatch);
   --spacing-glow: var(--sos-size-glow);
   --spacing-glow-offset: var(--sos-layout-glow-offset);
+  --spacing-label-column: var(--sos-layout-label-column);
 
   /* Widths use --container-*: Tailwind v4 maps max-w-sm/md/lg/xl to --spacing-* first (docs/conventions.md, Known traps). */
   --container-card: var(--sos-layout-card-max-width);

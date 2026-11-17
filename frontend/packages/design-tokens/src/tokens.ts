@@ -124,6 +124,8 @@ export const tokens = {
     cardMaxWidth: 420,
     contentMaxWidth: 1120,
     glowOffset: 160,
+    /** Fixed label column in definition-style rows (showcase scales). */
+    labelColumn: 120,
   },
   /** Stacking order (z-index). */
   layer: {
