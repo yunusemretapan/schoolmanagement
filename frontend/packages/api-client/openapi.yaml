@@ -1,0 +1,53 @@
+openapi: 3.1.0
+info:
+  title: SchoolOS API
+  version: 0.1.0
+  description: >-
+    Contract-first API description. Hand-written until the backend generates it (backlog B-4);
+    every change here regenerates src/schema.ts (npm run generate).
+paths:
+  /api/v1/system/status:
+    get:
+      operationId: getSystemStatus
+      summary: Public status probe (spec 0001, AC-1). No authentication.
+      responses:
+        '200':
+          description: The system is up.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemStatusResponse'
+        default:
+          description: Any error, as RFC 9457 ProblemDetails.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+components:
+  schemas:
+    SystemStatusResponse:
+      type: object
+      additionalProperties: false
+      required: [status, version]
+      properties:
+        status:
+          type: string
+          enum: [UP]
+        version:
+          type: string
+          examples: ['0.1.0']
+    ProblemDetails:
+      type: object
+      required: [status, title, code]
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        instance:
+          type: string
+        code:
+          type: string
+          description: Stable error code, e.g. NOT_FOUND (docs/conventions.md, Error handling).

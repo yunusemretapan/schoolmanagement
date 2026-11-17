@@ -19,3 +19,10 @@ Thumbs.db
 extensions/vscode/node_modules/
 extensions/vscode/out/
 extensions/vscode/*.vsix
+
+# Build outputs (spec 0001)
+target/
+node_modules/
+dist/
+.expo/
+web-build/

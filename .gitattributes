@@ -9,3 +9,7 @@ scripts/* text eol=lf
 *.json text
 *.cmd text eol=crlf
 *.bat text eol=crlf
+
+# Maven wrapper (spec 0001)
+backend/mvnw text eol=lf
+backend/mvnw.cmd text eol=crlf

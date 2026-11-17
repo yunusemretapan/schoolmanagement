@@ -1,0 +1,43 @@
+@import 'tailwindcss';
+
+/*
+ * Tailwind utilities read the runtime CSS variables that theme.ts derives from @schoolos/design-tokens
+ * (spec 0001, AC-7). No colour or size is written here by value.
+ */
+@theme inline {
+  --color-brand: var(--sos-color-brand-primary);
+  --color-on-brand: var(--sos-color-brand-primary-contrast);
+  --color-accent: var(--sos-color-brand-accent);
+  --color-canvas: var(--sos-color-surface-canvas);
+  --color-raised: var(--sos-color-surface-raised);
+  --color-line: var(--sos-color-surface-border);
+  --color-ink: var(--sos-color-text-primary);
+  --color-ink-muted: var(--sos-color-text-secondary);
+  --color-success: var(--sos-color-status-success);
+  --color-danger: var(--sos-color-status-danger);
+  --color-pending: var(--sos-color-status-pending);
+  --font-sans: var(--sos-typography-font-family-sans);
+  --text-sm: var(--sos-typography-size-sm);
+  --text-md: var(--sos-typography-size-md);
+  --text-lg: var(--sos-typography-size-lg);
+  --text-xl: var(--sos-typography-size-xl);
+  --spacing-xs: var(--sos-spacing-xs);
+  --spacing-sm: var(--sos-spacing-sm);
+  --spacing-md: var(--sos-spacing-md);
+  --spacing-lg: var(--sos-spacing-lg);
+  --spacing-xl: var(--sos-spacing-xl);
+  --radius-md: var(--sos-radius-md);
+  --radius-lg: var(--sos-radius-lg);
+  --duration-fast: var(--sos-motion-duration-ms-fast);
+  --shadow-card: var(--sos-elevation-card);
+  /* Widths use --container-*: Tailwind v4 maps max-w-sm/md/lg/xl to --spacing-* first (docs/conventions.md, Known traps). */
+  --container-card: var(--sos-layout-card-max-width);
+}
+
+/* docs/testing.md, Determinism: the app's own motion switch (set on <html data-motion="off"> in tests). */
+[data-motion='off'] *,
+[data-motion='off'] *::before,
+[data-motion='off'] *::after {
+  animation: none !important;
+  transition: none !important;
+}

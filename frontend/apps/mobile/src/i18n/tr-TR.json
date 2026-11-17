@@ -1,0 +1,15 @@
+{
+  "app": {
+    "name": "SchoolOS",
+    "tagline": "Okul Yönetim Platformu"
+  },
+  "status": {
+    "checking": "Sistem kontrol ediliyor…",
+    "running": "Sistem çalışıyor",
+    "version": "Sürüm {{version}}",
+    "runningAnnouncement": "Sistem çalışıyor, Sürüm {{version}}",
+    "unreachable": "Sunucuya ulaşılamıyor",
+    "retry": "Tekrar dene",
+    "loading": "Yükleniyor"
+  }
+}

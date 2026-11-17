@@ -13,12 +13,16 @@
 - Kullanıcıya görünen metinler: i18n dosyalarında (önce `tr-TR`), koda gömülmez.
 
 ## Language & framework versions
-- Backend: **Java 25 LTS**, **Spring Boot 4.x**, Maven 3.9 (wrapper `mvnw` / `mvnw.cmd` commit edilir), Flyway, Spring Data JPA, JobRunr.
-- Veritabanı: **PostgreSQL 18**.
-- Frontend: **React 19 + TypeScript (strict) + Vite**, Tailwind CSS v4, Radix UI, Motion, TanStack Query, Zod.
-- Mobil: **React Native + Expo** (TypeScript), Reanimated 3, Gesture Handler, Skia.
+Sabitlendiği yer: `backend/pom.xml`, `frontend/**/package.json` + `package-lock.json`, `frontend/.nvmrc` (spec 0001).
+- Backend: **Java 25 LTS**, **Spring Boot 4.1.2** (`spring-boot-starter-webmvc`), Maven 3.9.16 (wrapper `mvnw` / `mvnw.cmd`),
+  Error Prone 2.52, Spotless 3.11 + Palantir Java Format 2.103. Flyway, Spring Data JPA, JobRunr: ilk ihtiyaç duyan spec ekler.
+- Veritabanı: **PostgreSQL 18** (ilk veritabanı spec'inde bağlanır).
+- Frontend: **Node 26 LTS**, **TypeScript 6.0** (7.x `typescript-eslint` ile uyumsuz), **React 19.3.0**, Vite 8, Tailwind CSS 4.3,
+  TanStack Query 5, i18next 27; test: Vitest 5 + Testing Library. Radix UI, Motion, Zod: ilk ihtiyaç duyan spec ekler.
+- Mobil: **Expo SDK 58** (React Native 0.88.1, React 19.3.0); test: jest-expo 58 + React Native Testing Library 14.
+  Reanimated (SDK 58 ile 4.7), Gesture Handler, Skia: ilk ihtiyaç duyan spec ekler, sürümü Expo'nun `bundledNativeModules` listesinden.
 - AI: Claude API (`claude-sonnet-5-5`) + ayrı bir STT servisi (spec'te seçilir).
-- Tam sürümler walking skeleton'da sabitlenir (`pom.xml`, `package.json`, `.nvmrc`); sürüm yükseltmesi kendi spec'iyle yapılır.
+- Sürüm yükseltmesi kendi spec'iyle yapılır; Expo paketleri `npx expo install` ile SDK'nın izin verdiği sürüme.
 
 ## Naming
 - Java: `CreateStudentCommand`, `GetStudentByIdQuery`, `StudentBusinessRules`, `StudentResponse`, `CreateStudentCommandValidator`.
@@ -53,6 +57,9 @@
 - Türkçe İ/I: `toUpperCase()` locale'e bağlı — kod içi karşılaştırmada `Locale.ROOT`, gösterimde `tr-TR` — from bootstrap
 - RN animasyonu JS thread'de `setState` ile — Reanimated worklet kullan; native modül gerekiyorsa Expo development build — from bootstrap
 - React 19'da `useEffect` içinde veri çekme — sunucu verisi TanStack Query ile — from bootstrap
+- `@ExceptionHandler(Exception.class)` Spring MVC'nin kendi 4xx istisnalarını da (405, 406, 400) yakalayıp 500'e çevirir — `ErrorResponse` uygulayan istisnayı kendi durum koduyla ve `getHeaders()` ile (`ResponseEntity`; düz `ProblemDetail` 405 `Allow` / 415 `Accept` başlığını düşürür) döndür; 4xx'i ERROR'a yazma, 5xx'i yaz (`GlobalExceptionHandler`) — from spec 0001 review 1 L-2, review 2 Low-1/Low-2 (A-3, A-5)
+- Tailwind v4'te `--spacing-sm/md/lg/xl` token adları `max-w-sm/md/lg/xl` sınıflarını ezer (`max-w-md` → 16px); jsdom testleri yakalamaz — genişlik için `--container-*` token'ı ve `max-w-<ad>` kullan — from spec 0001 fix-1 F-1 (A-4)
+- npm workspace'te Vite (`envDir` varsayılanı) ve Expo `.env*` dosyalarını uygulamanın kendi klasöründen okur, `frontend/` kökünden değil — `.env.example` / `.env.local` her uygulamanın klasöründe — from spec 0001 review 2 Low-3 (A-5)
 - Windows satır sonları — `.gitattributes` ile LF; `mvnw` ve `mvnw.cmd` ikisi de commit edilir — from bootstrap
 
 ## Enforced by tooling
