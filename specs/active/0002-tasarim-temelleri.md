@@ -1,6 +1,6 @@
 # Spec 0002 — Tasarım temelleri
 
-- Status: Approved
+- Status: In progress
 - Mode: lite
 - Plan: `specs/plans/0002-plan.md`
 - Self-critique: done
