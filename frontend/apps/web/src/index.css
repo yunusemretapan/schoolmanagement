@@ -6,7 +6,17 @@
  * default colour palette is switched off so a screen cannot reach for it.
  */
 @theme inline {
+  /* Tailwind's default scales are switched off: only the token-backed names below exist. */
   --color-*: initial;
+  --font-*: initial;
+  --font-weight-*: initial;
+  --text-*: initial;
+  --leading-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --blur-*: initial;
+  --container-*: initial;
+  --ease-*: initial;
   --color-canvas: var(--sos-bg-canvas);
   --color-surface: var(--sos-bg-surface);
   --color-sunken: var(--sos-bg-sunken);
