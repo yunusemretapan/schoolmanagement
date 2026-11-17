@@ -1,6 +1,6 @@
 # Git
 
-> **Template — adjust at bootstrap.** Defaults below are safe; loosen consciously, not accidentally.
+> Bootstrap'ta ANEW varsayılanları olduğu gibi kabul edildi; yalnızca commit scope'ları eklendi.
 
 ## Branching
 - `feature/<spec-no>-<short-name>` — **no branch without a spec.** Also for CHANGE-lane mini-specs.
@@ -15,6 +15,9 @@
   Review fixes name their fix round instead of the step:
   `fix(catalog): empty page size [plan 0001/fix-2]` — the reviewer counts rounds from these
   (R-06 after round 3).
+- Scope = backend modülü (`institution`, `people`, `attendance`, `communication`, `academics`, `billing`,
+  `appointments`, `reporting`, `ai`, `consent`, `core`) veya frontend alanı (`web`, `mobile`, `design`).
+  Commit mesajları İngilizce.
 - Agent commits follow the same standard: the agent writes the message, the human approves it
   through the gate before the commit, not one by one — an approved plan covers its
   `[plan NNNN/n]` and `[plan NNNN/fix-k]` commits, the ship approval the ship commit. Every
@@ -31,11 +34,11 @@
 - Force push, history rewriting on shared branches. Undo = `git revert` (see recovery R-11).
 
 ## Trivial changes
-<!-- Set at bootstrap. Applies only to requests the change-request triage rubric
-     (workflows/change-request.md) classifies as TRIVIAL: no acceptance criterion changes, no shared code. -->
-- Policy: **(1) PR + one reviewer, no spec** — default; alternatives: (2) direct commit allowed on a
-  `trivial/<short-name>` branch · (3) everything goes through a mini-spec (`specs/TEMPLATE-mini.md`;
-  no ANALYZE here: run the self-critique pass of `prompts/spec.md`, then `Self-critique: done`).
+Applies only to requests the change-request triage rubric (workflows/change-request.md) classifies
+as TRIVIAL: no acceptance criterion changes, no shared code.
+- Policy: **(1) PR + one reviewer, no spec** — chosen at bootstrap 2026-11-17.
+- İstisna: **KVKK aydınlatma/rıza metinleri ve veli bildirim şablonları asla trivial değildir**; her zaman
+  mini-spec (`specs/TEMPLATE-mini.md`).
 - Always: one narrow commit, `scripts/check` green. A second file or a new test means re-triage.
 
 ## Pull requests

@@ -8,11 +8,26 @@
 - The whole suite runs inside `scripts/check` — one command, everywhere.
 
 ## Frameworks & layout
-<!-- Test framework(s), where tests live, naming pattern. -->
+**Karar: yalnızca unit test** (ADR 0003). Entegrasyon, Testcontainers ve e2e katmanı yok.
+- **Backend:** JUnit 5 + AssertJ + Mockito. Testler her Maven modülünde `src/test/java`, ad `*Test.java`.
+  Dış servisler (ödeme, SMS, Claude, STT) port arayüzü üzerinden mock'lanır; testte ağ ve veritabanı yok.
+- **Web:** Vitest + Testing Library (jsdom), `*.test.ts(x)` kaynak dosyanın yanında.
+- **Mobil:** Jest (`jest-expo`) + React Native Testing Library, `*.test.ts(x)` kaynak dosyanın yanında.
+- **Görsel kanıt (test değil):** UI kriterleri için ekran görüntüsü — Evidence for UI criteria.
+- **Determinizm:** Backend'de `Clock.fixed(...)`, `Europe/Istanbul`, `tr-TR`; UUID/random üreteçleri
+  enjekte, seed sabit. Frontend'de `vi.useFakeTimers` / Jest fake timers, `prefers-reduced-motion: reduce`
+  ve uygulamanın `MOTION_DISABLED` bayrağı (Motion / Reanimated animasyonları anında biter).
+  Claude her testte mock'lanır; AI çıktı kalitesi `check` dışında, ayrı bir değerlendirme setinde ölçülür.
 
 ## What must be tested
-<!-- e.g. every business rule (BR-n), every boundary/forbidden dependency; the e2e journeys and
-     budget, if the project has e2e at all (Test layers). -->
+- Her iş kuralı (BR-n, `docs/domain.md`) ve her `*BusinessRules` sınıfı.
+- Her pipeline behavior (Authorization varsayılan reddet, Validation, Transaction, Audit).
+- Domain değer nesneleri (`Money`, taksit hesabı, makbuz numarası üretimi).
+- Hassas alan kriterleri: her biri kasıtlı bir kırılmayla kırmızıya düştüğü gösterilerek.
+- UI: her ekranın durumları (boş, yükleniyor, hata, dolu, yetkisiz) bileşen-seviyesi unit testinde.
+- **Bilinen açık:** BR-1 tenant izolasyonu, PostgreSQL RLS ve Flyway migration davranışı unit testle
+  kanıtlanamaz (yalnızca filtre/çağrı seviyesi). Kabul edilmiş risk; `specs/backlog.md` B-1.
+- **e2e:** yok (bütçe 0). Gerekirse ADR ile: en fazla 2 yolculuk / 5 dk, Playwright `--workers=1`.
 
 ## Test layers
 1. **The cheapest test that proves the criterion.** Unit first, then component or integration

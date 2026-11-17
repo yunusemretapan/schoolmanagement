@@ -13,3 +13,13 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
   — Recommendation: <the reviewer's action> — Deferred by: <name>, <YYYY-MM-DD>, <why>
   A decision deferred at bootstrap (its REPORT) uses Source: bootstrap <YYYY-MM-DD>.
 -->
+
+- **B-1** — BR-1 tenant izolasyonu, PostgreSQL RLS ve Flyway migration davranışı otomatik testle kanıtlanmıyor
+  (yalnızca unit test kararı) — Source: bootstrap 2026-11-17 — Severity: high (sensitive area: tenant izolasyonu)
+  — Recommendation: Kapı 1'den (pilotta gerçek çocuk verisi) önce hassas alanlar için küçük bir Testcontainers seti
+  (ADR 0003, seçenek C) — Deferred by: ürün sahibi, 2026-11-17, yalnızca unit test tercihi
+- **B-2** — e2e aday yolculukları: "veli taksit öder → makbuz oluşur", "öğretmen yoklama alır → veliye bildirim"
+  — Source: bootstrap 2026-11-17 — Severity: low — Recommendation: ihtiyaç doğarsa ADR ile, bütçe ≤ 2 yolculuk / 5 dk,
+  Playwright `--workers=1` — Deferred by: ürün sahibi, 2026-11-17, e2e şimdilik yok
+- **B-3** — Faz 2 ve Faz 3 modülleri (`school.md`) — Source: bootstrap 2026-11-17 — Severity: n/a
+  — Recommendation: ilgili kapı kriteri sağlanınca spec'e dönüşür — Deferred by: ürün sahibi, 2026-11-17, faz kapısı
