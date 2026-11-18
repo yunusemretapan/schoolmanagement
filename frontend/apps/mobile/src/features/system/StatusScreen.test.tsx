@@ -3,6 +3,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent } from '@testing-library/react-native';
 import { AccessibilityInfo, Platform } from 'react-native';
 import { ApiProvider } from '../../api/ApiProvider';
+import { AppearanceProvider } from '../../appearance/AppearanceProvider';
+import { createMemoryStorage } from '../../test/device';
 import { StatusScreen } from './StatusScreen';
 
 async function renderWith(getSystemStatus: ApiClient['getSystemStatus']) {
@@ -13,15 +15,25 @@ async function renderWith(getSystemStatus: ApiClient['getSystemStatus']) {
   await render(
     <QueryClientProvider client={client}>
       <ApiProvider client={{ getSystemStatus }}>
-        <StatusScreen />
+        <AppearanceProvider storage={createMemoryStorage()} configuredBrand={null}>
+          <StatusScreen />
+        </AppearanceProvider>
       </ApiProvider>
     </QueryClientProvider>,
   );
+  // Saved appearance loads asynchronously; the screen appears once it is known.
+  await screen.findByTestId('status-region');
 }
 
 const up: SystemStatus = { status: 'UP', version: '0.1.0' };
 
 describe('StatusScreen (mobile)', () => {
+  it('offers the appearance panel from the header (spec 0002 AC-1)', async () => {
+    await renderWith(async () => up);
+
+    expect(screen.getByRole('button', { name: 'Görünüm' })).toBeOnTheScreen();
+  });
+
   it('shows checking state', async () => {
     await renderWith(() => new Promise<SystemStatus>(() => undefined));
 

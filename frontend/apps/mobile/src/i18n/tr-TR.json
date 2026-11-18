@@ -11,5 +11,57 @@
     "unreachable": "Sunucuya ulaşılamıyor",
     "retry": "Tekrar dene",
     "loading": "Yükleniyor"
+  },
+  "appearance": {
+    "open": "Görünüm",
+    "title": "Görünüm ayarları",
+    "close": "Kapat",
+    "scheme": {
+      "label": "Görünüm",
+      "system": "Sistem",
+      "light": "Açık",
+      "dark": "Koyu"
+    },
+    "motion": {
+      "label": "Hareket",
+      "system": "Sistem",
+      "reduced": "Azaltılmış",
+      "normal": "Normal"
+    }
+  },
+  "showcase": {
+    "open": "Tasarım vitrini",
+    "back": "Geri",
+    "title": "Tasarım vitrini",
+    "subtitle": "Renkler, yazı, ölçüler ve hareket — görünüm ve kurum rengiyle canlı",
+    "brand": {
+      "title": "Kurum rengi",
+      "label": "Kurum rengi (#RRGGBB)",
+      "placeholder": "#1E40AF",
+      "reset": "Varsayılana dön",
+      "invalid": "Geçerli bir renk girin (ör. #1E40AF)"
+    },
+    "colors": {
+      "title": "Renkler",
+      "contrast": "Kontrast {{ratio}}:1"
+    },
+    "typography": {
+      "title": "Yazı",
+      "step": "{{step}} · {{size}}/{{lineHeight}}",
+      "sample": "Veliyle iletişim tek yerde"
+    },
+    "scales": {
+      "title": "Boşluk, ölçü, köşe ve gölge",
+      "spacing": "{{name}} · {{value}}",
+      "size": "{{name}} · {{value}}",
+      "shadow": "Kart gölgesi"
+    },
+    "motion": {
+      "title": "Hareket",
+      "normal": "Hareket açık: geçişler hareket token'larıyla oynar.",
+      "reduced": "Hareket azaltılmış: geçişler anında gösterilir.",
+      "duration": "{{name}} · {{ms}} ms",
+      "play": "Oynat"
+    }
   }
 }

@@ -1,0 +1,289 @@
+// Unit tests for design-lint (spec 0002 AC-7). Run: node --test scripts/design-lint.test.mjs
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { dirname, join, sep } from 'node:path';
+import { test } from 'node:test';
+import {
+  BOUND_DEFAULTS,
+  LOCKED_NAMESPACES,
+  LOCKED_STYLESHEET,
+  REQUIRED_LOCKS,
+  TAILWIND_PALETTE,
+  UNLOCKED_NAMESPACES,
+  isScanned,
+  lintSource,
+  missingLocks,
+  OPEN_DEFAULTS,
+} from './design-lint.mjs';
+
+const web = join('apps', 'web', 'src', 'X.tsx');
+const mobile = join('apps', 'mobile', 'src', 'X.tsx');
+const css = join('apps', 'web', 'src', 'index.css');
+const rules = (text, file) => lintSource(text, file).map((v) => v.rule);
+
+test('flags colours written by value', () => {
+  assert.deepEqual(rules(`const c = '#1E40AF';`, web), ['color-literal']);
+  assert.deepEqual(rules(`style={{ color: 'rgba(0, 0, 0, 0.5)' }}`, mobile), ['color-literal']);
+  assert.deepEqual(rules(`a { color: hsl(10 20% 30%); }`, css), ['color-literal']);
+});
+
+test('ignores colours in comments', () => {
+  assert.deepEqual(rules(`// e.g. #1E40AF\n/* rgb(1,2,3) */ const x = 1;`, web), []);
+});
+
+test('flags Tailwind arbitrary values unless they read a token variable', () => {
+  assert.deepEqual(rules(`<div className="h-[36rem] scale-[0.98]" />`, web), [
+    'tailwind-arbitrary',
+    'tailwind-arbitrary',
+  ]);
+  assert.deepEqual(
+    rules(
+      `<div className="opacity-[var(--sos-opacity-pulse)] border-[length:var(--sos-border-thick)]" />`,
+      web,
+    ),
+    [],
+  );
+});
+
+test('allows variant selectors such as data-[state=checked]:', () => {
+  assert.deepEqual(
+    rules(`<div className="data-[state=checked]:bg-surface aria-[selected=true]:text-ink" />`, web),
+    [],
+  );
+});
+
+test('flags Tailwind default-scale numbers, keeps token names and fractions', () => {
+  assert.deepEqual(rules(`<div className="p-4 size-10 -top-40 hover:opacity-60 text-2xl" />`, web), [
+    'tailwind-numeric',
+    'tailwind-numeric',
+    'tailwind-numeric',
+    'tailwind-numeric',
+    'tailwind-numeric',
+  ]);
+  assert.deepEqual(rules(`<div className="p-md size-logo left-1/2 -translate-x-1/2 max-w-card" />`, web), []);
+});
+
+test('allows structural flex switches grow-0 / shrink-0', () => {
+  assert.deepEqual(rules(`<div className="shrink-0 grow-0 grow" />`, web), []);
+});
+
+test('flags Tailwind default breakpoints but not object keys', () => {
+  assert.deepEqual(rules(`<ul className="grid sm:grid-cols-2 lg:gap-md" />`, web), [
+    'tailwind-breakpoint',
+    'tailwind-breakpoint',
+  ]);
+  assert.deepEqual(rules(`const TEXT = { sm: 'text-sm', md: 'text-md' };`, web), []);
+});
+
+test('flags React Native style numbers except 0 and 1', () => {
+  assert.deepEqual(rules(`const s = StyleSheet.create({ a: { width: 40, flex: 1, opacity: 0 } });`, mobile), [
+    'rn-style-number',
+  ]);
+  assert.deepEqual(rules(`transform: [{ scale: 0.98 }]`, mobile), ['rn-style-number']);
+  assert.deepEqual(rules(`{ padding: theme.spacing.md, maxWidth: theme.layout.cardMaxWidth }`, mobile), []);
+});
+
+test('flags web inline style numbers and units written by value (review 1, L-4)', () => {
+  assert.deepEqual(rules(`<div style={{ width: 40, padding: 12, flex: 1 }} />`, web), [
+    'web-style-number',
+    'web-style-number',
+  ]);
+  assert.deepEqual(rules(`<div style={{ transitionDuration: "300ms", width: '2rem' }} />`, web), [
+    'web-style-unit',
+    'web-style-unit',
+  ]);
+  assert.deepEqual(
+    rules(
+      '<span style={{ width: `var(--sos-spacing-${name})`, background: `var(--sos-bg-canvas)` }} />',
+      web,
+    ),
+    [],
+  );
+  // Outside a style object the same text is not a style (e.g. an option object or a timeout).
+  assert.deepEqual(rules(`const delay = { duration: 300 }; setTimeout(run, 300);`, web), []);
+});
+
+test('flags Tailwind default palette classes (VERIFY 1, F-1)', () => {
+  assert.deepEqual(
+    rules(`<p className="bg-red-500 text-gray-700 border-blue-600 hover:bg-white/50" />`, web),
+    ['tailwind-palette', 'tailwind-palette', 'tailwind-palette', 'tailwind-palette'],
+  );
+  assert.deepEqual(
+    rules(
+      `<p className="bg-surface text-ink border-line bg-brand text-on-brand ring-focus text-danger" />`,
+      web,
+    ),
+    [],
+  );
+});
+
+test('the web stylesheet keeps the default scales switched off (VERIFY 1, F-1)', () => {
+  const locked = REQUIRED_LOCKS.map((lock) => `  ${lock};`).join('\n');
+  assert.deepEqual(missingLocks(`@theme inline {\n${locked}\n}`), []);
+  const withoutPalette = locked.replace('--color-*: initial;', '');
+  assert.deepEqual(missingLocks(`@theme inline {\n${withoutPalette}\n}`), ['--color-*: initial']);
+  // A lock that only survives inside a comment does not count.
+  assert.deepEqual(missingLocks(`/* --color-*: initial; */\n${withoutPalette}`), ['--color-*: initial']);
+});
+
+// Plan 0002 A-7: the lock list is checked against Tailwind's own default theme, not written from memory.
+const tailwindTheme = readFileSync(createRequire(import.meta.url).resolve('tailwindcss/theme.css'), 'utf8');
+const defaultThemeVars = [
+  ...(/@theme default[^{]*\{([\s\S]*?)\n\}/.exec(tailwindTheme)?.[1] ?? '').matchAll(
+    /^\s*--([a-z0-9-]+)\s*:/gm,
+  ),
+].map((m) => m[1]);
+
+test('every Tailwind default theme namespace is locked or left open with a reason (A-7)', () => {
+  assert.ok(defaultThemeVars.length > 100, 'parsed the @theme default block of tailwindcss/theme.css');
+  const known = [...LOCKED_NAMESPACES, ...Object.keys(UNLOCKED_NAMESPACES)];
+  const uncovered = defaultThemeVars.filter(
+    (name) => !known.some((ns) => name === ns || name.startsWith(`${ns}-`)),
+  );
+  assert.deepEqual(uncovered, []);
+});
+
+test('every Tailwind default colour family is in the palette rule (A-7)', () => {
+  const families = new Set(
+    defaultThemeVars.flatMap((name) => /^color-([a-z]+)-\d+$/.exec(name)?.slice(1) ?? []),
+  );
+  const listed = new Set(TAILWIND_PALETTE.split('|'));
+  assert.deepEqual(
+    [...families].filter((family) => !listed.has(family)),
+    [],
+  );
+});
+
+test('the web stylesheet holds every required lock and binds the transition defaults to tokens (A-7)', () => {
+  const stylesheet = readFileSync(
+    new URL(`../${LOCKED_STYLESHEET.split(sep).join('/')}`, import.meta.url),
+    'utf8',
+  );
+  assert.deepEqual(missingLocks(stylesheet), []);
+  assert.deepEqual(
+    missingLocks(stylesheet.replace('--default-transition-timing-function: var(--sos-ease-standard);', '')),
+    ['--default-transition-timing-function: var(--sos-ease-'],
+  );
+  assert.deepEqual(missingLocks(stylesheet.replace('--ease-*: initial;', '')), ['--ease-*: initial']);
+});
+
+test('mobile screens time animations only through src/motion (A-7)', () => {
+  assert.deepEqual(
+    rules(`offset.value = withTiming(64, { duration: theme.motion.durationMs.slow });`, mobile),
+    ['rn-motion-direct'],
+  );
+  assert.deepEqual(
+    rules(`<Animated.View entering={FadeIn.duration(theme.motion.durationMs.fast)} />`, mobile),
+    ['rn-motion-direct'],
+  );
+  assert.deepEqual(rules(`<Animated.View layout={LinearTransition} exiting={SlideOutLeft} />`, mobile), [
+    'rn-motion-direct',
+    'rn-motion-direct',
+  ]);
+  assert.deepEqual(
+    rules(
+      `offset.value = animateTo(theme.motion, 64, 'slow', 'standard'); entering={fadeIn(m, 'fast', 'enter')}`,
+      mobile,
+    ),
+    [],
+  );
+  // The gateway itself may call Reanimated with token values.
+  const helper = join('apps', 'mobile', 'src', 'motion', 'timing.ts');
+  assert.deepEqual(
+    rules(
+      `return withTiming(v, timing(m, d, c)); const [a, b, c, d] = x; Easing.bezier(a, b, c, d);`,
+      helper,
+    ),
+    [],
+  );
+  // Only that file: a component living in src/motion/ is checked like any screen (A-8, review 4 L-1).
+  const component = join('apps', 'mobile', 'src', 'motion', 'MotionIndicator.tsx');
+  assert.deepEqual(
+    rules(
+      `withRepeat(withTiming(1, { duration: motion.durationMs.loop, easing: Easing.linear }), -1)`,
+      component,
+    ),
+    ['rn-motion-direct', 'rn-easing-literal'],
+  );
+  assert.deepEqual(
+    rules(
+      `withTiming(1, { duration: motion.durationMs.loop })`,
+      join('apps', 'mobile', 'src', 'motion', 'NewSpinner.tsx'),
+    ),
+    ['rn-motion-direct'],
+  );
+});
+
+// Plan 0002 A-8: --default-* fallbacks live in theme.css and, for some, only in Tailwind's compiled code.
+const tailwindLib = readFileSync(
+  join(dirname(createRequire(import.meta.url).resolve('tailwindcss/theme.css')), 'dist', 'lib.js'),
+  'utf8',
+);
+const tailwindDefaults = [
+  ...new Set([...`${tailwindTheme}\n${tailwindLib}`.matchAll(/--default-([a-z-]+)/g)].map((m) => m[1])),
+];
+
+test('every Tailwind --default-* fallback is bound to a token or open with a reason (A-8)', () => {
+  assert.ok(tailwindDefaults.includes('border-width'), 'found the fallbacks in tailwindcss/dist/lib.js');
+  const known = [...Object.keys(BOUND_DEFAULTS), ...Object.keys(OPEN_DEFAULTS)];
+  assert.deepEqual(
+    tailwindDefaults.filter((name) => !known.includes(name)),
+    [],
+  );
+  const stylesheet = readFileSync(
+    new URL(`../${LOCKED_STYLESHEET.split(sep).join('/')}`, import.meta.url),
+    'utf8',
+  );
+  assert.deepEqual(
+    missingLocks(stylesheet.replace('--default-border-width: var(--sos-border-hairline);', '')),
+    ['--default-border-width: var(--sos-border-'],
+  );
+});
+
+test('flags easing written by value (VERIFY 1, F-2)', () => {
+  assert.deepEqual(rules(`a { animation: spin var(--sos-duration-loop) linear infinite; }`, css), [
+    'css-easing-literal',
+  ]);
+  assert.deepEqual(rules(`a { transition-timing-function: cubic-bezier(0.2, 0, 0, 1); }`, css), [
+    'css-easing-literal',
+  ]);
+  assert.deepEqual(
+    rules(
+      `a { animation: spin var(--sos-duration-loop) var(--sos-ease-linear) infinite; --ease-standard: x; }`,
+      css,
+    ),
+    [],
+  );
+  // Samples are config objects so only the easing rule is under test; withTiming in a screen also
+  // trips rn-motion-direct (A-7), shown in the last assert.
+  assert.deepEqual(rules(`const config = { easing: Easing.linear };`, mobile), ['rn-easing-literal']);
+  assert.deepEqual(rules(`const config = { easing: Easing.bezier(0.2, 0, 0, 1) };`, mobile), [
+    'rn-easing-literal',
+  ]);
+  assert.deepEqual(
+    rules(`const config = { easing: Easing.bezier(...theme.motion.easing.standard) };`, mobile),
+    [],
+  );
+  assert.deepEqual(rules(`const config = { easing: Easing.bezier(...motion.easing.linear) };`, mobile), []);
+  assert.deepEqual(rules(`withTiming(1, { easing: Easing.linear })`, mobile), [
+    'rn-motion-direct',
+    'rn-easing-literal',
+  ]);
+});
+
+test('flags CSS lengths and durations written by value', () => {
+  assert.deepEqual(rules(`a { transition: opacity 150ms; margin: 4px; }`, css), [
+    'css-unit-literal',
+    'css-unit-literal',
+  ]);
+  assert.deepEqual(rules(`a { margin: var(--sos-spacing-md); width: calc(var(--x) * 100%); }`, css), []);
+});
+
+test('scans app sources only', () => {
+  assert.equal(isScanned(join('apps', 'web', 'src', 'a.tsx')), true);
+  assert.equal(isScanned(join('apps', 'web', 'src', 'a.test.tsx')), false);
+  assert.equal(isScanned(join('apps', 'web', 'src', 'test', 'setup.ts')), false);
+  assert.equal(isScanned(join('apps', 'web', 'src', 'i18n', 'tr-TR.json')), false);
+  assert.equal(isScanned(join('packages', 'design-tokens', 'src', 'tokens.ts')), false);
+});

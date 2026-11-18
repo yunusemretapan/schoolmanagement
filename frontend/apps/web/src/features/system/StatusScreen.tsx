@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { AppearancePanel } from '../../appearance/AppearancePanel';
 import { useSystemStatus, type StatusView } from './useSystemStatus';
 
 const DOT: Record<StatusView['kind'], string> = {
@@ -15,29 +16,30 @@ export function StatusScreen() {
     <main className="relative grid min-h-dvh place-items-center overflow-hidden bg-canvas p-lg font-sans text-ink">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-40 left-1/2 h-[36rem] w-[36rem] -translate-x-1/2 rounded-full bg-brand/15 blur-3xl"
+        className="pointer-events-none absolute -top-glow-offset left-1/2 size-glow -translate-x-1/2 rounded-pill bg-brand-glow blur-glow"
       />
-      <section className="relative w-full max-w-card rounded-lg border border-line bg-raised p-xl shadow-card">
+      <section className="relative w-full max-w-card rounded-lg border border-line bg-surface p-xl shadow-card">
         <header className="mb-xl flex items-center gap-sm">
-          <span className="grid size-10 place-items-center rounded-md bg-brand text-lg font-bold text-on-brand">
+          <span className="grid size-logo place-items-center rounded-md bg-brand text-lg font-bold text-on-brand">
             {t('app.name').charAt(0)}
           </span>
-          <div>
-            <p className="text-md font-bold leading-tight">{t('app.name')}</p>
+          <div className="grow">
+            <p className="text-md font-bold">{t('app.name')}</p>
             <p className="text-sm text-ink-muted">{t('app.tagline')}</p>
           </div>
+          <AppearancePanel />
         </header>
 
         <div role="status" aria-live="polite" className="flex items-center gap-md">
-          <span className="relative flex size-3">
+          <span className="relative flex size-dot">
             {view.kind === 'checking' && (
               <span
                 data-pulse
                 aria-hidden="true"
-                className={`absolute inline-flex size-full rounded-full opacity-60 motion-safe:animate-ping ${DOT[view.kind]}`}
+                className={`absolute inline-flex size-full rounded-pill opacity-[var(--sos-opacity-pulse)] motion-ok:animate-ping ${DOT[view.kind]}`}
               />
             )}
-            <span className={`relative inline-flex size-3 rounded-full ${DOT[view.kind]}`} />
+            <span className={`relative inline-flex size-dot rounded-pill ${DOT[view.kind]}`} />
           </span>
           <div>
             {view.kind === 'checking' && (
@@ -47,7 +49,7 @@ export function StatusScreen() {
                 <span
                   role="progressbar"
                   aria-label={t('status.loading')}
-                  className="mt-xs block size-5 rounded-full border-2 border-line border-t-brand motion-safe:animate-spin"
+                  className="mt-xs block size-spinner rounded-pill border-[length:var(--sos-border-thick)] border-line border-t-brand motion-ok:animate-spin"
                 />
               </>
             )}
@@ -67,7 +69,7 @@ export function StatusScreen() {
           <button
             type="button"
             onClick={retry}
-            className="mt-lg w-full rounded-md bg-brand px-lg py-sm font-semibold text-on-brand transition-transform duration-fast hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand active:scale-[0.98]"
+            className="mt-lg min-h-control w-full rounded-md bg-brand px-lg py-sm font-semibold text-on-brand outline-focus focus-visible:outline-[length:var(--sos-border-thick)] focus-visible:outline-offset-[var(--sos-border-thick)] hover:opacity-[var(--sos-opacity-pressed)] active:scale-[var(--sos-press-scale)]"
           >
             {t('status.retry')}
           </button>

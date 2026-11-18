@@ -4,6 +4,30 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SchoolOS</title>
+    <script>
+      // Spec 0002: set appearance and motion before the first paint, so a dark-mode user never sees a
+      // light flash. Same keys and rules as @schoolos/design-tokens preferences; AppearanceProvider takes over.
+      (function () {
+        var root = document.documentElement;
+        function read(key) {
+          try {
+            return localStorage.getItem(key);
+          } catch (e) {
+            return null;
+          }
+        }
+        var appearance = read('sos.appearance');
+        var motion = read('sos.motion');
+        var dark =
+          appearance === 'dark' ||
+          (appearance !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        var reduce =
+          motion === 'reduced' ||
+          (motion !== 'normal' && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        root.dataset.theme = dark ? 'dark' : 'light';
+        root.dataset.motion = reduce ? 'off' : 'on';
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

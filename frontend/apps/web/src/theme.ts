@@ -1,44 +1,82 @@
-import { tokens, type Tokens } from '@schoolos/design-tokens';
-
-type TokenTree = { readonly [key: string]: string | number | TokenTree };
-
-const PX_GROUPS = new Set(['size', 'spacing', 'radius', 'layout']);
+import {
+  deriveBrand,
+  parseHexColor,
+  tokens,
+  withAlpha,
+  type ColorScheme,
+  type Tokens,
+} from '@schoolos/design-tokens';
 
 /**
- * Flattens the design tokens into CSS custom properties: tokens.color.brand.primary → --sos-color-brand-primary.
- * The web theme is always derived from the shared tokens, never written by hand (spec 0001, AC-7).
+ * Web theme = CSS custom properties derived from @schoolos/design-tokens (spec 0001 AC-7, spec 0002).
+ * Two layers: scale variables (same for every appearance) and scheme variables (colours, shadow) that
+ * change with light/dark and the institution's brand colour. index.css maps them to Tailwind utilities.
  */
-export function toCssVariables(source: Tokens | TokenTree): Record<string, string> {
-  const result: Record<string, string> = {};
-  const walk = (node: TokenTree, path: string[]) => {
-    for (const [key, value] of Object.entries(node)) {
-      const next = [...path, key];
-      if (typeof value === 'object') {
-        walk(value, next);
-      } else {
-        result[`--sos-${next.map(kebab).join('-')}`] = unit(next, value);
-      }
-    }
+
+export const kebab = (segment: string) => segment.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+
+/** Typography, spacing, sizes, layout, radius, borders, opacity, motion: --sos-<group>-<name>. */
+export function scaleVariables(source: Tokens = tokens): Record<string, string> {
+  const vars: Record<string, string> = {
+    '--sos-font-sans': source.typography.fontFamily.sansStack,
   };
-  walk(source as TokenTree, []);
-  return result;
-}
-
-function unit(path: string[], value: string | number): string {
-  if (typeof value === 'string') return value;
-  if (path.includes('durationMs')) return `${value}ms`;
-  if (path.some((segment) => PX_GROUPS.has(segment))) return `${value}px`;
-  return String(value);
-}
-
-function kebab(segment: string): string {
-  return segment.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
-}
-
-export const webTheme = toCssVariables(tokens);
-
-export function applyTheme(element: HTMLElement, theme: Record<string, string> = webTheme): void {
-  for (const [name, value] of Object.entries(theme)) {
-    element.style.setProperty(name, value);
+  for (const [name, step] of Object.entries(source.typography.scale)) {
+    vars[`--sos-text-${kebab(name)}`] = `${step.size}px`;
+    vars[`--sos-text-${kebab(name)}-line-height`] = `${step.lineHeight}px`;
   }
+  for (const [name, weight] of Object.entries(source.typography.weight))
+    vars[`--sos-weight-${name}`] = weight;
+  const px = (group: string, values: Record<string, number>) => {
+    for (const [name, value] of Object.entries(values)) vars[`--sos-${group}-${kebab(name)}`] = `${value}px`;
+  };
+  px('spacing', source.spacing);
+  px('size', source.size);
+  px('layout', source.layout);
+  px('radius', source.radius);
+  px('border', source.borderWidth);
+  for (const [name, value] of Object.entries(source.layer))
+    vars[`--sos-layer-${kebab(name)}`] = String(value);
+  for (const [name, value] of Object.entries(source.opacity))
+    vars[`--sos-opacity-${kebab(name)}`] = String(value);
+  for (const [name, value] of Object.entries(source.motion.durationMs)) {
+    vars[`--sos-duration-${kebab(name)}`] = `${value}ms`;
+  }
+  for (const [name, curve] of Object.entries(source.motion.easing)) {
+    vars[`--sos-ease-${kebab(name)}`] = `cubic-bezier(${curve.join(', ')})`;
+  }
+  vars['--sos-press-scale'] = String(source.motion.pressScale);
+  return vars;
+}
+
+/** Colours and shadow for one appearance, with the institution's brand colour if valid (AC-5, AC-6). */
+export function schemeVariables(
+  scheme: ColorScheme,
+  brandColor?: string | null,
+  source: Tokens = tokens,
+): Record<string, string> {
+  const s = source.semantic[scheme];
+  const brand = deriveBrand(brandColor, scheme);
+  const customBrand = parseHexColor(brandColor) !== null;
+  return {
+    '--sos-bg-canvas': s.bg.canvas,
+    '--sos-bg-surface': s.bg.surface,
+    '--sos-bg-sunken': s.bg.sunken,
+    '--sos-border-subtle': s.border.subtle,
+    '--sos-border-control': s.border.control,
+    '--sos-text-primary': s.text.primary,
+    '--sos-text-secondary': s.text.secondary,
+    '--sos-brand-solid': brand.solid,
+    '--sos-brand-on-solid': brand.onSolid,
+    '--sos-brand-text': brand.text,
+    '--sos-brand-subtle': customBrand ? withAlpha(brand.solid, source.opacity.glow) : s.brand.subtle,
+    '--sos-status-success': s.status.success,
+    '--sos-status-danger': s.status.danger,
+    '--sos-status-pending': s.status.pending,
+    '--sos-focus': customBrand ? brand.text : s.focus,
+    '--sos-elevation-card': source.elevation[scheme].card,
+  };
+}
+
+export function applyVariables(element: HTMLElement, vars: Record<string, string>): void {
+  for (const [name, value] of Object.entries(vars)) element.style.setProperty(name, value);
 }

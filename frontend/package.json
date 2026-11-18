@@ -13,7 +13,8 @@
     "lint": "eslint . --max-warnings=0",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "design-lint": "node --test scripts/design-lint.test.mjs && node scripts/design-lint.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

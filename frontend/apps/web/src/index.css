@@ -2,42 +2,135 @@
 
 /*
  * Tailwind utilities read the runtime CSS variables that theme.ts derives from @schoolos/design-tokens
- * (spec 0001, AC-7). No colour or size is written here by value.
+ * (spec 0001 AC-7, spec 0002 AC-7). No colour, size or duration is written here by value, and Tailwind's
+ * default colour palette is switched off so a screen cannot reach for it.
  */
 @theme inline {
-  --color-brand: var(--sos-color-brand-primary);
-  --color-on-brand: var(--sos-color-brand-primary-contrast);
-  --color-accent: var(--sos-color-brand-accent);
-  --color-canvas: var(--sos-color-surface-canvas);
-  --color-raised: var(--sos-color-surface-raised);
-  --color-line: var(--sos-color-surface-border);
-  --color-ink: var(--sos-color-text-primary);
-  --color-ink-muted: var(--sos-color-text-secondary);
-  --color-success: var(--sos-color-status-success);
-  --color-danger: var(--sos-color-status-danger);
-  --color-pending: var(--sos-color-status-pending);
-  --font-sans: var(--sos-typography-font-family-sans);
-  --text-sm: var(--sos-typography-size-sm);
-  --text-md: var(--sos-typography-size-md);
-  --text-lg: var(--sos-typography-size-lg);
-  --text-xl: var(--sos-typography-size-xl);
+  /* Tailwind's default scales are switched off: only the token-backed names below exist. */
+  --color-*: initial;
+  --font-*: initial;
+  --font-weight-*: initial;
+  --text-*: initial;
+  --leading-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --blur-*: initial;
+  --container-*: initial;
+  --ease-*: initial;
+  --animate-*: initial;
+  --drop-shadow-*: initial;
+  --inset-shadow-*: initial;
+  --text-shadow-*: initial;
+  --tracking-*: initial;
+  --perspective-*: initial;
+  --breakpoint-*: initial;
+  /* A transition that names no duration or curve takes these, never Tailwind's own (plan 0002 A-7). */
+  --default-transition-duration: var(--sos-duration-fast);
+  --default-transition-timing-function: var(--sos-ease-standard);
+  /* Bare border / outline / ring classes take these, never Tailwind's built-in 1px / 3px (plan 0002 A-8). */
+  --default-border-width: var(--sos-border-hairline);
+  --default-outline-width: var(--sos-border-hairline);
+  --default-ring-width: var(--sos-border-hairline);
+  --default-ring-color: var(--sos-focus);
+  --color-canvas: var(--sos-bg-canvas);
+  --color-surface: var(--sos-bg-surface);
+  --color-sunken: var(--sos-bg-sunken);
+  --color-line: var(--sos-border-subtle);
+  --color-line-strong: var(--sos-border-control);
+  --color-ink: var(--sos-text-primary);
+  --color-ink-muted: var(--sos-text-secondary);
+  --color-brand: var(--sos-brand-solid);
+  --color-on-brand: var(--sos-brand-on-solid);
+  --color-brand-ink: var(--sos-brand-text);
+  --color-brand-subtle: var(--sos-brand-subtle);
+  --color-brand-glow: color-mix(
+    in oklab,
+    var(--sos-brand-solid) calc(var(--sos-opacity-glow) * 100%),
+    transparent
+  );
+  --color-success: var(--sos-status-success);
+  --color-danger: var(--sos-status-danger);
+  --color-pending: var(--sos-status-pending);
+  --color-focus: var(--sos-focus);
+  --color-transparent: transparent;
+
+  --font-sans: var(--sos-font-sans);
+  --font-weight-regular: var(--sos-weight-regular);
+  --font-weight-medium: var(--sos-weight-medium);
+  --font-weight-semibold: var(--sos-weight-semibold);
+  --font-weight-bold: var(--sos-weight-bold);
+
+  --text-xs: var(--sos-text-xs);
+  --text-xs--line-height: var(--sos-text-xs-line-height);
+  --text-sm: var(--sos-text-sm);
+  --text-sm--line-height: var(--sos-text-sm-line-height);
+  --text-md: var(--sos-text-md);
+  --text-md--line-height: var(--sos-text-md-line-height);
+  --text-lg: var(--sos-text-lg);
+  --text-lg--line-height: var(--sos-text-lg-line-height);
+  --text-xl: var(--sos-text-xl);
+  --text-xl--line-height: var(--sos-text-xl-line-height);
+  --text-xxl: var(--sos-text-xxl);
+  --text-xxl--line-height: var(--sos-text-xxl-line-height);
+  --text-display: var(--sos-text-display);
+  --text-display--line-height: var(--sos-text-display-line-height);
+
+  /* Spacing and fixed sizes share Tailwind's spacing namespace (p-*, gap-*, size-*, top-*). */
+  --spacing-xxs: var(--sos-spacing-xxs);
   --spacing-xs: var(--sos-spacing-xs);
   --spacing-sm: var(--sos-spacing-sm);
   --spacing-md: var(--sos-spacing-md);
   --spacing-lg: var(--sos-spacing-lg);
   --spacing-xl: var(--sos-spacing-xl);
-  --radius-md: var(--sos-radius-md);
-  --radius-lg: var(--sos-radius-lg);
-  --duration-fast: var(--sos-motion-duration-ms-fast);
-  --shadow-card: var(--sos-elevation-card);
+  --spacing-xxl: var(--sos-spacing-xxl);
+  --spacing-dot: var(--sos-size-dot);
+  --spacing-icon-sm: var(--sos-size-icon-sm);
+  --spacing-spinner: var(--sos-size-spinner);
+  --spacing-icon-md: var(--sos-size-icon-md);
+  --spacing-logo: var(--sos-size-logo);
+  --spacing-control: var(--sos-size-control);
+  --spacing-swatch: var(--sos-size-swatch);
+  --spacing-glow: var(--sos-size-glow);
+  --spacing-glow-offset: var(--sos-layout-glow-offset);
+  --spacing-label-column: var(--sos-layout-label-column);
+
   /* Widths use --container-*: Tailwind v4 maps max-w-sm/md/lg/xl to --spacing-* first (docs/conventions.md, Known traps). */
   --container-card: var(--sos-layout-card-max-width);
+  --container-content: var(--sos-layout-content-max-width);
+
+  --radius-sm: var(--sos-radius-sm);
+  --radius-md: var(--sos-radius-md);
+  --radius-lg: var(--sos-radius-lg);
+  --radius-pill: var(--sos-radius-pill);
+
+  --shadow-card: var(--sos-elevation-card);
+  --blur-glow: var(--sos-size-glow-blur);
+
+  --ease-standard: var(--sos-ease-standard);
+  --ease-enter: var(--sos-ease-enter);
+  --ease-exit: var(--sos-ease-exit);
+  --animate-ping: ping var(--sos-duration-loop) var(--sos-ease-exit) infinite;
+  --animate-spin: spin var(--sos-duration-loop) var(--sos-ease-linear) infinite;
 }
 
-/* docs/testing.md, Determinism: the app's own motion switch (set on <html data-motion="off"> in tests). */
+/*
+ * Motion (spec 0002 AC-2, docs/design/motion.md): animations run only under data-motion="on", which the
+ * appearance provider sets from the user's choice and the device setting. Use `motion-ok:` instead of
+ * Tailwind's `motion-safe:` — that one reads only the device setting and would ignore the user's choice.
+ */
+@custom-variant motion-ok (&:where([data-motion='on'], [data-motion='on'] *));
+
 [data-motion='off'] *,
 [data-motion='off'] *::before,
 [data-motion='off'] *::after {
   animation: none !important;
   transition: none !important;
+}
+
+html {
+  color-scheme: light;
+}
+
+html[data-theme='dark'] {
+  color-scheme: dark;
 }

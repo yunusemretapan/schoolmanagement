@@ -26,10 +26,6 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
 - **B-4** — `frontend/packages/api-client/openapi.yaml` elle yazılıyor; backend'den üretilip karşılaştırılmıyor, sözleşme kayabilir
   — Source: spec 0001, plan R3 (review round 1, L-4) — Severity: medium — Recommendation: backend'den OpenAPI üret
   (springdoc) ve `frontend-contract` adımında elle yazılanla karşılaştır — Deferred by: yunusemretapan, 2026-11-17, plan R3 kararı
-- **B-5** — Token dışı ölçüler (mobil/web logo 40, nokta 12; web `h-[36rem]`, `-top-40`, `size-10`, spinner `size-5 border-2` (review 2, Info-1); kart genişliği A-4 ile token'a taşındı) ve
-  Tailwind'in varsayılan renk paleti açık — Source: spec 0001, review round 1 (L-3; `frontend/apps/web/src/index.css:1`)
-  — Severity: low — Recommendation: "Tasarım sistemi v1"de boyut token'ları + `@theme { --color-*: initial; }`
-  — Deferred by: yunusemretapan, 2026-11-17, tasarım sistemi spec'inin konusu
 - **B-6** — Web ve mobilde birebir kopya `i18n/tr-TR.json`, `i18n/index.ts`, `api/ApiProvider.tsx`, `useSystemStatus.ts`
   — Source: spec 0001, review round 1 (I-1) — Severity: info — Recommendation: ortak `packages/i18n` (ve paylaşılan hook)
   — Deferred by: yunusemretapan, 2026-11-17, plan bunu onayladı; ayrışma riski ileride. Not (VERIFY V-F1): web `tr-TR.json`'daki
@@ -41,7 +37,25 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
 - **B-8** — 415 `Accept` başlığının korunması testsiz (405 `Allow` test ediliyor; kod yolu ortak `framework.getHeaders()`)
   — Source: spec 0001, VERIFY round 1 (V-F2; `backend/webapi/.../errors/GlobalExceptionHandlerTest.java`) — Severity: low
   — Recommendation: sonraki backend spec'inde 415 için `Accept` başlığı assert'i — Deferred by: yunusemretapan, 2026-11-17, risk düşük
-- **B-9** — Uygulamaların kendi deterministik modu eksik: web `data-motion=off` yalnızca test setup'ında, prod/preview'da açılamıyor;
-  mobilde `MOTION_DISABLED` benzeri bayrak yok (`ActivityIndicator` reduce-motion altında da dönüyor) — Source: spec 0001,
-  VERIFY round 1 (V-O1; docs/testing.md, Determinism) — Severity: low — Recommendation: "Tasarım sistemi v1" hareket ilkeleriyle
-  birlikte, iki uygulamada da çalışma zamanında açılabilir hareket kapatma anahtarı — Deferred by: yunusemretapan, 2026-11-17
+- **B-10** — Tasarım vitrini (web `/tasarim`, mobil bağlantı) giriş sistemi olmadığı için her build'de herkese açık
+  — Source: spec 0002, self-critique G3 — Severity: low — Recommendation: yetkilendirme spec'inde vitrini yönetici rolüne ve
+  geliştirme ortamına kısıtla — Deferred by: yunusemretapan, 2026-11-17, giriş sistemi henüz yok
+- **B-11** — Mobil `AppearancePanel` radyoları react-native-web çıktısında `aria-checked` taşımıyor (RN-web
+  `accessibilityState.checked`'i çevirmiyor); yerel platformda sorun yok — Source: spec 0002, VERIFY round 1 (I-1;
+  `frontend/apps/mobile/src/appearance/AppearancePanel.tsx`, OptionGroup) — Severity: info — Recommendation: mobil web
+  yayınlanırsa `aria-checked={checked}` ekle — Deferred by: yunusemretapan, 2026-11-18, mobil web hedef platform değil
+- **B-12** — Örtük zamanlamalı mobil animasyon API'leri design-lint `rn-motion-direct` kapsamı dışında: Reanimated `Layout`
+  takma adı, `Keyframe`, Reanimated 4 CSS geçiş/animasyon prop'ları (`transitionProperty`/`transitionDuration`,
+  `animationName`), react-native `Animated.timing/spring/decay`, `LayoutAnimation` — bugün kodda yok — Source: spec 0002,
+  review round 4 (L-2; `frontend/scripts/design-lint.mjs`, rn-motion-direct) — Severity: low — Recommendation: ilk kullanan
+  spec (0004 mobil bileşenler) kuralı genişletsin ya da `src/motion/timing`'e yardımcı eklesin — Deferred by: yunusemretapan,
+  2026-11-18, A-8 kapsam sınırı
+- **B-13** — `rn-motion-direct` deseni geniş: `\w+Transition` ve `(Fade|Slide|Zoom…)\w*(In|Out)` React `useTransition`,
+  `<SlideIndicator>`, `<ZoomInput>` gibi adları da işaretler — bugün yanlış pozitif yok — Source: spec 0002, review round 4
+  (I-1) — Severity: info — Recommendation: Reanimated export adlarına sabitle ya da import kaynağına göre denetle —
+  Deferred by: yunusemretapan, 2026-11-18, mevcut kaynakta etki yok
+- **B-14** — Spec 0002'nin yerel iOS/Android cihaz gözlemi yapılmadı: Sistem seçiliyken cihaz açık→koyu (yeniden başlatmadan, AC-1),
+  TalkBack/VoiceOver ile Görünüm paneli ve geri hareketi (AC-10), yerel "hareketi azalt" (AC-2). Kriterler Jest + Expo web + config
+  introspection ile PASS (spec 0001 AC-6 emsali); yerel gözlem ek güvence — Source: spec 0002, VERIFY round 1 (G-1) — Severity: low
+  — Recommendation: Android emülatör (ve imkân olursa iOS simülatör) development build'de gözlem + ekran görüntüsü; aksayan
+  davranış bug raporu olur — Deferred by: yunusemretapan, 2026-11-18, emülatör kurulumu sonraya bırakıldı
