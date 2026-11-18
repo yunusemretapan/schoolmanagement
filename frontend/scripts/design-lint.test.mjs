@@ -1,8 +1,19 @@
 // Unit tests for design-lint (spec 0002 AC-7). Run: node --test scripts/design-lint.test.mjs
 import assert from 'node:assert/strict';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { join, sep } from 'node:path';
 import { test } from 'node:test';
-import { REQUIRED_LOCKS, isScanned, lintSource, missingLocks } from './design-lint.mjs';
+import {
+  LOCKED_NAMESPACES,
+  LOCKED_STYLESHEET,
+  REQUIRED_LOCKS,
+  TAILWIND_PALETTE,
+  UNLOCKED_NAMESPACES,
+  isScanned,
+  lintSource,
+  missingLocks,
+} from './design-lint.mjs';
 
 const web = join('apps', 'web', 'src', 'X.tsx');
 const mobile = join('apps', 'mobile', 'src', 'X.tsx');
@@ -112,6 +123,47 @@ test('the web stylesheet keeps the default scales switched off (VERIFY 1, F-1)',
   assert.deepEqual(missingLocks(`@theme inline {\n${withoutPalette}\n}`), ['--color-*: initial']);
   // A lock that only survives inside a comment does not count.
   assert.deepEqual(missingLocks(`/* --color-*: initial; */\n${withoutPalette}`), ['--color-*: initial']);
+});
+
+// Plan 0002 A-7: the lock list is checked against Tailwind's own default theme, not written from memory.
+const tailwindTheme = readFileSync(createRequire(import.meta.url).resolve('tailwindcss/theme.css'), 'utf8');
+const defaultThemeVars = [
+  ...(/@theme default[^{]*\{([\s\S]*?)\n\}/.exec(tailwindTheme)?.[1] ?? '').matchAll(
+    /^\s*--([a-z0-9-]+)\s*:/gm,
+  ),
+].map((m) => m[1]);
+
+test('every Tailwind default theme namespace is locked or left open with a reason (A-7)', () => {
+  assert.ok(defaultThemeVars.length > 100, 'parsed the @theme default block of tailwindcss/theme.css');
+  const known = [...LOCKED_NAMESPACES, ...Object.keys(UNLOCKED_NAMESPACES)];
+  const uncovered = defaultThemeVars.filter(
+    (name) => !known.some((ns) => name === ns || name.startsWith(`${ns}-`)),
+  );
+  assert.deepEqual(uncovered, []);
+});
+
+test('every Tailwind default colour family is in the palette rule (A-7)', () => {
+  const families = new Set(
+    defaultThemeVars.flatMap((name) => /^color-([a-z]+)-\d+$/.exec(name)?.slice(1) ?? []),
+  );
+  const listed = new Set(TAILWIND_PALETTE.split('|'));
+  assert.deepEqual(
+    [...families].filter((family) => !listed.has(family)),
+    [],
+  );
+});
+
+test('the web stylesheet holds every required lock and binds the transition defaults to tokens (A-7)', () => {
+  const stylesheet = readFileSync(
+    new URL(`../${LOCKED_STYLESHEET.split(sep).join('/')}`, import.meta.url),
+    'utf8',
+  );
+  assert.deepEqual(missingLocks(stylesheet), []);
+  assert.deepEqual(
+    missingLocks(stylesheet.replace('--default-transition-timing-function: var(--sos-ease-standard);', '')),
+    ['--default-transition-timing-function: var(--sos-ease-'],
+  );
+  assert.deepEqual(missingLocks(stylesheet.replace('--ease-*: initial;', '')), ['--ease-*: initial']);
 });
 
 test('flags easing written by value (VERIFY 1, F-2)', () => {

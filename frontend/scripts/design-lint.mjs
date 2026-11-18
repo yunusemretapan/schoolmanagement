@@ -18,20 +18,55 @@ const INLINE_STYLE = /style=\{\{[\s\S]*?\}\}/g;
 
 const TAILWIND_COLOR_PREFIXES =
   'bg|text|border|border-[trblxy]|ring|ring-offset|outline|fill|stroke|from|via|to|shadow|decoration|accent|caret|divide|placeholder';
-const TAILWIND_PALETTE =
-  'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose';
+// Checked against tailwindcss/theme.css by the tests (every default colour family must be listed).
+export const TAILWIND_PALETTE =
+  'slate|gray|zinc|neutral|stone|taupe|mauve|mist|olive|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose';
 
 /**
  * VERIFY 1, F-1: the web stylesheet must keep Tailwind's default scales switched off (spec 0002 AC-7).
  * Removing one of these lines brings the default palette / scale back without any other signal.
  */
+/**
+ * Plan 0002 A-7: Tailwind's default theme namespaces that carry a visual value (colour, size, shadow, curve…)
+ * are switched off at the source; the test checks this list against tailwindcss/theme.css, so a Tailwind
+ * upgrade that adds a namespace fails until it is locked here or listed in UNLOCKED_NAMESPACES.
+ */
+export const LOCKED_NAMESPACES = [
+  'color',
+  'font',
+  'font-weight',
+  'text',
+  'leading',
+  'radius',
+  'shadow',
+  'blur',
+  'container',
+  'ease',
+  'animate',
+  'drop-shadow',
+  'inset-shadow',
+  'text-shadow',
+  'tracking',
+  'perspective',
+  'breakpoint',
+];
+
+/** Namespaces left open, each with its reason. */
+export const UNLOCKED_NAMESPACES = {
+  spacing:
+    'numeric spacing classes are forbidden by tailwind-numeric; token spacing names are defined in index.css',
+  aspect: 'a ratio (16 / 9), not a size, colour or duration',
+  'max-width':
+    'only max-w-prose (65ch, a reading measure); max-w-* by value is forbidden by tailwind-numeric',
+  default:
+    'transition defaults are bound to tokens below; font defaults read --font-*, which is locked (resolves to initial)',
+};
+
 export const REQUIRED_LOCKS = [
-  '--color-*: initial',
-  '--font-*: initial',
-  '--font-weight-*: initial',
-  '--text-*: initial',
-  '--leading-*: initial',
-  '--radius-*: initial',
+  ...LOCKED_NAMESPACES.map((namespace) => `--${namespace}-*: initial`),
+  // A transition that names no duration or curve must still take token values, never Tailwind's.
+  '--default-transition-duration: var(--sos-duration-',
+  '--default-transition-timing-function: var(--sos-ease-',
 ];
 export const LOCKED_STYLESHEET = join('apps', 'web', 'src', 'index.css');
 
