@@ -71,6 +71,26 @@ test('flags React Native style numbers except 0 and 1', () => {
   assert.deepEqual(rules(`{ padding: theme.spacing.md, maxWidth: theme.layout.cardMaxWidth }`, mobile), []);
 });
 
+test('flags web inline style numbers and units written by value (review 1, L-4)', () => {
+  assert.deepEqual(rules(`<div style={{ width: 40, padding: 12, flex: 1 }} />`, web), [
+    'web-style-number',
+    'web-style-number',
+  ]);
+  assert.deepEqual(rules(`<div style={{ transitionDuration: "300ms", width: '2rem' }} />`, web), [
+    'web-style-unit',
+    'web-style-unit',
+  ]);
+  assert.deepEqual(
+    rules(
+      '<span style={{ width: `var(--sos-spacing-${name})`, background: `var(--sos-bg-canvas)` }} />',
+      web,
+    ),
+    [],
+  );
+  // Outside a style object the same text is not a style (e.g. an option object or a timeout).
+  assert.deepEqual(rules(`const delay = { duration: 300 }; setTimeout(run, 300);`, web), []);
+});
+
 test('flags CSS lengths and durations written by value', () => {
   assert.deepEqual(rules(`a { transition: opacity 150ms; margin: 4px; }`, css), [
     'css-unit-literal',

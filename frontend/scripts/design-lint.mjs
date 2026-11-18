@@ -13,6 +13,9 @@ const RN_STYLE_KEYS =
   'width|height|minWidth|minHeight|maxWidth|maxHeight|margin\\w*|padding\\w*|gap|rowGap|columnGap|top|left|right|bottom|' +
   'fontSize|lineHeight|letterSpacing|borderRadius|border\\w*Width|opacity|elevation|duration|delay|scale|shadowRadius|shadowOpacity';
 
+/** A JSX inline style object: style={{ … }} (flat objects; the first "}}" closes it). */
+const INLINE_STYLE = /style=\{\{[\s\S]*?\}\}/g;
+
 const TAILWIND_NUMERIC_PREFIXES =
   'p|px|py|pt|pb|pl|pr|ps|pe|m|mx|my|mt|mb|ml|mr|ms|me|gap|gap-x|gap-y|space-x|space-y|size|w|h|min-w|min-h|max-w|max-h|' +
   'top|left|right|bottom|inset|inset-x|inset-y|start|end|text|leading|tracking|rounded|rounded-[trbl]{1,2}|border|border-[trblxy]|' +
@@ -61,6 +64,22 @@ export const RULES = [
       'React Native style number written by value — use theme.spacing / size / radius / opacity / motion',
   },
   {
+    // Review 1, L-4: web inline style objects (style={{ … }}) follow the same rule as RN styles.
+    id: 'web-style-number',
+    applies: (file) => /\.(tsx|jsx)$/.test(file) && !file.includes(`${sep}mobile${sep}`),
+    within: INLINE_STYLE,
+    pattern: new RegExp(`\\b(?:${RN_STYLE_KEYS}|inset|zIndex|flexBasis)\\s*:\\s*(-?\\d*\\.?\\d+)\\b`, 'g'),
+    keep: (match) => !RN_ALLOWED_NUMBERS.has(match[1] ?? ''),
+    message: 'inline style number written by value — use var(--sos-…)',
+  },
+  {
+    id: 'web-style-unit',
+    applies: (file) => /\.(tsx|jsx)$/.test(file) && !file.includes(`${sep}mobile${sep}`),
+    within: INLINE_STYLE,
+    pattern: /(?<![\w-])\d*\.?\d+(?:px|rem|em|ms|s|vh|vw|deg)\b/g,
+    message: 'inline style length or duration written by value — use var(--sos-…)',
+  },
+  {
     id: 'css-unit-literal',
     applies: (file) => file.endsWith('.css'),
     pattern: /(?<![\w-])\d*\.?\d+(?:px|rem|em|ms|s|vh|vw)\b/g,
@@ -80,10 +99,16 @@ export function lintSource(text, file) {
   const violations = [];
   for (const rule of RULES) {
     if (!rule.applies(file)) continue;
-    for (const match of source.matchAll(rule.pattern)) {
-      if (rule.keep && !rule.keep(match)) continue;
-      const line = source.slice(0, match.index).split('\n').length;
-      violations.push({ rule: rule.id, line, text: match[0].trim(), message: rule.message });
+    // A rule with `within` looks only inside those regions (inline style objects).
+    const regions = rule.within
+      ? [...source.matchAll(rule.within)].map((m) => ({ text: m[0], offset: m.index }))
+      : [{ text: source, offset: 0 }];
+    for (const region of regions) {
+      for (const match of region.text.matchAll(rule.pattern)) {
+        if (rule.keep && !rule.keep(match)) continue;
+        const line = source.slice(0, region.offset + match.index).split('\n').length;
+        violations.push({ rule: rule.id, line, text: match[0].trim(), message: rule.message });
+      }
     }
   }
   return violations;
