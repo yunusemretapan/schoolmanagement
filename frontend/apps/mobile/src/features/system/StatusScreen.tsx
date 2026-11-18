@@ -13,7 +13,8 @@ const DOT: Record<StatusView['kind'], keyof NativeTheme['colors']> = {
   unreachable: 'danger',
 };
 
-export function StatusScreen() {
+/** `onOpenShowcase` shows the "Tasarım vitrini" link (spec 0002: open in every build until B-10). */
+export function StatusScreen({ onOpenShowcase }: { onOpenShowcase?: () => void }) {
   const { t } = useTranslation();
   const { view, retry } = useSystemStatus();
   const { theme } = useAppearance();
@@ -79,6 +80,17 @@ export function StatusScreen() {
             <Text style={styles.buttonLabel}>{t('status.retry')}</Text>
           </Pressable>
         )}
+
+        {onOpenShowcase && (
+          <Pressable
+            role="link"
+            accessibilityLabel={t('showcase.open')}
+            onPress={onOpenShowcase}
+            style={({ pressed }) => [styles.link, pressed && styles.buttonPressed]}
+          >
+            <Text style={styles.linkLabel}>{t('showcase.open')}</Text>
+          </Pressable>
+        )}
       </View>
     </View>
   );
@@ -138,5 +150,16 @@ function createStyles(theme: NativeTheme) {
     },
     buttonPressed: { opacity: theme.opacity.pressed, transform: [{ scale: theme.motion.pressScale }] },
     buttonLabel: { ...theme.text('md', 'semibold'), color: theme.colors.onBrand },
+    link: {
+      marginTop: theme.spacing.lg,
+      minHeight: theme.size.control,
+      alignSelf: 'flex-start',
+      justifyContent: 'center',
+    },
+    linkLabel: {
+      ...theme.text('sm', 'semibold'),
+      color: theme.colors.brandText,
+      textDecorationLine: 'underline',
+    },
   });
 }

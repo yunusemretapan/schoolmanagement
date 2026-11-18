@@ -18,9 +18,12 @@ Sabitlendiği yer: `backend/pom.xml`, `frontend/**/package.json` + `package-lock
   Error Prone 2.52, Spotless 3.11 + Palantir Java Format 2.103. Flyway, Spring Data JPA, JobRunr: ilk ihtiyaç duyan spec ekler.
 - Veritabanı: **PostgreSQL 18** (ilk veritabanı spec'inde bağlanır).
 - Frontend: **Node 26 LTS**, **TypeScript 6.0** (7.x `typescript-eslint` ile uyumsuz), **React 19.3.0**, Vite 8, Tailwind CSS 4.3,
-  TanStack Query 5, i18next 27; test: Vitest 5 + Testing Library. Radix UI, Motion, Zod: ilk ihtiyaç duyan spec ekler.
+  TanStack Query 5, i18next 27; test: Vitest 5 + Testing Library. Radix UI 1.8.1 (`radix-ui`), Inter (`@fontsource-variable/inter`
+  5.3.0, OFL-1.1) — spec 0002. Motion, Zod: ilk ihtiyaç duyan spec ekler.
 - Mobil: **Expo SDK 58** (React Native 0.88.1, React 19.3.0); test: jest-expo 58 + React Native Testing Library 14.
-  Reanimated (SDK 58 ile 4.7), Gesture Handler, Skia: ilk ihtiyaç duyan spec ekler, sürümü Expo'nun `bundledNativeModules` listesinden.
+  Spec 0002: Reanimated 4.7.1 + Worklets 0.13.0, AsyncStorage 2.2.0, `expo-font` / `expo-splash-screen` ~58.0,
+  Inter (`@expo-google-fonts/inter` 0.4.2, OFL-1.1). Gesture Handler, Skia: ilk ihtiyaç duyan spec ekler; sürüm her zaman
+  Expo'nun `bundledNativeModules` listesinden.
 - AI: Claude API (`claude-sonnet-5-5`) + ayrı bir STT servisi (spec'te seçilir).
 - Sürüm yükseltmesi kendi spec'iyle yapılır; Expo paketleri `npx expo install` ile SDK'nın izin verdiği sürüme.
 
@@ -48,6 +51,16 @@ Sabitlendiği yer: `backend/pom.xml`, `frontend/**/package.json` + `package-lock
 - **Silme:** Kişisel veri soft-delete + saklama süresi sonunda anonimleştirme (BR-12); tahsilat asla silinmez (BR-9).
 - **Hassas alanlar** (sağlık notu, alerji, TC kimlik no) uygulama seviyesinde şifrelenir.
 
+## Design rules
+Spec 0002; ayrıntı: `docs/design/motion.md`.
+- Görsel değerler yalnızca `@schoolos/design-tokens`'tan: ekranlar anlamsal rolleri (`semantic.light/dark`) ve ölçekleri
+  kullanır; renk, ölçü, süre değeri yazılmaz (`frontend-design-lint` adımı). Web'de Tailwind'in varsayılan paleti kapalı
+  (`--color-*: initial`); token sınıfı (`p-md`, `size-logo`) veya `var(--sos-…)`.
+- Mobilde tema canlıdır: `useAppearance().theme` + `useMemo(() => createStyles(theme), [theme])`; modül düzeyinde
+  `StyleSheet` tema değeri okumaz. Yazı stili `theme.text(adım, ağırlık)` (her ağırlık ayrı Inter yüzü).
+- Kurum rengi her zaman `deriveBrand` üzerinden (marka üstü metin ve marka metni ≥ 4.5:1); ham kurum rengi metin rengi olmaz.
+- Görünüm ve hareket tercihi `AppearanceProvider`'dan okunur; animasyon kuralları `docs/design/motion.md`.
+
 ## Known traps
 - JPA lazy loading / N+1 — controller'a entity değil DTO döner, `spring.jpa.open-in-view=false` — from bootstrap
 - Hibernate tenant filtresi native sorguda çalışmaz — native SQL yasak; zorunluysa spec'te gerekçe + elle `tenant_id` koşulu — from bootstrap
@@ -60,6 +73,9 @@ Sabitlendiği yer: `backend/pom.xml`, `frontend/**/package.json` + `package-lock
 - `@ExceptionHandler(Exception.class)` Spring MVC'nin kendi 4xx istisnalarını da (405, 406, 400) yakalayıp 500'e çevirir — `ErrorResponse` uygulayan istisnayı kendi durum koduyla ve `getHeaders()` ile (`ResponseEntity`; düz `ProblemDetail` 405 `Allow` / 415 `Accept` başlığını düşürür) döndür; 4xx'i ERROR'a yazma, 5xx'i yaz (`GlobalExceptionHandler`) — from spec 0001 review 1 L-2, review 2 Low-1/Low-2 (A-3, A-5)
 - Tailwind v4'te `--spacing-sm/md/lg/xl` token adları `max-w-sm/md/lg/xl` sınıflarını ezer (`max-w-md` → 16px); jsdom testleri yakalamaz — genişlik için `--container-*` token'ı ve `max-w-<ad>` kullan — from spec 0001 fix-1 F-1 (A-4)
 - npm workspace'te Vite (`envDir` varsayılanı) ve Expo `.env*` dosyalarını uygulamanın kendi klasöründen okur, `frontend/` kökünden değil — `.env.example` / `.env.local` her uygulamanın klasöründe — from spec 0001 review 2 Low-3 (A-5)
+- `@expo-google-fonts/<aile>` paket girişinden içe aktarmak ailenin bütün yüzlerini (Inter: 18, ~6 MB) pakete koyar — ağırlık başına alt yol (`@expo-google-fonts/inter/600SemiBold`) + `expo-font`'un `useFonts`'u — from spec 0002 build step 5
+- Reanimated stil değişikliği RNTL'de `props.style`'a yansımaz — Jest'te `getAnimatedStyle(element)` ile oku, sahte zamanlayıcıyla ilerlet; Jest `resolver: react-native-reanimated/jest/resolver` — from spec 0002 build step 5-6
+- RN'de `role` taşıyan ama `accessible` olmayan `View` RNTL'nin `getByRole`'üne görünmez; grubu `accessible` yapmak ise VoiceOver'da çocuklarını gizler — kapsayıcıyı testID ile bul, rol ve adını prop olarak doğrula — from spec 0002 build step 5
 - Windows satır sonları — `.gitattributes` ile LF; `mvnw` ve `mvnw.cmd` ikisi de commit edilir — from bootstrap
 
 ## Enforced by tooling

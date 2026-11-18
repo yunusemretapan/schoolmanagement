@@ -26,10 +26,6 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
 - **B-4** — `frontend/packages/api-client/openapi.yaml` elle yazılıyor; backend'den üretilip karşılaştırılmıyor, sözleşme kayabilir
   — Source: spec 0001, plan R3 (review round 1, L-4) — Severity: medium — Recommendation: backend'den OpenAPI üret
   (springdoc) ve `frontend-contract` adımında elle yazılanla karşılaştır — Deferred by: yunusemretapan, 2026-11-17, plan R3 kararı
-- **B-5** — Token dışı ölçüler (mobil/web logo 40, nokta 12; web `h-[36rem]`, `-top-40`, `size-10`, spinner `size-5 border-2` (review 2, Info-1); kart genişliği A-4 ile token'a taşındı) ve
-  Tailwind'in varsayılan renk paleti açık — Source: spec 0001, review round 1 (L-3; `frontend/apps/web/src/index.css:1`)
-  — Severity: low — Recommendation: "Tasarım sistemi v1"de boyut token'ları + `@theme { --color-*: initial; }`
-  — Deferred by: yunusemretapan, 2026-11-17, tasarım sistemi spec'inin konusu
 - **B-6** — Web ve mobilde birebir kopya `i18n/tr-TR.json`, `i18n/index.ts`, `api/ApiProvider.tsx`, `useSystemStatus.ts`
   — Source: spec 0001, review round 1 (I-1) — Severity: info — Recommendation: ortak `packages/i18n` (ve paylaşılan hook)
   — Deferred by: yunusemretapan, 2026-11-17, plan bunu onayladı; ayrışma riski ileride. Not (VERIFY V-F1): web `tr-TR.json`'daki
@@ -41,10 +37,6 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
 - **B-8** — 415 `Accept` başlığının korunması testsiz (405 `Allow` test ediliyor; kod yolu ortak `framework.getHeaders()`)
   — Source: spec 0001, VERIFY round 1 (V-F2; `backend/webapi/.../errors/GlobalExceptionHandlerTest.java`) — Severity: low
   — Recommendation: sonraki backend spec'inde 415 için `Accept` başlığı assert'i — Deferred by: yunusemretapan, 2026-11-17, risk düşük
-- **B-9** — Uygulamaların kendi deterministik modu eksik: web `data-motion=off` yalnızca test setup'ında, prod/preview'da açılamıyor;
-  mobilde `MOTION_DISABLED` benzeri bayrak yok (`ActivityIndicator` reduce-motion altında da dönüyor) — Source: spec 0001,
-  VERIFY round 1 (V-O1; docs/testing.md, Determinism) — Severity: low — Recommendation: "Tasarım sistemi v1" hareket ilkeleriyle
-  birlikte, iki uygulamada da çalışma zamanında açılabilir hareket kapatma anahtarı — Deferred by: yunusemretapan, 2026-11-17
 - **B-10** — Tasarım vitrini (web `/tasarim`, mobil bağlantı) giriş sistemi olmadığı için her build'de herkese açık
   — Source: spec 0002, self-critique G3 — Severity: low — Recommendation: yetkilendirme spec'inde vitrini yönetici rolüne ve
   geliştirme ortamına kısıtla — Deferred by: yunusemretapan, 2026-11-17, giriş sistemi henüz yok

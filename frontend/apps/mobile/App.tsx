@@ -7,11 +7,10 @@ import { createApiClient } from '@schoolos/api-client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState } from 'react';
 import { ApiProvider } from './src/api/ApiProvider';
-import { AppearanceProvider, useAppearance } from './src/appearance/AppearanceProvider';
-import { StatusScreen } from './src/features/system/StatusScreen';
+import { AppearanceProvider } from './src/appearance/AppearanceProvider';
+import { Screens } from './src/Screens';
 import { nativeTheme } from './src/theme';
 import './src/i18n';
 
@@ -28,16 +27,6 @@ const FONTS = {
   [nativeTheme.fontFace.semibold]: Inter_600SemiBold,
   [nativeTheme.fontFace.bold]: Inter_700Bold,
 };
-
-function Screens() {
-  const { scheme } = useAppearance();
-  return (
-    <>
-      <StatusScreen />
-      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-    </>
-  );
-}
 
 export default function App() {
   const [queryClient] = useState(() => new QueryClient());
