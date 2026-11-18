@@ -191,7 +191,7 @@ function MotionSection() {
             data-testid="motion-dot"
             data-moved={moved}
             aria-hidden="true"
-            className={`block size-spinner rounded-pill bg-brand motion-ok:transition-transform motion-ok:duration-[var(--sos-duration-slow)] motion-ok:ease-standard ${moved ? 'translate-x-[var(--sos-size-glow-blur)]' : ''}`}
+            className={`block size-spinner rounded-pill bg-brand motion-ok:transition-transform motion-ok:duration-[var(--sos-duration-slow)] motion-ok:ease-standard ${moved ? 'translate-x-[var(--sos-layout-motion-demo-travel)]' : ''}`}
           />
         </div>
       </div>

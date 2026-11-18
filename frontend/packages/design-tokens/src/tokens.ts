@@ -126,6 +126,8 @@ export const tokens = {
     glowOffset: 160,
     /** Fixed label column in definition-style rows (showcase scales). */
     labelColumn: 120,
+    /** How far the showcase motion example travels. */
+    motionDemoTravel: 64,
   },
   /** Stacking order (z-index). */
   layer: {

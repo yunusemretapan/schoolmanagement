@@ -94,10 +94,10 @@ describe('DesignShowcase (mobile, spec 0002 AC-9)', () => {
       await user.press(screen.getByRole('button', { name: 'Oynat' }));
       await act(async () => jest.advanceTimersByTime(ONE_FRAME_MS));
       // Still on its way: the move takes motion.durationMs.slow, not an instant jump.
-      expect(translateX()).toBeLessThan(tokens.size.glowBlur);
+      expect(translateX()).toBeLessThan(tokens.layout.motionDemoTravel);
 
       await act(async () => jest.advanceTimersByTime(tokens.motion.durationMs.slow * 2));
-      expect(translateX()).toBe(tokens.size.glowBlur);
+      expect(translateX()).toBe(tokens.layout.motionDemoTravel);
     } finally {
       jest.useRealTimers();
     }
@@ -112,7 +112,7 @@ describe('DesignShowcase (mobile, spec 0002 AC-9)', () => {
       await user.press(screen.getByRole('button', { name: 'Oynat' }));
       await act(async () => jest.advanceTimersByTime(ONE_FRAME_MS));
 
-      expect(translateX()).toBe(tokens.size.glowBlur);
+      expect(translateX()).toBe(tokens.layout.motionDemoTravel);
     } finally {
       jest.useRealTimers();
     }

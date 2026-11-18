@@ -167,7 +167,7 @@ function MotionSection({ styles }: { styles: Styles }) {
 
   // AC-2, AC-8: the example moves with the slow duration and standard curve; with reduced motion it jumps.
   useEffect(() => {
-    const target = moved ? theme.size.glowBlur : 0;
+    const target = moved ? theme.layout.motionDemoTravel : 0;
     offset.value = reducedMotion
       ? target
       : withTiming(target, {

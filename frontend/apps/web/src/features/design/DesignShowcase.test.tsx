@@ -93,5 +93,10 @@ describe('DesignShowcase (web, spec 0002 AC-9)', () => {
     expect(dot).toHaveAttribute('data-moved', 'false');
     await user.click(screen.getByRole('button', { name: 'Oynat' }));
     expect(dot).toHaveAttribute('data-moved', 'true');
+    // Travel comes from its own token (review 1, I-1), which the theme publishes as a variable.
+    expect(dot.className).toContain('translate-x-[var(--sos-layout-motion-demo-travel)]');
+    expect(document.documentElement.style.getPropertyValue('--sos-layout-motion-demo-travel')).toBe(
+      `${tokens.layout.motionDemoTravel}px`,
+    );
   });
 });
