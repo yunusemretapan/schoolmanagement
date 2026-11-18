@@ -76,6 +76,7 @@ Spec 0002; ayrıntı: `docs/design/motion.md`.
 - `@expo-google-fonts/<aile>` paket girişinden içe aktarmak ailenin bütün yüzlerini (Inter: 18, ~6 MB) pakete koyar — ağırlık başına alt yol (`@expo-google-fonts/inter/600SemiBold`) + `expo-font`'un `useFonts`'u — from spec 0002 build step 5
 - Reanimated stil değişikliği RNTL'de `props.style`'a yansımaz — Jest'te `getAnimatedStyle(element)` ile oku, sahte zamanlayıcıyla ilerlet; Jest `resolver: react-native-reanimated/jest/resolver` — from spec 0002 build step 5-6
 - RN'de `role` taşıyan ama `accessible` olmayan `View` RNTL'nin `getByRole`'üne görünmez; grubu `accessible` yapmak ise VoiceOver'da çocuklarını gizler — kapsayıcıyı testID ile bul, rol ve adını prop olarak doğrula — from spec 0002 build step 5
+- Expo `app.json` `userInterfaceStyle: "light"` yerel build'de `useColorScheme()`'i hep 'light'a kilitler; Jest sahtesi bunu yakalamaz — tema destekleyen uygulamada `"automatic"` + `expo-system-ui` (Android) ve `app.json`'u okuyan test — from spec 0002 review 1 H-1 (A-4)
 - Windows satır sonları — `.gitattributes` ile LF; `mvnw` ve `mvnw.cmd` ikisi de commit edilir — from bootstrap
 
 ## Enforced by tooling
