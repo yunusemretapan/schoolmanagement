@@ -197,6 +197,22 @@ test('mobile screens time animations only through src/motion (A-7)', () => {
     ),
     [],
   );
+  // Only that file: a component living in src/motion/ is checked like any screen (A-8, review 4 L-1).
+  const component = join('apps', 'mobile', 'src', 'motion', 'MotionIndicator.tsx');
+  assert.deepEqual(
+    rules(
+      `withRepeat(withTiming(1, { duration: motion.durationMs.loop, easing: Easing.linear }), -1)`,
+      component,
+    ),
+    ['rn-motion-direct', 'rn-easing-literal'],
+  );
+  assert.deepEqual(
+    rules(
+      `withTiming(1, { duration: motion.durationMs.loop })`,
+      join('apps', 'mobile', 'src', 'motion', 'NewSpinner.tsx'),
+    ),
+    ['rn-motion-direct'],
+  );
 });
 
 // Plan 0002 A-8: --default-* fallbacks live in theme.css and, for some, only in Tailwind's compiled code.

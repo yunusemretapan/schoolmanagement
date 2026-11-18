@@ -16,8 +16,11 @@ const RN_STYLE_KEYS =
 /** Reanimated entering/exiting animation families (FadeIn, SlideOutLeft, ZoomInEasyDown…). */
 const RN_LAYOUT_ANIMATIONS = 'Fade|Slide|Zoom|Bounce|Flip|Stretch|Rotate|Roll|LightSpeed|Pinwheel';
 
-/** src/motion/ is the one gateway that turns motion tokens into Reanimated timing (plan 0002 A-7). */
-const inMotionHelpers = (file) => file.includes(`${sep}mobile${sep}src${sep}motion${sep}`);
+/**
+ * src/motion/timing.ts is the one gateway that turns motion tokens into Reanimated timing (plan 0002 A-7);
+ * only that file is exempt — components in src/motion/ are checked like any screen (A-8).
+ */
+const inMotionHelpers = (file) => file.endsWith(`${sep}mobile${sep}src${sep}motion${sep}timing.ts`);
 
 /** A JSX inline style object: style={{ … }} (flat objects; the first "}}" closes it). */
 const INLINE_STYLE = /style=\{\{[\s\S]*?\}\}/g;
