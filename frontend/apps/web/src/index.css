@@ -95,7 +95,7 @@
   --ease-enter: var(--sos-ease-enter);
   --ease-exit: var(--sos-ease-exit);
   --animate-ping: ping var(--sos-duration-loop) var(--sos-ease-exit) infinite;
-  --animate-spin: spin var(--sos-duration-loop) linear infinite;
+  --animate-spin: spin var(--sos-duration-loop) var(--sos-ease-linear) infinite;
 }
 
 /*

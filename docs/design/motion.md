@@ -28,6 +28,7 @@ mobilde `rn-style-number`).
 | `standard` | Ekranda kalan öğenin hareketi |
 | `enter` | Beliren öğe (yavaşlayarak durur) |
 | `exit` | Kaybolan öğe (hızlanarak çıkar) |
+| `linear` | Sabit hız: yalnızca meşgul döngüleri (dönen halka) |
 
 ## Hareketi azalt
 Tercih: **Sistem / Azaltılmış / Normal** (varsayılan Sistem = cihazın "hareketi azalt" ayarı). Azaltılmış iken

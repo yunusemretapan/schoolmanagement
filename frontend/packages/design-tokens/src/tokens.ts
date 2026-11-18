@@ -167,6 +167,8 @@ export const tokens = {
       standard: [0.2, 0, 0, 1],
       enter: [0, 0, 0, 1],
       exit: [0.3, 0, 1, 1],
+      /** Constant speed: busy loops (spinner) only. */
+      linear: [0, 0, 1, 1],
     },
     pressScale: 0.98,
   },

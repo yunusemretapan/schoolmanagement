@@ -22,6 +22,8 @@ export function MotionIndicator({ label }: { label: string }) {
   const { theme, reducedMotion } = useAppearance();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const turn = useSharedValue(0);
+  // The token object is shared by every theme (toNativeTheme passes it through), so this dependency is stable.
+  const { motion } = theme;
 
   useEffect(() => {
     if (reducedMotion) {
@@ -30,11 +32,14 @@ export function MotionIndicator({ label }: { label: string }) {
       return;
     }
     turn.value = withRepeat(
-      withTiming(1, { duration: theme.motion.durationMs.loop, easing: Easing.linear }),
+      withTiming(1, {
+        duration: motion.durationMs.loop,
+        easing: Easing.bezier(...motion.easing.linear),
+      }),
       -1,
     );
     return () => cancelAnimation(turn);
-  }, [reducedMotion, theme.motion.durationMs.loop, turn]);
+  }, [reducedMotion, motion, turn]);
 
   const spin = useAnimatedStyle(() => ({
     transform: [{ rotate: `${turn.value * FULL_TURN_DEG}deg` }],
