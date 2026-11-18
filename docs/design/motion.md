@@ -36,12 +36,14 @@ Tercih: **Sistem / Azaltılmış / Normal** (varsayılan Sistem = cihazın "hare
 **hiçbir animasyon veya geçiş oynamaz**; değişiklik anında görünür, bilgi kaybolmaz (meşgul göstergesi sabit
 bir halka olarak kalır).
 
-- **Web:** `<html data-motion="on|off">` ilk boyamadan önce ayarlanır (`index.html`). Animasyon ve geçiş
+- **Web:** `<html data-motion="on|off">` ilk boyamadan önce ayarlanır (`index.html`). Eğri ya da süre
+  yazılmayan bir geçiş Tailwind'in değil token'ın varsayılanını alır (`--default-transition-*`, `index.css`). Animasyon ve geçiş
   sınıfları yalnızca `motion-ok:` varyantıyla yazılır (`motion-ok:transition-opacity`, `motion-ok:animate-spin`);
   varyantsız `transition-*` / `animate-*` kullanılmaz.
 - **Mobil:** `useAppearance().reducedMotion`. Animasyonlar Reanimated ile yazılır (JS thread'de `setState`
-  ile animasyon yok); `reducedMotion` iken değer doğrudan atanır (`withTiming` yok), `entering` animasyonu
-  verilmez. RN `Modal` her zaman `animationType="none"`; belirme Reanimated ile yapılır. Durdurulamayan yerel
+  ile animasyon yok) ve zamanlama yalnızca `src/motion/timing` üzerinden verilir (`animateTo`, `timing`, `fadeIn`:
+  süre ve eğri adıyla, token'dan; design-lint `rn-motion-direct` bu klasör dışında doğrudan `withTiming` /
+  `FadeIn`… kullanımını yakalar). `reducedMotion` iken değer doğrudan atanır, `entering` animasyonu verilmez. RN `Modal` her zaman `animationType="none"`; belirme Reanimated ile yapılır. Durdurulamayan yerel
   `ActivityIndicator` yerine `MotionIndicator` kullanılır.
 
 ## Test

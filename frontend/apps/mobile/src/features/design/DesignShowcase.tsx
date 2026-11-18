@@ -2,10 +2,11 @@ import { contrastRatio } from '@schoolos/design-tokens';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { AppearancePanel } from '../../appearance/AppearancePanel';
 import { useAppearance } from '../../appearance/AppearanceProvider';
 import { MotionIndicator } from '../../motion/MotionIndicator';
+import { animateTo } from '../../motion/timing';
 import type { NativeTheme } from '../../theme';
 import { BrandColorField } from './BrandColorField';
 
@@ -178,12 +179,7 @@ function MotionSection({ styles }: { styles: Styles }) {
   // AC-2, AC-8: the example moves with the slow duration and standard curve; with reduced motion it jumps.
   useEffect(() => {
     const target = moved ? theme.layout.motionDemoTravel : 0;
-    offset.value = reducedMotion
-      ? target
-      : withTiming(target, {
-          duration: theme.motion.durationMs.slow,
-          easing: Easing.bezier(...theme.motion.easing.standard),
-        });
+    offset.value = reducedMotion ? target : animateTo(theme.motion, target, 'slow', 'standard');
   }, [moved, reducedMotion, offset, theme]);
 
   const slide = useAnimatedStyle(() => ({ transform: [{ translateX: offset.value }] }));

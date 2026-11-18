@@ -1,15 +1,14 @@
 import { useEffect, useMemo } from 'react';
 import { StyleSheet } from 'react-native';
 import Animated, {
-  Easing,
   cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
-  withTiming,
 } from 'react-native-reanimated';
 import { useAppearance } from '../appearance/AppearanceProvider';
 import type { NativeTheme } from '../theme';
+import { animateTo } from './timing';
 
 const FULL_TURN_DEG = 360;
 
@@ -31,13 +30,7 @@ export function MotionIndicator({ label }: { label: string }) {
       turn.value = 0;
       return;
     }
-    turn.value = withRepeat(
-      withTiming(1, {
-        duration: motion.durationMs.loop,
-        easing: Easing.bezier(...motion.easing.linear),
-      }),
-      -1,
-    );
+    turn.value = withRepeat(animateTo(motion, 1, 'loop', 'linear'), -1);
     return () => cancelAnimation(turn);
   }, [reducedMotion, motion, turn]);
 

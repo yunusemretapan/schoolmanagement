@@ -7,7 +7,8 @@ import {
 import { useMemo, useRef, useState, type ComponentRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
+import { fadeIn } from '../motion/timing';
 import type { NativeTheme } from '../theme';
 import { useAppearance } from './AppearanceProvider';
 
@@ -53,7 +54,7 @@ export function AppearancePanel() {
             testID="appearance-panel"
             accessibilityViewIsModal
             aria-modal
-            entering={reducedMotion ? undefined : FadeIn.duration(theme.motion.durationMs.fast)}
+            entering={reducedMotion ? undefined : fadeIn(theme.motion, 'fast', 'enter')}
             style={styles.panel}
           >
             <Text role="heading" style={styles.title}>

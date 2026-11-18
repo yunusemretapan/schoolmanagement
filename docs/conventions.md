@@ -77,6 +77,7 @@ Spec 0002; ayrıntı: `docs/design/motion.md`.
 - Reanimated stil değişikliği RNTL'de `props.style`'a yansımaz — Jest'te `getAnimatedStyle(element)` ile oku, sahte zamanlayıcıyla ilerlet; Jest `resolver: react-native-reanimated/jest/resolver` — from spec 0002 build step 5-6
 - RN'de `role` taşıyan ama `accessible` olmayan `View` RNTL'nin `getByRole`'üne görünmez; grubu `accessible` yapmak ise VoiceOver'da çocuklarını gizler — kapsayıcıyı testID ile bul, rol ve adını prop olarak doğrula — from spec 0002 build step 5
 - Expo `app.json` `userInterfaceStyle: "light"` yerel build'de `useColorScheme()`'i hep 'light'a kilitler; Jest sahtesi bunu yakalamaz — tema destekleyen uygulamada `"automatic"` + `expo-system-ui` (Android) ve `app.json`'u okuyan test — from spec 0002 review 1 H-1 (A-4)
+- Tailwind v4 `transition-*` ve Reanimated `withTiming` / `FadeIn` gibi builder'lar eğri ya da süre verilmezse kendi varsayılanını kullanır (`cubic-bezier(0.4, 0, 0.2, 1)`, `Easing.inOut(quad)`, 300 ms); değer yazılmadığı için regex lint görmez — varsayılanı kaynağında kapat: web `index.css` kilitleri + `--default-transition-*` token'a bağlı, mobil zamanlama yalnızca `src/motion/timing` üzerinden — from spec 0002 review 3 M-1 (A-7)
 - Windows satır sonları — `.gitattributes` ile LF; `mvnw` ve `mvnw.cmd` ikisi de commit edilir — from bootstrap
 
 ## Enforced by tooling

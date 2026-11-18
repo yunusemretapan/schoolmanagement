@@ -166,6 +166,37 @@ test('the web stylesheet holds every required lock and binds the transition defa
   assert.deepEqual(missingLocks(stylesheet.replace('--ease-*: initial;', '')), ['--ease-*: initial']);
 });
 
+test('mobile screens time animations only through src/motion (A-7)', () => {
+  assert.deepEqual(
+    rules(`offset.value = withTiming(64, { duration: theme.motion.durationMs.slow });`, mobile),
+    ['rn-motion-direct'],
+  );
+  assert.deepEqual(
+    rules(`<Animated.View entering={FadeIn.duration(theme.motion.durationMs.fast)} />`, mobile),
+    ['rn-motion-direct'],
+  );
+  assert.deepEqual(rules(`<Animated.View layout={LinearTransition} exiting={SlideOutLeft} />`, mobile), [
+    'rn-motion-direct',
+    'rn-motion-direct',
+  ]);
+  assert.deepEqual(
+    rules(
+      `offset.value = animateTo(theme.motion, 64, 'slow', 'standard'); entering={fadeIn(m, 'fast', 'enter')}`,
+      mobile,
+    ),
+    [],
+  );
+  // The gateway itself may call Reanimated with token values.
+  const helper = join('apps', 'mobile', 'src', 'motion', 'timing.ts');
+  assert.deepEqual(
+    rules(
+      `return withTiming(v, timing(m, d, c)); const [a, b, c, d] = x; Easing.bezier(a, b, c, d);`,
+      helper,
+    ),
+    [],
+  );
+});
+
 test('flags easing written by value (VERIFY 1, F-2)', () => {
   assert.deepEqual(rules(`a { animation: spin var(--sos-duration-loop) linear infinite; }`, css), [
     'css-easing-literal',
@@ -180,15 +211,21 @@ test('flags easing written by value (VERIFY 1, F-2)', () => {
     ),
     [],
   );
-  assert.deepEqual(rules(`withTiming(1, { easing: Easing.linear })`, mobile), ['rn-easing-literal']);
-  assert.deepEqual(rules(`withTiming(1, { easing: Easing.bezier(0.2, 0, 0, 1) })`, mobile), [
+  // Samples are config objects so only the easing rule is under test; withTiming in a screen also
+  // trips rn-motion-direct (A-7), shown in the last assert.
+  assert.deepEqual(rules(`const config = { easing: Easing.linear };`, mobile), ['rn-easing-literal']);
+  assert.deepEqual(rules(`const config = { easing: Easing.bezier(0.2, 0, 0, 1) };`, mobile), [
     'rn-easing-literal',
   ]);
   assert.deepEqual(
-    rules(`withTiming(1, { easing: Easing.bezier(...theme.motion.easing.standard) })`, mobile),
+    rules(`const config = { easing: Easing.bezier(...theme.motion.easing.standard) };`, mobile),
     [],
   );
-  assert.deepEqual(rules(`withTiming(1, { easing: Easing.bezier(...motion.easing.linear) })`, mobile), []);
+  assert.deepEqual(rules(`const config = { easing: Easing.bezier(...motion.easing.linear) };`, mobile), []);
+  assert.deepEqual(rules(`withTiming(1, { easing: Easing.linear })`, mobile), [
+    'rn-motion-direct',
+    'rn-easing-literal',
+  ]);
 });
 
 test('flags CSS lengths and durations written by value', () => {

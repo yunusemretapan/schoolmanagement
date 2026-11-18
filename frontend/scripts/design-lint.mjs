@@ -13,6 +13,12 @@ const RN_STYLE_KEYS =
   'width|height|minWidth|minHeight|maxWidth|maxHeight|margin\\w*|padding\\w*|gap|rowGap|columnGap|top|left|right|bottom|' +
   'fontSize|lineHeight|letterSpacing|borderRadius|border\\w*Width|opacity|elevation|duration|delay|scale|shadowRadius|shadowOpacity';
 
+/** Reanimated entering/exiting animation families (FadeIn, SlideOutLeft, ZoomInEasyDown…). */
+const RN_LAYOUT_ANIMATIONS = 'Fade|Slide|Zoom|Bounce|Flip|Stretch|Rotate|Roll|LightSpeed|Pinwheel';
+
+/** src/motion/ is the one gateway that turns motion tokens into Reanimated timing (plan 0002 A-7). */
+const inMotionHelpers = (file) => file.includes(`${sep}mobile${sep}src${sep}motion${sep}`);
+
 /** A JSX inline style object: style={{ … }} (flat objects; the first "}}" closes it). */
 const INLINE_STYLE = /style=\{\{[\s\S]*?\}\}/g;
 
@@ -142,8 +148,21 @@ export const RULES = [
     message: 'CSS easing written by value — use var(--sos-ease-…)',
   },
   {
+    // Plan 0002 A-7: outside src/motion/ an animation cannot be timed directly, so it cannot forget its
+    // duration or curve and fall back to Reanimated's default; use animateTo / timing / fadeIn instead.
+    id: 'rn-motion-direct',
+    applies: (file) =>
+      /\.(tsx?|jsx?)$/.test(file) && file.includes(`${sep}mobile${sep}`) && !inMotionHelpers(file),
+    pattern: new RegExp(
+      `\\b(?:with(?:Timing|Spring|Decay)|(?:${RN_LAYOUT_ANIMATIONS})\\w*(?:In|Out)\\w*|\\w+Transition)\\b`,
+      'g',
+    ),
+    message: 'Reanimated timing used directly — use src/motion/timing (animateTo, timing, fadeIn)',
+  },
+  {
     id: 'rn-easing-literal',
-    applies: (file) => /\.(tsx?|jsx?)$/.test(file) && file.includes(`${sep}mobile${sep}`),
+    applies: (file) =>
+      /\.(tsx?|jsx?)$/.test(file) && file.includes(`${sep}mobile${sep}`) && !inMotionHelpers(file),
     // Allowed: Easing.bezier(...theme.motion.easing.<name>) or (...motion.easing.<name>) — the token spread in.
     pattern: /\bEasing\.(?!bezier\(\s*\.\.\.\s*(?:theme\.)?motion\.easing\.)\w+(?:\([^)]*\))?/g,
     message: 'React Native easing written by value — use Easing.bezier(...theme.motion.easing.<name>)',
