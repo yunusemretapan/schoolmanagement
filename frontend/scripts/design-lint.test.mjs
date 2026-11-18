@@ -2,9 +2,10 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { join, sep } from 'node:path';
+import { dirname, join, sep } from 'node:path';
 import { test } from 'node:test';
 import {
+  BOUND_DEFAULTS,
   LOCKED_NAMESPACES,
   LOCKED_STYLESHEET,
   REQUIRED_LOCKS,
@@ -13,6 +14,7 @@ import {
   isScanned,
   lintSource,
   missingLocks,
+  OPEN_DEFAULTS,
 } from './design-lint.mjs';
 
 const web = join('apps', 'web', 'src', 'X.tsx');
@@ -194,6 +196,32 @@ test('mobile screens time animations only through src/motion (A-7)', () => {
       helper,
     ),
     [],
+  );
+});
+
+// Plan 0002 A-8: --default-* fallbacks live in theme.css and, for some, only in Tailwind's compiled code.
+const tailwindLib = readFileSync(
+  join(dirname(createRequire(import.meta.url).resolve('tailwindcss/theme.css')), 'dist', 'lib.js'),
+  'utf8',
+);
+const tailwindDefaults = [
+  ...new Set([...`${tailwindTheme}\n${tailwindLib}`.matchAll(/--default-([a-z-]+)/g)].map((m) => m[1])),
+];
+
+test('every Tailwind --default-* fallback is bound to a token or open with a reason (A-8)', () => {
+  assert.ok(tailwindDefaults.includes('border-width'), 'found the fallbacks in tailwindcss/dist/lib.js');
+  const known = [...Object.keys(BOUND_DEFAULTS), ...Object.keys(OPEN_DEFAULTS)];
+  assert.deepEqual(
+    tailwindDefaults.filter((name) => !known.includes(name)),
+    [],
+  );
+  const stylesheet = readFileSync(
+    new URL(`../${LOCKED_STYLESHEET.split(sep).join('/')}`, import.meta.url),
+    'utf8',
+  );
+  assert.deepEqual(
+    missingLocks(stylesheet.replace('--default-border-width: var(--sos-border-hairline);', '')),
+    ['--default-border-width: var(--sos-border-'],
   );
 });
 

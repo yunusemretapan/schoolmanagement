@@ -27,6 +27,11 @@
   /* A transition that names no duration or curve takes these, never Tailwind's own (plan 0002 A-7). */
   --default-transition-duration: var(--sos-duration-fast);
   --default-transition-timing-function: var(--sos-ease-standard);
+  /* Bare border / outline / ring classes take these, never Tailwind's built-in 1px / 3px (plan 0002 A-8). */
+  --default-border-width: var(--sos-border-hairline);
+  --default-outline-width: var(--sos-border-hairline);
+  --default-ring-width: var(--sos-border-hairline);
+  --default-ring-color: var(--sos-focus);
   --color-canvas: var(--sos-bg-canvas);
   --color-surface: var(--sos-bg-surface);
   --color-sunken: var(--sos-bg-sunken);

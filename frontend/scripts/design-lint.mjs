@@ -29,10 +29,6 @@ export const TAILWIND_PALETTE =
   'slate|gray|zinc|neutral|stone|taupe|mauve|mist|olive|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose';
 
 /**
- * VERIFY 1, F-1: the web stylesheet must keep Tailwind's default scales switched off (spec 0002 AC-7).
- * Removing one of these lines brings the default palette / scale back without any other signal.
- */
-/**
  * Plan 0002 A-7: Tailwind's default theme namespaces that carry a visual value (colour, size, shadow, curve…)
  * are switched off at the source; the test checks this list against tailwindcss/theme.css, so a Tailwind
  * upgrade that adds a namespace fails until it is locked here or listed in UNLOCKED_NAMESPACES.
@@ -65,14 +61,39 @@ export const UNLOCKED_NAMESPACES = {
   'max-width':
     'only max-w-prose (65ch, a reading measure); max-w-* by value is forbidden by tailwind-numeric',
   default:
-    'transition defaults are bound to tokens below; font defaults read --font-*, which is locked (resolves to initial)',
+    'every --default-* value is in BOUND_DEFAULTS or OPEN_DEFAULTS (checked against theme.css and dist/lib.js)',
 };
 
+/**
+ * Plan 0002 A-8: Tailwind's --default-* fallbacks. Some live in theme.css, others only in dist/lib.js
+ * (e.g. a bare `border` falls back to 1px there). Each is bound to a token in index.css or left open with a
+ * reason; the test reads both files, so a Tailwind upgrade that adds one fails until it is listed here.
+ */
+export const BOUND_DEFAULTS = {
+  'transition-duration': 'var(--sos-duration-',
+  'transition-timing-function': 'var(--sos-ease-',
+  'border-width': 'var(--sos-border-',
+  'outline-width': 'var(--sos-border-',
+  'ring-width': 'var(--sos-border-',
+  'ring-color': 'var(--sos-',
+};
+
+export const OPEN_DEFAULTS = {
+  'font-family': 'reads --font-sans, which index.css binds to the token font stack',
+  'font-feature-settings': 'reads --font-sans--font-feature-settings: not set, resolves to initial',
+  'font-variation-settings': 'reads --font-sans--font-variation-settings: not set, resolves to initial',
+  'mono-font-family': 'reads --font-mono, locked by --font-*: initial (browser monospace, no Tailwind value)',
+  'mono-font-feature-settings': 'reads a locked --font-mono setting: resolves to initial',
+  'mono-font-variation-settings': 'reads a locked --font-mono setting: resolves to initial',
+};
+
+/**
+ * VERIFY 1 F-1, plan 0002 A-7/A-8: lines the web stylesheet must hold. Removing one brings a Tailwind
+ * default (palette, scale, curve, width) back without any other signal.
+ */
 export const REQUIRED_LOCKS = [
   ...LOCKED_NAMESPACES.map((namespace) => `--${namespace}-*: initial`),
-  // A transition that names no duration or curve must still take token values, never Tailwind's.
-  '--default-transition-duration: var(--sos-duration-',
-  '--default-transition-timing-function: var(--sos-ease-',
+  ...Object.entries(BOUND_DEFAULTS).map(([name, value]) => `--default-${name}: ${value}`),
 ];
 export const LOCKED_STYLESHEET = join('apps', 'web', 'src', 'index.css');
 
