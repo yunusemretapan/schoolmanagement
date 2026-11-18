@@ -40,3 +40,7 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
 - **B-10** — Tasarım vitrini (web `/tasarim`, mobil bağlantı) giriş sistemi olmadığı için her build'de herkese açık
   — Source: spec 0002, self-critique G3 — Severity: low — Recommendation: yetkilendirme spec'inde vitrini yönetici rolüne ve
   geliştirme ortamına kısıtla — Deferred by: yunusemretapan, 2026-11-17, giriş sistemi henüz yok
+- **B-11** — Mobil `AppearancePanel` radyoları react-native-web çıktısında `aria-checked` taşımıyor (RN-web
+  `accessibilityState.checked`'i çevirmiyor); yerel platformda sorun yok — Source: spec 0002, VERIFY round 1 (I-1;
+  `frontend/apps/mobile/src/appearance/AppearancePanel.tsx`, OptionGroup) — Severity: info — Recommendation: mobil web
+  yayınlanırsa `aria-checked={checked}` ekle — Deferred by: yunusemretapan, 2026-11-18, mobil web hedef platform değil
