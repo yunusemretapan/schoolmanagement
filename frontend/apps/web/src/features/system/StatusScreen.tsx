@@ -69,7 +69,7 @@ export function StatusScreen() {
           <button
             type="button"
             onClick={retry}
-            className="mt-lg min-h-control w-full rounded-md bg-brand px-lg py-sm font-semibold text-on-brand outline-focus focus-visible:outline-[length:var(--sos-border-thick)] focus-visible:outline-offset-[var(--sos-border-thick)] hover:opacity-[var(--sos-opacity-pressed)] motion-ok:transition-transform motion-ok:duration-[var(--sos-duration-fast)] motion-ok:ease-standard active:scale-[var(--sos-press-scale)]"
+            className="mt-lg min-h-control w-full rounded-md bg-brand px-lg py-sm font-semibold text-on-brand outline-focus focus-visible:outline-[length:var(--sos-border-thick)] focus-visible:outline-offset-[var(--sos-border-thick)] hover:opacity-[var(--sos-opacity-pressed)] active:scale-[var(--sos-press-scale)]"
           >
             {t('status.retry')}
           </button>

@@ -84,6 +84,17 @@ describe('StatusScreen (web)', () => {
     expect(getSystemStatus).toHaveBeenCalledTimes(2);
   });
 
+  it('gives instant press feedback, not a transition (docs/design/motion.md; review 1, L-5)', async () => {
+    renderWith(async () => {
+      throw new ApiError(undefined, 'TIMEOUT');
+    });
+    const retry = await screen.findByRole('button', { name: 'Tekrar dene' });
+
+    // jsdom cannot play transitions, so the contract is read from the classes: a pressed look, no transition.
+    expect(retry.className).toContain('active:scale-[var(--sos-press-scale)]');
+    expect(retry.className).not.toMatch(/transition/);
+  });
+
   it('retries from the keyboard', async () => {
     const user = userEvent.setup();
     let answer: () => Promise<SystemStatus> = async () => {
