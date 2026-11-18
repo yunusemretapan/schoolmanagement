@@ -1,6 +1,6 @@
 import { STORAGE_KEYS, tokens } from '@schoolos/design-tokens';
 import { act, render, screen, userEvent } from '@testing-library/react-native';
-import { Pressable, Text } from 'react-native';
+import { AccessibilityInfo, Pressable, Text } from 'react-native';
 import { createMemoryStorage, device } from '../test/device';
 import { AppearanceProvider, useAppearance } from './AppearanceProvider';
 
@@ -135,6 +135,34 @@ describe('AppearanceProvider (mobile)', () => {
     await act(async () => pending.forEach((resolve) => resolve(null)));
     expect(await screen.findByTestId('scheme')).toBeOnTheScreen();
     expect(onReady).toHaveBeenCalledTimes(1);
+  });
+
+  it('waits for the device reduce-motion setting even when storage answers first (review 1, L-3)', async () => {
+    let answer: (value: boolean) => void = () => undefined;
+    jest
+      .mocked(AccessibilityInfo.isReduceMotionEnabled)
+      .mockImplementation(() => new Promise<boolean>((resolve) => (answer = resolve)));
+    const onReady = jest.fn();
+    await render(
+      <AppearanceProvider storage={createMemoryStorage()} configuredBrand={null} onReady={onReady}>
+        <Probe />
+      </AppearanceProvider>,
+    );
+
+    // Storage has answered (memory storage resolves at once); the device setting has not.
+    expect(screen.queryByTestId('motion')).not.toBeOnTheScreen();
+    expect(onReady).not.toHaveBeenCalled();
+
+    await act(async () => answer(true));
+    expect(await screen.findByTestId('motion')).toHaveTextContent('off');
+    expect(onReady).toHaveBeenCalledTimes(1);
+  });
+
+  it('still opens when the device reduce-motion setting cannot be read', async () => {
+    jest.mocked(AccessibilityInfo.isReduceMotionEnabled).mockRejectedValue(new Error('unavailable'));
+    await renderProvider();
+
+    expect(text('motion')).toBe('on');
   });
 
   it('uses the configured brand colour, a showcase preview over it, and never saves the preview', async () => {
