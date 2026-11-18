@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { isScanned, lintSource } from './design-lint.mjs';
+import { REQUIRED_LOCKS, isScanned, lintSource, missingLocks } from './design-lint.mjs';
 
 const web = join('apps', 'web', 'src', 'X.tsx');
 const mobile = join('apps', 'mobile', 'src', 'X.tsx');
@@ -89,6 +89,29 @@ test('flags web inline style numbers and units written by value (review 1, L-4)'
   );
   // Outside a style object the same text is not a style (e.g. an option object or a timeout).
   assert.deepEqual(rules(`const delay = { duration: 300 }; setTimeout(run, 300);`, web), []);
+});
+
+test('flags Tailwind default palette classes (VERIFY 1, F-1)', () => {
+  assert.deepEqual(
+    rules(`<p className="bg-red-500 text-gray-700 border-blue-600 hover:bg-white/50" />`, web),
+    ['tailwind-palette', 'tailwind-palette', 'tailwind-palette', 'tailwind-palette'],
+  );
+  assert.deepEqual(
+    rules(
+      `<p className="bg-surface text-ink border-line bg-brand text-on-brand ring-focus text-danger" />`,
+      web,
+    ),
+    [],
+  );
+});
+
+test('the web stylesheet keeps the default scales switched off (VERIFY 1, F-1)', () => {
+  const locked = REQUIRED_LOCKS.map((lock) => `  ${lock};`).join('\n');
+  assert.deepEqual(missingLocks(`@theme inline {\n${locked}\n}`), []);
+  const withoutPalette = locked.replace('--color-*: initial;', '');
+  assert.deepEqual(missingLocks(`@theme inline {\n${withoutPalette}\n}`), ['--color-*: initial']);
+  // A lock that only survives inside a comment does not count.
+  assert.deepEqual(missingLocks(`/* --color-*: initial; */\n${withoutPalette}`), ['--color-*: initial']);
 });
 
 test('flags CSS lengths and durations written by value', () => {

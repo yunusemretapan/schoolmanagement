@@ -16,6 +16,31 @@ const RN_STYLE_KEYS =
 /** A JSX inline style object: style={{ … }} (flat objects; the first "}}" closes it). */
 const INLINE_STYLE = /style=\{\{[\s\S]*?\}\}/g;
 
+const TAILWIND_COLOR_PREFIXES =
+  'bg|text|border|border-[trblxy]|ring|ring-offset|outline|fill|stroke|from|via|to|shadow|decoration|accent|caret|divide|placeholder';
+const TAILWIND_PALETTE =
+  'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose';
+
+/**
+ * VERIFY 1, F-1: the web stylesheet must keep Tailwind's default scales switched off (spec 0002 AC-7).
+ * Removing one of these lines brings the default palette / scale back without any other signal.
+ */
+export const REQUIRED_LOCKS = [
+  '--color-*: initial',
+  '--font-*: initial',
+  '--font-weight-*: initial',
+  '--text-*: initial',
+  '--leading-*: initial',
+  '--radius-*: initial',
+];
+export const LOCKED_STYLESHEET = join('apps', 'web', 'src', 'index.css');
+
+/** The required lock lines missing from the stylesheet text (comments ignored). */
+export function missingLocks(css) {
+  const source = stripComments(css);
+  return REQUIRED_LOCKS.filter((lock) => !source.includes(lock));
+}
+
 const TAILWIND_NUMERIC_PREFIXES =
   'p|px|py|pt|pb|pl|pr|ps|pe|m|mx|my|mt|mb|ml|mr|ms|me|gap|gap-x|gap-y|space-x|space-y|size|w|h|min-w|min-h|max-w|max-h|' +
   'top|left|right|bottom|inset|inset-x|inset-y|start|end|text|leading|tracking|rounded|rounded-[trbl]{1,2}|border|border-[trblxy]|' +
@@ -62,6 +87,16 @@ export const RULES = [
     keep: (match) => !RN_ALLOWED_NUMBERS.has(match[1] ?? ''),
     message:
       'React Native style number written by value — use theme.spacing / size / radius / opacity / motion',
+  },
+  {
+    // VERIFY 1, F-1: a default-palette class silently does nothing once the palette is off; say so instead.
+    id: 'tailwind-palette',
+    applies: (file) => /\.(tsx?|jsx?)$/.test(file) && !file.includes(`${sep}mobile${sep}`),
+    pattern: new RegExp(
+      `(?<![\\w-])(?:[a-z-]+:)*(?:${TAILWIND_COLOR_PREFIXES})-(?:(?:${TAILWIND_PALETTE})-\\d{2,3}|black|white)(?![\\w-])`,
+      'g',
+    ),
+    message: 'Tailwind default colour palette — use a semantic colour (bg-surface, text-ink, bg-brand…)',
   },
   {
     // Review 1, L-4: web inline style objects (style={{ … }}) follow the same rule as RN styles.
@@ -143,6 +178,13 @@ function main() {
       count++;
       console.log(`${relative(root, file)}:${v.line}  ${v.rule}  ${v.text}  — ${v.message}`);
     }
+  }
+  const stylesheet = join(root, LOCKED_STYLESHEET);
+  for (const lock of missingLocks(readFileSync(stylesheet, 'utf8'))) {
+    count++;
+    console.log(
+      `${LOCKED_STYLESHEET}  tailwind-lock  ${lock}  — default scale must stay switched off (spec 0002 AC-7)`,
+    );
   }
   if (count > 0) {
     console.log(`design-lint: ${count} violation(s) in ${files.length} file(s)`);
