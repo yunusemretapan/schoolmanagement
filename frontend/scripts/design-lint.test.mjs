@@ -114,6 +114,31 @@ test('the web stylesheet keeps the default scales switched off (VERIFY 1, F-1)',
   assert.deepEqual(missingLocks(`/* --color-*: initial; */\n${withoutPalette}`), ['--color-*: initial']);
 });
 
+test('flags easing written by value (VERIFY 1, F-2)', () => {
+  assert.deepEqual(rules(`a { animation: spin var(--sos-duration-loop) linear infinite; }`, css), [
+    'css-easing-literal',
+  ]);
+  assert.deepEqual(rules(`a { transition-timing-function: cubic-bezier(0.2, 0, 0, 1); }`, css), [
+    'css-easing-literal',
+  ]);
+  assert.deepEqual(
+    rules(
+      `a { animation: spin var(--sos-duration-loop) var(--sos-ease-linear) infinite; --ease-standard: x; }`,
+      css,
+    ),
+    [],
+  );
+  assert.deepEqual(rules(`withTiming(1, { easing: Easing.linear })`, mobile), ['rn-easing-literal']);
+  assert.deepEqual(rules(`withTiming(1, { easing: Easing.bezier(0.2, 0, 0, 1) })`, mobile), [
+    'rn-easing-literal',
+  ]);
+  assert.deepEqual(
+    rules(`withTiming(1, { easing: Easing.bezier(...theme.motion.easing.standard) })`, mobile),
+    [],
+  );
+  assert.deepEqual(rules(`withTiming(1, { easing: Easing.bezier(...motion.easing.linear) })`, mobile), []);
+});
+
 test('flags CSS lengths and durations written by value', () => {
   assert.deepEqual(rules(`a { transition: opacity 150ms; margin: 4px; }`, css), [
     'css-unit-literal',

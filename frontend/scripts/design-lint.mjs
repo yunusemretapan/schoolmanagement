@@ -99,6 +99,21 @@ export const RULES = [
     message: 'Tailwind default colour palette — use a semantic colour (bg-surface, text-ink, bg-brand…)',
   },
   {
+    // VERIFY 1, F-2 (AC-8): easing curves come from motion.easing; a keyword or a curve by value is not allowed.
+    id: 'css-easing-literal',
+    applies: (file) => file.endsWith('.css'),
+    pattern:
+      /(?<![\w-])(?:linear|ease|ease-in|ease-out|ease-in-out|step-start|step-end|cubic-bezier|steps)(?![\w-])/g,
+    message: 'CSS easing written by value — use var(--sos-ease-…)',
+  },
+  {
+    id: 'rn-easing-literal',
+    applies: (file) => /\.(tsx?|jsx?)$/.test(file) && file.includes(`${sep}mobile${sep}`),
+    // Allowed: Easing.bezier(...theme.motion.easing.<name>) or (...motion.easing.<name>) — the token spread in.
+    pattern: /\bEasing\.(?!bezier\(\s*\.\.\.\s*(?:theme\.)?motion\.easing\.)\w+(?:\([^)]*\))?/g,
+    message: 'React Native easing written by value — use Easing.bezier(...theme.motion.easing.<name>)',
+  },
+  {
     // Review 1, L-4: web inline style objects (style={{ … }}) follow the same rule as RN styles.
     id: 'web-style-number',
     applies: (file) => /\.(tsx|jsx)$/.test(file) && !file.includes(`${sep}mobile${sep}`),

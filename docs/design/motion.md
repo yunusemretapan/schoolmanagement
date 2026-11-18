@@ -13,8 +13,9 @@
 
 ## Süre ve eğri
 Bütün süreler `motion.durationMs`, bütün eğriler `motion.easing` token'larından gelir; kodda süre ya da
-`cubic-bezier` değeri yazılmaz (design-lint yakalar: web'de `css-unit-literal` / `tailwind-arbitrary`,
-mobilde `rn-style-number`).
+`cubic-bezier` / `linear` / `ease` değeri yazılmaz (design-lint yakalar: web'de `css-unit-literal`, `css-easing-literal`,
+`web-style-unit`, `tailwind-arbitrary`; mobilde `rn-style-number`, `rn-easing-literal` — eğri yalnızca
+`Easing.bezier(...theme.motion.easing.<ad>)`).
 
 | Token | Kullanım |
 |---|---|
