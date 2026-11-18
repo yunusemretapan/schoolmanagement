@@ -13,7 +13,7 @@ import {
  * change with light/dark and the institution's brand colour. index.css maps them to Tailwind utilities.
  */
 
-const kebab = (segment: string) => segment.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+export const kebab = (segment: string) => segment.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 
 /** Typography, spacing, sizes, layout, radius, borders, opacity, motion: --sos-<group>-<name>. */
 export function scaleVariables(source: Tokens = tokens): Record<string, string> {

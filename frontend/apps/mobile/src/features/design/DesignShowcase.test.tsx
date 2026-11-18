@@ -5,7 +5,7 @@ import { AppearanceProvider } from '../../appearance/AppearanceProvider';
 import { createMemoryStorage } from '../../test/device';
 import { DesignShowcase } from './DesignShowcase';
 
-const SECTIONS = ['Kurum rengi', 'Renkler', 'Yazı', 'Boşluk, köşe ve gölge', 'Hareket'];
+const SECTIONS = ['Kurum rengi', 'Renkler', 'Yazı', 'Boşluk, ölçü, köşe ve gölge', 'Hareket'];
 
 async function renderShowcase(saved: Record<string, string> = {}, onBack = jest.fn()) {
   await render(
@@ -39,12 +39,16 @@ describe('DesignShowcase (mobile, spec 0002 AC-9)', () => {
       Object.keys(tokens.typography.scale).length,
     );
     for (const [name, value] of Object.entries(tokens.spacing)) {
-      expect(section('Boşluk, köşe ve gölge').getByText(`${name} · ${value}`)).toBeOnTheScreen();
+      expect(section('Boşluk, ölçü, köşe ve gölge').getByText(`${name} · ${value}`)).toBeOnTheScreen();
+    }
+    // Review 1, M-1: the size scale is shown too.
+    for (const [name, value] of Object.entries(tokens.size)) {
+      expect(section('Boşluk, ölçü, köşe ve gölge').getByText(`${name} · ${value}`)).toBeOnTheScreen();
     }
     for (const name of Object.keys(tokens.radius)) {
-      expect(section('Boşluk, köşe ve gölge').getByText(name)).toBeOnTheScreen();
+      expect(section('Boşluk, ölçü, köşe ve gölge').getByText(name)).toBeOnTheScreen();
     }
-    expect(section('Boşluk, köşe ve gölge').getByText('Kart gölgesi')).toBeOnTheScreen();
+    expect(section('Boşluk, ölçü, köşe ve gölge').getByText('Kart gölgesi')).toBeOnTheScreen();
     for (const [name, ms] of Object.entries(tokens.motion.durationMs)) {
       expect(section('Hareket').getByText(`${name} · ${ms} ms`)).toBeOnTheScreen();
     }

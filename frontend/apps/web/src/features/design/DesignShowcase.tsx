@@ -3,6 +3,7 @@ import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppearancePanel } from '../../appearance/AppearancePanel';
 import { useAppearance } from '../../appearance/AppearanceProvider';
+import { kebab } from '../../theme';
 import { BrandColorField } from './BrandColorField';
 
 // Tailwind only emits classes it can see written out, so every scale step is listed explicitly.
@@ -141,6 +142,20 @@ function ScaleSection() {
               aria-hidden="true"
               className="h-sm rounded-sm bg-brand"
               style={{ width: `var(--sos-spacing-${name})` }}
+            />
+          </div>
+        ))}
+      </div>
+      <div className="flex flex-col gap-sm">
+        {Object.entries(tokens.size).map(([name, value]) => (
+          <div key={name} className="flex items-center gap-md">
+            <span className="w-label-column shrink-0 whitespace-nowrap text-xs text-ink-muted">
+              {t('showcase.scales.size', { name, value })}
+            </span>
+            <span
+              aria-hidden="true"
+              className="h-sm max-w-full rounded-sm bg-ink-muted"
+              style={{ width: `var(--sos-size-${kebab(name)})` }}
             />
           </div>
         ))}

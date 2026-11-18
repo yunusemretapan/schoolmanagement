@@ -51,8 +51,9 @@
       "sample": "Veliyle iletişim tek yerde"
     },
     "scales": {
-      "title": "Boşluk, köşe ve gölge",
+      "title": "Boşluk, ölçü, köşe ve gölge",
       "spacing": "{{name}} · {{value}}",
+      "size": "{{name}} · {{value}}",
       "shadow": "Kart gölgesi"
     },
     "motion": {

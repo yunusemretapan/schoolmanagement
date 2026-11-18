@@ -145,6 +145,16 @@ function ScaleSection({ styles }: { styles: Styles }) {
           </View>
         ))}
       </View>
+      <View style={styles.list}>
+        {Object.entries(theme.size).map(([name, value]) => (
+          <View key={name} style={styles.scaleRow}>
+            <Text style={[styles.caption, styles.labelColumn]}>
+              {t('showcase.scales.size', { name, value })}
+            </Text>
+            <View style={[styles.sizeBar, { width: value }]} />
+          </View>
+        ))}
+      </View>
       <View style={styles.wrap}>
         {Object.entries(theme.radius).map(([name, value]) => (
           <View key={name} style={[styles.radiusSwatch, { borderRadius: value }]}>
@@ -255,6 +265,13 @@ function createStyles(theme: NativeTheme) {
     labelColumn: { width: theme.layout.labelColumn },
     sample: { flexShrink: 1, color: colors.ink },
     spacingBar: { height: spacing.sm, borderRadius: radius.sm, backgroundColor: colors.brand },
+    sizeBar: {
+      flexShrink: 1,
+      maxWidth: '100%',
+      height: spacing.sm,
+      borderRadius: radius.sm,
+      backgroundColor: colors.inkMuted,
+    },
     radiusSwatch: {
       width: size.swatch,
       height: size.swatch,

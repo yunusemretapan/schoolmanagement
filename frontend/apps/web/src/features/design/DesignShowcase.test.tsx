@@ -34,15 +34,19 @@ describe('DesignShowcase (web, spec 0002 AC-9)', () => {
     renderShowcase();
 
     expect(screen.getByRole('heading', { level: 1, name: 'Tasarım vitrini' })).toBeInTheDocument();
-    for (const name of ['Kurum rengi', 'Renkler', 'Yazı', 'Boşluk, köşe ve gölge', 'Hareket']) {
+    for (const name of ['Kurum rengi', 'Renkler', 'Yazı', 'Boşluk, ölçü, köşe ve gölge', 'Hareket']) {
       expect(screen.getByRole('region', { name })).toBeInTheDocument();
     }
     const typography = screen.getByRole('region', { name: 'Yazı' });
     expect(within(typography).getAllByText('Veliyle iletişim tek yerde')).toHaveLength(
       Object.keys(tokens.typography.scale).length,
     );
-    const scales = screen.getByRole('region', { name: 'Boşluk, köşe ve gölge' });
+    const scales = screen.getByRole('region', { name: 'Boşluk, ölçü, köşe ve gölge' });
     for (const [name, value] of Object.entries(tokens.spacing)) {
+      expect(within(scales).getByText(`${name} · ${value}`)).toBeInTheDocument();
+    }
+    // Review 1, M-1: the size scale is shown too.
+    for (const [name, value] of Object.entries(tokens.size)) {
       expect(within(scales).getByText(`${name} · ${value}`)).toBeInTheDocument();
     }
     const motion = screen.getByRole('region', { name: 'Hareket' });
