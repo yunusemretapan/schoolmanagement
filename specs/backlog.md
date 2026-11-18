@@ -54,3 +54,8 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
   `<SlideIndicator>`, `<ZoomInput>` gibi adları da işaretler — bugün yanlış pozitif yok — Source: spec 0002, review round 4
   (I-1) — Severity: info — Recommendation: Reanimated export adlarına sabitle ya da import kaynağına göre denetle —
   Deferred by: yunusemretapan, 2026-11-18, mevcut kaynakta etki yok
+- **B-14** — Spec 0002'nin yerel iOS/Android cihaz gözlemi yapılmadı: Sistem seçiliyken cihaz açık→koyu (yeniden başlatmadan, AC-1),
+  TalkBack/VoiceOver ile Görünüm paneli ve geri hareketi (AC-10), yerel "hareketi azalt" (AC-2). Kriterler Jest + Expo web + config
+  introspection ile PASS (spec 0001 AC-6 emsali); yerel gözlem ek güvence — Source: spec 0002, VERIFY round 1 (G-1) — Severity: low
+  — Recommendation: Android emülatör (ve imkân olursa iOS simülatör) development build'de gözlem + ekran görüntüsü; aksayan
+  davranış bug raporu olur — Deferred by: yunusemretapan, 2026-11-18, emülatör kurulumu sonraya bırakıldı
