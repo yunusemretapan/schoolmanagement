@@ -44,6 +44,75 @@ describe('web theme (spec 0001 AC-7, spec 0002)', () => {
     expect(schemeVariables('dark', 'nope')['--sos-brand-solid']).toBe(tokens.semantic.dark.brand.solid);
   });
 
+  // Review 1, L-2: replaces spec 0001's "one variable per token and nothing else" for the token v2 shape.
+  describe('has one variable per token and nothing else', () => {
+    const kebab = (name: string) => name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+    const named = (prefix: string, group: object) =>
+      Object.keys(group).map((k) => `--sos-${prefix}-${kebab(k)}`);
+
+    it('knows every token group (a new group needs its web variables first)', () => {
+      expect(Object.keys(tokens).sort()).toEqual(
+        [
+          'borderWidth',
+          'elevation',
+          'layer',
+          'layout',
+          'motion',
+          'opacity',
+          'palette',
+          'radius',
+          'semantic',
+          'size',
+          'spacing',
+          'typography',
+        ].sort(),
+      );
+    });
+
+    it('scale variables', () => {
+      const expected = [
+        '--sos-font-sans',
+        ...Object.keys(tokens.typography.scale).flatMap((k) => [
+          `--sos-text-${kebab(k)}`,
+          `--sos-text-${kebab(k)}-line-height`,
+        ]),
+        ...named('weight', tokens.typography.weight),
+        ...named('spacing', tokens.spacing),
+        ...named('size', tokens.size),
+        ...named('layout', tokens.layout),
+        ...named('radius', tokens.radius),
+        ...named('border', tokens.borderWidth),
+        ...named('layer', tokens.layer),
+        ...named('opacity', tokens.opacity),
+        ...named('duration', tokens.motion.durationMs),
+        ...named('ease', tokens.motion.easing),
+        '--sos-press-scale',
+      ];
+
+      expect(Object.keys(scaleVariables()).sort()).toEqual(expected.sort());
+    });
+
+    it.each(['light', 'dark'] as const)(
+      '%s scheme variables: every semantic role and elevation',
+      (scheme) => {
+        const leaves = (node: object, path: string[] = []): string[] =>
+          Object.entries(node).flatMap(([key, value]) =>
+            typeof value === 'object'
+              ? leaves(value as object, [...path, key])
+              : [[...path, key].map(kebab).join('-')],
+          );
+        // `shadow` is the base colour of the elevation tokens and reaches CSS only through --sos-elevation-*.
+        const roles = leaves(tokens.semantic[scheme]).filter((role) => role !== 'shadow');
+        const expected = [
+          ...roles.map((role) => `--sos-${role}`),
+          ...named('elevation', tokens.elevation[scheme]),
+        ];
+
+        expect(Object.keys(schemeVariables(scheme)).sort()).toEqual(expected.sort());
+      },
+    );
+  });
+
   it('applies the variables to an element', () => {
     const element = document.createElement('div');
     applyVariables(element, schemeVariables('light'));
