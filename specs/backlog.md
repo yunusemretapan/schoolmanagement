@@ -44,3 +44,13 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
   `accessibilityState.checked`'i çevirmiyor); yerel platformda sorun yok — Source: spec 0002, VERIFY round 1 (I-1;
   `frontend/apps/mobile/src/appearance/AppearancePanel.tsx`, OptionGroup) — Severity: info — Recommendation: mobil web
   yayınlanırsa `aria-checked={checked}` ekle — Deferred by: yunusemretapan, 2026-11-18, mobil web hedef platform değil
+- **B-12** — Örtük zamanlamalı mobil animasyon API'leri design-lint `rn-motion-direct` kapsamı dışında: Reanimated `Layout`
+  takma adı, `Keyframe`, Reanimated 4 CSS geçiş/animasyon prop'ları (`transitionProperty`/`transitionDuration`,
+  `animationName`), react-native `Animated.timing/spring/decay`, `LayoutAnimation` — bugün kodda yok — Source: spec 0002,
+  review round 4 (L-2; `frontend/scripts/design-lint.mjs`, rn-motion-direct) — Severity: low — Recommendation: ilk kullanan
+  spec (0004 mobil bileşenler) kuralı genişletsin ya da `src/motion/timing`'e yardımcı eklesin — Deferred by: yunusemretapan,
+  2026-11-18, A-8 kapsam sınırı
+- **B-13** — `rn-motion-direct` deseni geniş: `\w+Transition` ve `(Fade|Slide|Zoom…)\w*(In|Out)` React `useTransition`,
+  `<SlideIndicator>`, `<ZoomInput>` gibi adları da işaretler — bugün yanlış pozitif yok — Source: spec 0002, review round 4
+  (I-1) — Severity: info — Recommendation: Reanimated export adlarına sabitle ya da import kaynağına göre denetle —
+  Deferred by: yunusemretapan, 2026-11-18, mevcut kaynakta etki yok
