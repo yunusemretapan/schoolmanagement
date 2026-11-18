@@ -11,5 +11,22 @@
     "unreachable": "Sunucuya ulaşılamıyor",
     "retry": "Tekrar dene",
     "loading": "Yükleniyor"
+  },
+  "appearance": {
+    "open": "Görünüm",
+    "title": "Görünüm ayarları",
+    "close": "Kapat",
+    "scheme": {
+      "label": "Görünüm",
+      "system": "Sistem",
+      "light": "Açık",
+      "dark": "Koyu"
+    },
+    "motion": {
+      "label": "Hareket",
+      "system": "Sistem",
+      "reduced": "Azaltılmış",
+      "normal": "Normal"
+    }
   }
 }

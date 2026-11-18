@@ -1,26 +1,23 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  AccessibilityInfo,
-  ActivityIndicator,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { nativeTheme as theme } from '../../theme';
+import { AccessibilityInfo, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppearancePanel } from '../../appearance/AppearancePanel';
+import { useAppearance } from '../../appearance/AppearanceProvider';
+import { MotionIndicator } from '../../motion/MotionIndicator';
+import type { NativeTheme } from '../../theme';
 import { useSystemStatus, type StatusView } from './useSystemStatus';
 
-const DOT: Record<StatusView['kind'], string> = {
-  checking: theme.colors.pending,
-  running: theme.colors.success,
-  unreachable: theme.colors.danger,
+const DOT: Record<StatusView['kind'], keyof NativeTheme['colors']> = {
+  checking: 'pending',
+  running: 'success',
+  unreachable: 'danger',
 };
 
 export function StatusScreen() {
   const { t } = useTranslation();
   const { view, retry } = useSystemStatus();
+  const { theme } = useAppearance();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const announcement =
     view.kind === 'checking'
       ? t('status.checking')
@@ -42,23 +39,22 @@ export function StatusScreen() {
           <View style={styles.logo}>
             <Text style={styles.logoLetter}>{t('app.name').charAt(0)}</Text>
           </View>
-          <View>
+          <View style={styles.brandText}>
             <Text style={styles.appName}>{t('app.name')}</Text>
             <Text style={styles.tagline}>{t('app.tagline')}</Text>
           </View>
+          <AppearancePanel />
         </View>
 
         <View testID="status-region" accessibilityLiveRegion="polite" style={styles.status}>
-          <View style={[styles.dot, { backgroundColor: DOT[view.kind] }]} />
+          <View style={[styles.dot, { backgroundColor: theme.colors[DOT[view.kind]] }]} />
           <View style={styles.statusText}>
             {view.kind === 'checking' && (
               <>
                 <Text style={styles.title}>{t('status.checking')}</Text>
-                <ActivityIndicator
-                  accessibilityLabel={t('status.loading')}
-                  color={theme.colors.brand}
-                  style={styles.spinner}
-                />
+                <View style={styles.spinner}>
+                  <MotionIndicator label={t('status.loading')} />
+                </View>
               </>
             )}
             {view.kind === 'running' && (
@@ -88,60 +84,59 @@ export function StatusScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.canvas,
-    padding: theme.spacing.lg,
-  },
-  card: {
-    width: '100%',
-    maxWidth: theme.layout.cardMaxWidth,
-    backgroundColor: theme.colors.raised,
-    borderColor: theme.colors.line,
-    borderWidth: 1,
-    borderRadius: theme.radius.lg,
-    padding: theme.spacing.xl,
-    boxShadow: theme.shadow.card,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.xl,
-  },
-  logo: {
-    width: theme.size.logo,
-    height: theme.size.logo,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.brand,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoLetter: { color: theme.colors.onBrand, fontSize: theme.fontSize.lg, fontWeight: theme.fontWeight.bold },
-  appName: { color: theme.colors.ink, fontSize: theme.fontSize.md, fontWeight: theme.fontWeight.bold },
-  tagline: { color: theme.colors.inkMuted, fontSize: theme.fontSize.sm },
-  status: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md },
-  dot: { width: theme.size.dot, height: theme.size.dot, borderRadius: theme.radius.pill },
-  statusText: { flexShrink: 1 },
-  title: { color: theme.colors.ink, fontSize: theme.fontSize.lg, fontWeight: theme.fontWeight.semibold },
-  version: { color: theme.colors.inkMuted, fontSize: theme.fontSize.sm },
-  spinner: { alignSelf: 'flex-start', marginTop: theme.spacing.xs },
-  button: {
-    marginTop: theme.spacing.lg,
-    backgroundColor: theme.colors.brand,
-    borderRadius: theme.radius.md,
-    paddingVertical: theme.spacing.sm + theme.spacing.xs,
-    minHeight: theme.size.control,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonPressed: { opacity: theme.opacity.pressed, transform: [{ scale: theme.motion.pressScale }] },
-  buttonLabel: {
-    color: theme.colors.onBrand,
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.semibold,
-  },
-});
+function createStyles(theme: NativeTheme) {
+  return StyleSheet.create({
+    screen: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.colors.canvas,
+      padding: theme.spacing.lg,
+    },
+    card: {
+      width: '100%',
+      maxWidth: theme.layout.cardMaxWidth,
+      backgroundColor: theme.colors.raised,
+      borderColor: theme.colors.line,
+      borderWidth: theme.borderWidth.hairline,
+      borderRadius: theme.radius.lg,
+      padding: theme.spacing.xl,
+      boxShadow: theme.shadow.card,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+      marginBottom: theme.spacing.xl,
+    },
+    logo: {
+      width: theme.size.logo,
+      height: theme.size.logo,
+      borderRadius: theme.radius.md,
+      backgroundColor: theme.colors.brand,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    logoLetter: { ...theme.text('lg', 'bold'), color: theme.colors.onBrand },
+    brandText: { flex: 1 },
+    appName: { ...theme.text('md', 'bold'), color: theme.colors.ink },
+    tagline: { ...theme.text('sm'), color: theme.colors.inkMuted },
+    status: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md },
+    dot: { width: theme.size.dot, height: theme.size.dot, borderRadius: theme.radius.pill },
+    statusText: { flexShrink: 1 },
+    title: { ...theme.text('lg', 'semibold'), color: theme.colors.ink },
+    version: { ...theme.text('sm'), color: theme.colors.inkMuted },
+    spinner: { alignSelf: 'flex-start', marginTop: theme.spacing.xs },
+    button: {
+      marginTop: theme.spacing.lg,
+      backgroundColor: theme.colors.brand,
+      borderRadius: theme.radius.md,
+      paddingVertical: theme.spacing.sm + theme.spacing.xs,
+      minHeight: theme.size.control,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    buttonPressed: { opacity: theme.opacity.pressed, transform: [{ scale: theme.motion.pressScale }] },
+    buttonLabel: { ...theme.text('md', 'semibold'), color: theme.colors.onBrand },
+  });
+}

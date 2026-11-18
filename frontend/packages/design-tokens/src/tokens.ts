@@ -145,6 +145,8 @@ export const tokens = {
     glow: 0.15,
     pulse: 0.6,
     pressed: 0.85,
+    /** Dims the screen behind a modal panel (mobile). */
+    scrim: 0.4,
   },
   elevation: {
     light: { card: `0 24px 64px -24px ${withAlpha(light.shadow, 0.25)}` },

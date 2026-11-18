@@ -28,6 +28,20 @@ describe('mobile theme (spec 0001 AC-7, spec 0002)', () => {
     expect(toNativeTheme(changed).spacing.md).toBe(18);
   });
 
+  it('maps every weight to its own loaded Inter face', () => {
+    expect(nativeTheme.fontFace).toEqual({
+      regular: 'Inter_400Regular',
+      medium: 'Inter_500Medium',
+      semibold: 'Inter_600SemiBold',
+      bold: 'Inter_700Bold',
+    });
+    expect(nativeTheme.text('lg', 'semibold')).toEqual({
+      fontFamily: 'Inter_600SemiBold',
+      fontSize: tokens.typography.scale.lg.size,
+      lineHeight: tokens.typography.scale.lg.lineHeight,
+    });
+  });
+
   it('brand colour flows into the theme', () => {
     const theme = toNativeTheme(tokens, 'dark', '#FEF08A');
     const brand = deriveBrand('#FEF08A', 'dark');
