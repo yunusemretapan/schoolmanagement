@@ -23,7 +23,8 @@
 - **Token saklama (plan 0003, R2):** access token her istemcide yalnızca bellekte. Web: refresh token yalnızca
   `sos_refresh` çerezinde (HttpOnly, Secure, SameSite=Strict, Path=/api/v1/auth); JavaScript göremez. Mobil: SecureStore
   (iOS Keychain / Android Keystore). Expo web: yalnızca bellek (geliştirme yüzeyi). İstemci aynı anda tek yenileme yapar
-  (iki paralel yenileme yeniden kullanım sayılır).
+  (iki paralel yenileme yeniden kullanım sayılır); web'de sekmeler aynı çerezi paylaştığı için yenileme tarayıcının
+  sekmeler arası kilidinde (Web Locks API, `sos-refresh`) yapılır (review 1, L-3).
 - **Kurum bağlamı:** tenant yalnızca imzalı token'dan gelir; başlık, parametre veya gövdedeki kurum bilgisi yok sayılır.
   Uygulama veritabanına süper kullanıcı olmayan, `BYPASSRLS` yetkisi olmayan bir rolle bağlanır.
 - **2FA (TOTP) zorunlu:** Kurucu/Yönetici ve Muhasebe rolleri. Diğer rollerde isteğe bağlı.

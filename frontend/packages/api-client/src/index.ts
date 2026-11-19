@@ -59,6 +59,24 @@ export interface AuthOptions {
   tokens: TokenStore;
   /** Called once when a signed-in call finds the session over (expired, ended elsewhere, or reused). */
   onSessionExpired?: () => void;
+  /**
+   * Cross-tab lock for web refreshes (review 1, L-3): tabs share the refresh cookie, so two tabs refreshing at once
+   * would present the same token twice — the server treats that as reuse and ends the session. Defaults to the
+   * browser's Web Locks API when present.
+   */
+  locks?: RefreshLock;
+}
+
+/** The slice of the Web Locks API the client needs. */
+export interface RefreshLock {
+  request<T>(name: string, callback: () => Promise<T>): Promise<T>;
+}
+
+export const REFRESH_LOCK_NAME = 'sos-refresh';
+
+function browserLocks(): RefreshLock | undefined {
+  const locks = (globalThis.navigator as { locks?: RefreshLock } | undefined)?.locks;
+  return locks === undefined ? undefined : { request: (name, callback) => locks.request(name, callback) };
 }
 
 export interface ApiClient {
@@ -80,6 +98,7 @@ export function createApiClient(
 ): ApiClient {
   const client = createClient<paths>({ baseUrl, fetch: (request) => fetchImpl(request) });
   const { clientType, tokens } = auth;
+  const locks = clientType === 'WEB' ? (auth.locks ?? browserLocks()) : undefined;
   /** ok: new tokens · refused: the server ended the session · unreachable: no answer; tokens kept (review 1, L-2). */
   type RefreshResult = 'ok' | 'refused' | 'unreachable';
   let refreshing: Promise<RefreshResult> | null = null;
@@ -107,12 +126,15 @@ export function createApiClient(
         if (clientType === 'MOBILE' && refreshToken === null) {
           return 'refused';
         }
-        const { data, response } = await withTimeout(LOGIN_TIMEOUT_MS, undefined, (signal) =>
-          client.POST('/api/v1/auth/refresh', {
-            body: refreshToken === null ? undefined : { refreshToken },
-            signal,
-          }),
-        );
+        const send = () =>
+          withTimeout(LOGIN_TIMEOUT_MS, undefined, (signal) =>
+            client.POST('/api/v1/auth/refresh', {
+              body: refreshToken === null ? undefined : { refreshToken },
+              signal,
+            }),
+          );
+        const { data, response } =
+          locks === undefined ? await send() : await locks.request(REFRESH_LOCK_NAME, send);
         if (data !== undefined) {
           await store(data);
           return 'ok';

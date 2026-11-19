@@ -273,6 +273,69 @@ describe('an unreachable server is not the end of the session (review 1, L-2)', 
   });
 });
 
+describe('web refresh across tabs (review 1, L-3)', () => {
+  it('runs inside the shared refresh lock, one tab at a time', async () => {
+    const order: string[] = [];
+    let queue = Promise.resolve();
+    const locks = {
+      request<T>(name: string, callback: () => Promise<T>): Promise<T> {
+        const run = queue.then(async () => {
+          order.push(`enter ${name}`);
+          const result = await callback();
+          order.push(`leave ${name}`);
+          return result;
+        });
+        queue = run.then(
+          () => undefined,
+          () => undefined,
+        );
+        return run;
+      },
+    };
+    const { fetchImpl } = backend({
+      'POST /api/v1/auth/refresh': () => json({ accessToken: 'a', expiresInSeconds: 900 }),
+    });
+    // Two tabs: two clients sharing one cookie jar (the browser's).
+    const tabA = createApiClient('http://api.test', fetchImpl, {
+      clientType: 'WEB',
+      tokens: createMemoryTokenStore(),
+      locks,
+    });
+    const tabB = createApiClient('http://api.test', fetchImpl, {
+      clientType: 'WEB',
+      tokens: createMemoryTokenStore(),
+      locks,
+    });
+
+    await Promise.all([tabA.restoreSession(), tabB.restoreSession()]);
+
+    expect(order).toEqual([
+      'enter sos-refresh',
+      'leave sos-refresh',
+      'enter sos-refresh',
+      'leave sos-refresh',
+    ]);
+  });
+
+  it('mobile does not use the browser lock', async () => {
+    const locks = { request: vi.fn() };
+    const tokens = createMemoryTokenStore();
+    await tokens.saveRefreshToken('r1');
+    const { fetchImpl } = backend({
+      'POST /api/v1/auth/refresh': () =>
+        json({ accessToken: 'a', expiresInSeconds: 900, refreshToken: 'r2' }),
+    });
+
+    await createApiClient('http://api.test', fetchImpl, {
+      clientType: 'MOBILE',
+      tokens,
+      locks,
+    }).restoreSession();
+
+    expect(locks.request).not.toHaveBeenCalled();
+  });
+});
+
 describe('restoreSession and logout', () => {
   it('mobile without a stored refresh token has no session to restore and asks nothing', async () => {
     const { fetchImpl } = backend({});
