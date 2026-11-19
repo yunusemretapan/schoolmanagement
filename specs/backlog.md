@@ -60,3 +60,7 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
   (`backend/webapi/.../security/InMemorySourceRateLimiter.java`) — Severity: medium — Recommendation: canlıya çıkıştan önce
   güvenilen vekil başlığını (`X-Forwarded-For`, yalnızca bilinen vekilden) okuyan kaynak çözümü ve paylaşılan sayaç
   (Postgres veya Redis) — Deferred by: yunusemretapan, 2026-11-19, plan 0003 R4 kararı; tek sunuculu geliştirme
+- **B-17** — Bozuk JSON gövdesi (`HttpMessageNotReadableException`) 400 yerine 500 `INTERNAL_ERROR` dönüyor ve ERROR log'u
+  üretiyor; iç ayrıntı sızmıyor — Source: spec 0003, VERIFY round 1 (F-1; `backend/webapi/.../errors/GlobalExceptionHandler.java`)
+  — Severity: low — Recommendation: okunamayan gövdeyi 400 `VALIDATION_FAILED`'e eşle, 4xx'i ERROR'a yazma; bir webapi testiyle
+  — Deferred by: yunusemretapan, 2026-11-20, spec 0001'den beri var, spec dışı
