@@ -21,10 +21,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sign in with e-mail or phone and password (spec 0003). Public.
+         * @description WEB clients get the refresh token only as an HttpOnly cookie (sos_refresh); MOBILE clients get it in the body. Unknown identifier, wrong password and locked account all answer 401 IDENTITY_INVALID_CREDENTIALS.
+         */
+        post: operations["login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rotate the refresh token and get a new access token (spec 0003). Public.
+         * @description MOBILE sends the refresh token in the body; WEB sends nothing and the browser sends the cookie.
+         */
+        post: operations["refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** End this device's session (spec 0003). Bearer token required. */
+        post: operations["logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The signed-in user's own account (spec 0003). Bearer token required. */
+        get: operations["getMe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        LoginRequest: {
+            /** @description E-mail or Turkish mobile number. */
+            identifier: string;
+            password: string;
+            clientType: components["schemas"]["ClientType"];
+        };
+        /** @enum {string} */
+        ClientType: "WEB" | "MOBILE";
+        RefreshRequest: {
+            refreshToken?: string;
+        };
+        TokenResponse: {
+            accessToken: string;
+            expiresInSeconds: number;
+            /** @description MOBILE only. */
+            refreshToken?: string;
+        };
+        CurrentUserResponse: {
+            /** Format: uuid */
+            userId: string;
+            fullName: string;
+            institutionName: string;
+            roles: components["schemas"]["Role"][];
+        };
+        /** @enum {string} */
+        Role: "ADMIN" | "TEACHER" | "GUARDIAN" | "ACCOUNTANT";
         SystemStatusResponse: {
             /** @enum {string} */
             status: "UP";
@@ -38,6 +138,10 @@ export interface components {
             instance?: string;
             /** @description Stable error code, e.g. NOT_FOUND (docs/conventions.md, Error handling). */
             code: string;
+            /** @description VALIDATION_FAILED only — field → error code. */
+            errors?: {
+                [key: string]: string;
+            };
         };
     };
     responses: never;
@@ -67,6 +171,128 @@ export interface operations {
                 };
             };
             /** @description Any error, as RFC 9457 ProblemDetails. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Signed in. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+            /** @description 400 VALIDATION_FAILED, 401 IDENTITY_INVALID_CREDENTIALS, 429 IDENTITY_RATE_LIMITED. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    refresh: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RefreshRequest"];
+            };
+        };
+        responses: {
+            /** @description New tokens. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+            /** @description 401 IDENTITY_SESSION_EXPIRED. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Signed out. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Any error, as RFC 9457 ProblemDetails. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    getMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Name, institution and roles. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentUserResponse"];
+                };
+            };
+            /** @description 401 AUTH_UNAUTHENTICATED. */
             default: {
                 headers: {
                     [name: string]: unknown;

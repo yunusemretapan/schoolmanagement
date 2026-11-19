@@ -23,8 +23,149 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/auth/login:
+    post:
+      operationId: login
+      summary: Sign in with e-mail or phone and password (spec 0003). Public.
+      description: >-
+        WEB clients get the refresh token only as an HttpOnly cookie (sos_refresh); MOBILE clients get it in the body.
+        Unknown identifier, wrong password and locked account all answer 401 IDENTITY_INVALID_CREDENTIALS.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Signed in.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        default:
+          description: 400 VALIDATION_FAILED, 401 IDENTITY_INVALID_CREDENTIALS, 429 IDENTITY_RATE_LIMITED.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/auth/refresh:
+    post:
+      operationId: refresh
+      summary: Rotate the refresh token and get a new access token (spec 0003). Public.
+      description: MOBILE sends the refresh token in the body; WEB sends nothing and the browser sends the cookie.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: New tokens.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        default:
+          description: 401 IDENTITY_SESSION_EXPIRED.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/auth/logout:
+    post:
+      operationId: logout
+      summary: End this device's session (spec 0003). Bearer token required.
+      security:
+        - bearer: []
+      responses:
+        '204':
+          description: Signed out.
+        default:
+          description: Any error, as RFC 9457 ProblemDetails.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/me:
+    get:
+      operationId: getMe
+      summary: The signed-in user's own account (spec 0003). Bearer token required.
+      security:
+        - bearer: []
+      responses:
+        '200':
+          description: Name, institution and roles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUserResponse'
+        default:
+          description: 401 AUTH_UNAUTHENTICATED.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
 components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [identifier, password, clientType]
+      properties:
+        identifier:
+          type: string
+          description: E-mail or Turkish mobile number.
+        password:
+          type: string
+        clientType:
+          $ref: '#/components/schemas/ClientType'
+    ClientType:
+      type: string
+      enum: [WEB, MOBILE]
+    RefreshRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        refreshToken:
+          type: string
+    TokenResponse:
+      type: object
+      additionalProperties: false
+      required: [accessToken, expiresInSeconds]
+      properties:
+        accessToken:
+          type: string
+        expiresInSeconds:
+          type: integer
+        refreshToken:
+          type: string
+          description: MOBILE only.
+    CurrentUserResponse:
+      type: object
+      additionalProperties: false
+      required: [userId, fullName, institutionName, roles]
+      properties:
+        userId:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        institutionName:
+          type: string
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+    Role:
+      type: string
+      enum: [ADMIN, TEACHER, GUARDIAN, ACCOUNTANT]
     SystemStatusResponse:
       type: object
       additionalProperties: false
@@ -51,3 +192,8 @@ components:
         code:
           type: string
           description: Stable error code, e.g. NOT_FOUND (docs/conventions.md, Error handling).
+        errors:
+          type: object
+          additionalProperties:
+            type: string
+          description: VALIDATION_FAILED only — field → error code.
