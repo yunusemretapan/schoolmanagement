@@ -16,12 +16,12 @@ derleme anında zorlanır, ileride parçalanabilir (ADR 0001, ADR 0002).
 ```
 backend/
 ├── core/core-application     Mediator, PipelineBehavior'lar (Authorization, Validation, Transaction, Audit, Logging, Caching)
-├── core/core-persistence     Base entity/repository, paging, dinamik sorgu, tenant filtresi
-├── core/core-security        JWT, 2FA (TOTP), Argon2id, şifreleme, rol/yetki altyapısı
+├── core/core-persistence     Tenant'a bağlı base entity + Hibernate tenant filtresi (spec 0003); paging, dinamik sorgu sonra
+├── core/core-security        JWT, Argon2id, @Public/@RequiresPermission, CurrentUser (spec 0003); 2FA (TOTP), şifreleme sonra
 ├── core/core-crosscutting    Exception tipleri, ProblemDetails, logging
 ├── domain                    Entity, enum, değer nesnesi (Money…) — saf Java
 ├── application               features/<modül>/{commands, queries, rules, dtos, mappers, constants}
-├── persistence               JPA config, repository implementasyonları, Flyway migration'ları
+├── persistence               JPA config, repository implementasyonları, Flyway migration'ları; webapi'ye yalnızca runtime
 ├── infrastructure            Dış servis adaptörleri: ödeme, SMS, Claude, STT, push, nesne depolama
 └── webapi                    REST controller'lar, OpenAPI, Spring Boot uygulaması
 frontend/
@@ -36,6 +36,7 @@ frontend/
 | Module | Single responsibility | Owns |
 |---|---|---|
 | `institution` | Kurum, şube, dönem, sınıf, sınıf seviyesi, ders programı | Akademik yapı, kurum ayarları |
+| `identity` | Giriş, oturum (cihaz başına dönen yenileme zinciri), kilitleme, kurum açma (operatör) | Giriş kimlikleri, oturumlar; `login_identities` ve `sessions` bilinçli olarak tenant'sız/RLS'siz (plan 0003, R1) |
 | `people` | Öğrenci, veli, kullanıcı, rol, kardeş bağlantısı, teslim alabilecek kişi, içe aktarma | Kişi kayıtları, rol atamaları |
 | `attendance` | Yoklama ve devamsızlık | Yoklama kayıtları |
 | `communication` | Duyuru, mesaj, onay formu, dosya/fotoğraf paylaşımı, bildirim gönderimi | İletişim kayıtları, okundu bilgisi |

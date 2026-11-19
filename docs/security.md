@@ -18,11 +18,19 @@
   `AiDraft` olarak oluşur, insan onayı olmadan gönderilmez (BR-3); yalnızca gereken en az veri gider (BR-5).
 
 ## AuthN / AuthZ
-- Giriş: e-posta veya telefon + şifre (Argon2id); kısa ömürlü JWT access token + dönen (rotating) refresh token.
+- Giriş: e-posta veya telefon + şifre (Argon2id); kısa ömürlü JWT access token (15 dk, HS256, `JWT_SECRET`) + dönen
+  (rotating) refresh token. Kullanılmış bir refresh token tekrar gelirse o cihazın oturumu tamamen iptal edilir (spec 0003).
+- **Token saklama (plan 0003, R2):** access token her istemcide yalnızca bellekte. Web: refresh token yalnızca
+  `sos_refresh` çerezinde (HttpOnly, Secure, SameSite=Strict, Path=/api/v1/auth); JavaScript göremez. Mobil: SecureStore
+  (iOS Keychain / Android Keystore). Expo web: yalnızca bellek (geliştirme yüzeyi). İstemci aynı anda tek yenileme yapar
+  (iki paralel yenileme yeniden kullanım sayılır).
+- **Kurum bağlamı:** tenant yalnızca imzalı token'dan gelir; başlık, parametre veya gövdedeki kurum bilgisi yok sayılır.
+  Uygulama veritabanına süper kullanıcı olmayan, `BYPASSRLS` yetkisi olmayan bir rolle bağlanır.
 - **2FA (TOTP) zorunlu:** Kurucu/Yönetici ve Muhasebe rolleri. Diğer rollerde isteğe bağlı.
 - **Varsayılan reddet:** Her command/query bir `@RequiresPermission` taşır; taşımayan reddedilir (`AuthorizationBehavior`).
 - Yetki kapsamı: kurum → şube → sınıf → öğrenci (BR-2). Tenant: Hibernate filtresi + PostgreSQL RLS (BR-1).
-- Login'de rate limit ve başarısız denemede kilitleme.
+- Login'de kaynak başına rate limit (dakikada 20) ve hesap başına kilitleme (5 hata → 15 dk); hatalı giriş, olmayan hesap ve
+  kilitli hesap aynı yanıtı alır (spec 0003).
 - Audit log (BR-6): append-only tablo; öğrenci kaydı görüntüleme dahil.
 
 ## Dependencies
