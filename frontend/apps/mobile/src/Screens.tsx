@@ -47,6 +47,8 @@ export function Screens() {
         </Text>
       </View>
     );
+  } else if (current === 'status') {
+    content = <StatusScreen onBack={toMain} onOpenShowcase={signedIn ? showcaseFromStatus : undefined} />;
   } else if (status === 'unreachable') {
     content = (
       <View style={styles.center}>
@@ -56,10 +58,17 @@ export function Screens() {
         <Pressable role="button" accessibilityLabel={t('auth.retry')} onPress={retry} style={styles.button}>
           <Text style={styles.buttonLabel}>{t('auth.retry')}</Text>
         </Pressable>
+        {/* The status screen needs no session and is most useful exactly now (review 2, L-6). */}
+        <Pressable
+          role="link"
+          accessibilityLabel={t('auth.statusLink')}
+          onPress={toStatus}
+          style={styles.link}
+        >
+          <Text style={styles.linkLabel}>{t('auth.statusLink')}</Text>
+        </Pressable>
       </View>
     );
-  } else if (current === 'status') {
-    content = <StatusScreen onBack={toMain} onOpenShowcase={signedIn ? showcaseFromStatus : undefined} />;
   } else if (current === 'showcase') {
     content = <DesignShowcase onBack={backFromShowcase} />;
   } else if (signedIn) {
@@ -90,5 +99,11 @@ function createStyles(theme: NativeTheme) {
       justifyContent: 'center',
     },
     buttonLabel: { ...theme.text('md', 'semibold'), color: theme.colors.onBrand },
+    link: { minHeight: theme.size.control, justifyContent: 'center', marginTop: theme.spacing.sm },
+    linkLabel: {
+      ...theme.text('sm', 'semibold'),
+      color: theme.colors.brandText,
+      textDecorationLine: 'underline',
+    },
   });
 }

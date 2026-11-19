@@ -1,3 +1,4 @@
+import { ApiError } from '@schoolos/api-client';
 import { act, screen, userEvent } from '@testing-library/react-native';
 import { BackHandler } from 'react-native';
 import { fakeApi, renderMobile } from './test/renderMobile';
@@ -76,6 +77,23 @@ describe('Screens (mobile, spec 0003 — access)', () => {
     await screen.findByText('Sistem çalışıyor');
 
     expect(screen.queryByRole('link', { name: 'Tasarım vitrini' })).toBeNull();
+  });
+
+  it('offline at start: the status screen is one link away and back (review 2, L-6)', async () => {
+    const user = userEvent.setup();
+    await renderMobile({
+      api: fakeApi({
+        restoreSession: async () => {
+          throw new ApiError(undefined, undefined);
+        },
+      }),
+    });
+
+    await user.press(await screen.findByRole('link', { name: 'Sistem durumu' }));
+    expect(await screen.findByText('Sistem çalışıyor')).toBeOnTheScreen();
+
+    await user.press(screen.getByRole('button', { name: 'Geri' }));
+    expect(await screen.findByText('Sunucuya ulaşılamıyor')).toBeOnTheScreen();
   });
 
   it('while the stored session is being checked, nothing signed-in is shown', async () => {
