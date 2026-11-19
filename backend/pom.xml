@@ -19,9 +19,12 @@
 
   <modules>
     <module>core/core-crosscutting</module>
+    <module>core/core-security</module>
     <module>core/core-application</module>
+    <module>core/core-persistence</module>
     <module>domain</module>
     <module>application</module>
+    <module>persistence</module>
     <module>webapi</module>
   </modules>
 
@@ -32,6 +35,8 @@
     <palantir-java-format.version>2.103.0</palantir-java-format.version>
     <spotless.version>3.11.0</spotless.version>
     <enforcer.version>3.7.0</enforcer.version>
+    <!-- Argon2id (spring-security-crypto) needs Bouncy Castle; not managed by the Boot BOM. MIT-style licence. -->
+    <bouncycastle.version>1.87</bouncycastle.version>
   </properties>
 
   <dependencyManagement>
@@ -43,7 +48,17 @@
       </dependency>
       <dependency>
         <groupId>com.schoolos</groupId>
+        <artifactId>core-security</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.schoolos</groupId>
         <artifactId>core-application</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.schoolos</groupId>
+        <artifactId>core-persistence</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -55,6 +70,16 @@
         <groupId>com.schoolos</groupId>
         <artifactId>application</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.schoolos</groupId>
+        <artifactId>persistence</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcprov-jdk18on</artifactId>
+        <version>${bouncycastle.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

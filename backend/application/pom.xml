@@ -17,8 +17,15 @@
     </dependency>
     <dependency>
       <groupId>com.schoolos</groupId>
+      <artifactId>core-security</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.schoolos</groupId>
       <artifactId>domain</artifactId>
     </dependency>
+    <dependency>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
+    </dependency>
   </dependencies>
-
 </project>

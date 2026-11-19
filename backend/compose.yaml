@@ -1,0 +1,31 @@
+# Local development database only (plan 0003, step 1). scripts/check never uses it (ADR 0003: unit tests only).
+#   cp .env.example .env   # then: docker compose up -d
+# The postgres superuser only bootstraps the database. The application connects as schoolos_app, a
+# non-superuser that owns the schema: a superuser would bypass Row-Level Security (BR-1, V1__identity.sql).
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in backend/.env}
+      POSTGRES_DB: schoolos
+      SCHOOLOS_APP_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in backend/.env}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql
+    configs:
+      - source: app-role
+        target: /docker-entrypoint-initdb.d/01-app-role.sh
+configs:
+  app-role:
+    content: |
+      #!/bin/sh
+      set -e
+      psql -v ON_ERROR_STOP=1 --username postgres --dbname schoolos <<SQL
+      create role schoolos_app login password '$$SCHOOLOS_APP_PASSWORD' nosuperuser nobypassrls;
+      alter database schoolos owner to schoolos_app;
+      alter schema public owner to schoolos_app;
+      SQL
+volumes:
+  db-data:
