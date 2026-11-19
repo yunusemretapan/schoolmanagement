@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ApiProvider } from '../../api/ApiProvider';
 import { AppearanceProvider } from '../../appearance/AppearanceProvider';
 import { createMemoryStorage } from '../../test/fakes';
+import { fakeApi } from '../../test/renderApp';
 import { StatusScreen } from './StatusScreen';
 
 function renderWith(getSystemStatus: ApiClient['getSystemStatus']) {
@@ -20,7 +21,7 @@ function renderWithContainer(getSystemStatus: ApiClient['getSystemStatus']) {
   return render(
     <AppearanceProvider storage={createMemoryStorage()} configuredBrand={null}>
       <QueryClientProvider client={client}>
-        <ApiProvider client={{ getSystemStatus }}>
+        <ApiProvider client={fakeApi({ getSystemStatus })}>
           <StatusScreen />
         </ApiProvider>
       </QueryClientProvider>
