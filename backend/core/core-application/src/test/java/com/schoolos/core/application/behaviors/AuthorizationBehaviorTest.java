@@ -75,7 +75,7 @@ class AuthorizationBehaviorTest {
 
     @Test
     void signedInUserWithoutThePermissionIsForbidden() {
-        CurrentUserHolder.set(user(Permission.SESSION_END));
+        CurrentUserHolder.set(user(Permission.PLATFORM_OPERATOR));
 
         assertThatThrownBy(() -> send(new SelfQuery())).isInstanceOf(AuthorizationException.class);
         assertThat(handled).isFalse();

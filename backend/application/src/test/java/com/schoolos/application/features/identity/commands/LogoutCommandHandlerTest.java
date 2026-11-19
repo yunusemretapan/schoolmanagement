@@ -45,7 +45,7 @@ class LogoutCommandHandlerTest {
         UUID laptop = open(ClientType.WEB);
         UUID phone = open(ClientType.MOBILE);
         CurrentUserHolder.set(
-                new CurrentUser(admin.id(), admin.tenantId(), laptop, Set.of("ADMIN"), Set.of(Permission.SESSION_END)));
+                new CurrentUser(admin.id(), admin.tenantId(), laptop, Set.of("ADMIN"), Set.of(Permission.SELF_READ)));
 
         handler.handle(new LogoutCommand(null));
 

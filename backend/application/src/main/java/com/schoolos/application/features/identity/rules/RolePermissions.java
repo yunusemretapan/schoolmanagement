@@ -13,7 +13,7 @@ import java.util.Set;
  */
 public final class RolePermissions {
 
-    private static final Set<Permission> EVERY_USER = EnumSet.of(Permission.SELF_READ, Permission.SESSION_END);
+    private static final Set<Permission> EVERY_USER = EnumSet.of(Permission.SELF_READ);
 
     private static final Map<Role, Set<Permission>> BY_ROLE = Map.of(
             Role.ADMIN, EVERY_USER,

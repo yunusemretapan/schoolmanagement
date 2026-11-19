@@ -9,10 +9,9 @@ import org.junit.jupiter.api.Test;
 class RolePermissionsTest {
 
     @Test
-    void everyFaz1RoleCanReadItselfAndEndItsSession() {
+    void everyFaz1RoleCanReadItself() {
         for (String role : List.of("ADMIN", "TEACHER", "GUARDIAN", "ACCOUNTANT")) {
-            assertThat(RolePermissions.forRoleNames(List.of(role)))
-                    .containsExactlyInAnyOrder(Permission.SELF_READ, Permission.SESSION_END);
+            assertThat(RolePermissions.forRoleNames(List.of(role))).containsExactly(Permission.SELF_READ);
         }
     }
 
