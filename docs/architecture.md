@@ -53,7 +53,8 @@ frontend/
   (ör. `attendance` → `AbsenceRecorded` → `communication` bildirimi gönderir).
 - Dış servis çağrısı yalnızca `application`'daki port arayüzü üzerinden; implementasyon `infrastructure`'da.
 - Her tenant'a bağlı tablo `tenant_id` taşır; Hibernate tenant filtresi (uygulama) + PostgreSQL RLS
-  (veritabanı) birlikte uygulanır (BR-1).
+  (veritabanı) birlikte uygulanır (BR-1). İstisna: `tenants` tablosunun kendisi `tenant_id` taşımaz; yalnızca RLS ile korunur ve
+  her zaman token'daki kurum kimliğiyle okunur (review 1, I-3).
 
 ## Forbidden dependencies (make them testable)
 Test kararı yalnızca unit (ADR 0003) olduğu için ayrı bir mimari test seti yok. Zorlama:
@@ -64,6 +65,9 @@ Test kararı yalnızca unit (ADR 0003) olduğu için ayrı bir mimari test seti 
 1. `domain` hiçbir modüle bağımlı olmaz; Spring/JPA/Jakarta anotasyonu kullanmaz.
 2. `application`, `persistence` / `infrastructure` / `webapi` modüllerine bağımlı olmaz; onlara yalnızca port arayüzleriyle erişir.
 3. `webapi` repository'leri doğrudan çağırmaz; her işlem bir command/query üzerinden geçer.
+   *İstisna (spec 0003, review 1 I-2):* kimlik doğrulama Mediator'dan önce olmak zorunda olduğu için
+   `JwtAuthenticationFilter` her istekte oturumun açık olduğunu `SessionValidator` (application: `SessionActivityChecker`)
+   üzerinden sorar; repository'ye doğrudan değil, application'daki bu tek servise gider.
 4. Bir feature modülü başka bir feature'ın repository'sine veya entity'sine dokunmaz; yalnızca query, command veya domain event.
 5. Claude/STT istemcisine yalnızca `infrastructure.ai` erişir; AI'ya giden veri tek kapıdan geçer (BR-5).
 6. Frontend uygulamaları API'ye yalnızca `packages/api-client` üzerinden erişir; elle `fetch` yok.
