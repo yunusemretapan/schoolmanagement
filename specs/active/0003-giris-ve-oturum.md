@@ -30,7 +30,8 @@ yönetimi ekranları ve davet (0005), 2FA (0004), şifre sıfırlama (0006), SSO
    açılır. Ayrıca aynı kaynaktan dakikada 20'den fazla giriş denemesi, hesaptan bağımsız olarak geçici olarak reddedilir.
 6. **Oturum:** Başarılı girişten sonra kullanıcı oturumu açık kalır.
    - Mobil: oturum son kullanımdan itibaren 30 gün geçerlidir; kullanıldıkça süre uzar. "Kullanım", oturumla yapılan
-     başarılı bir sunucu isteğidir; uygulamayı yalnızca açıp kapatmak süreyi uzatmaz.
+     başarılı bir sunucu isteğidir. Uygulama açılırken oturumun sunucuda doğrulanması da başarılı bir oturumlu istektir ve
+     süreyi uzatır; sunucuya ulaşmadan açıp kapatmak uzatmaz.
    - Web: 12 saat hareketsizlikten sonra oturum düşer; kullanıcı giriş ekranına döner.
    - Süresi dolan oturumla yapılan istek reddedilir ve kullanıcı giriş ekranına yönlendirilir.
    - Oturum yenilenirken daha önce kullanılmış (eskimiş) bir yenileme bilgisi gelirse o cihazın oturum zinciri tamamen
@@ -39,7 +40,9 @@ yönetimi ekranları ve davet (0005), 2FA (0004), şifre sıfırlama (0006), SSO
    oturumları etkilenmez.
 8. **Kurum bağlamı:** Giriş yapmış kullanıcının her işlemi yalnızca kendi kurumunun bağlamında çalışır; istemcinin
    gönderdiği herhangi bir kurum bilgisi dikkate alınmaz (BR-1).
-9. **Varsayılan reddet:** Giriş yapmamış kişinin her isteği reddedilir; tek istisna spec 0001'deki durum sorgusudur.
+9. **Varsayılan reddet:** Giriş yapmamış kişinin her isteği reddedilir; istisnalar spec 0001'deki durum sorgusu ve kimlik
+   doğrulama kapısının kendisidir: giriş, oturum yenileme ve çıkış. Çıkış yalnızca çağıranın kanıtladığı oturumu (geçerli
+   erişim bilgisi ya da güncel yenileme bilgisi) kapatır.
    Giriş yapmış kullanıcının isteği de, işlem kendisine açıkça bir yetki gereksinimi tanımlamamışsa reddedilir
    (`docs/security.md`, AuthN/AuthZ).
 10. **Ana sayfa:** Giriş yapan kullanıcı adını, kurumunun adını ve rollerini görür; buradan sistem durumuna, tasarım
@@ -75,6 +78,9 @@ yönetimi ekranları ve davet (0005), 2FA (0004), şifre sıfırlama (0006), SSO
 ## Constraints & out of scope
 - Sensitive area: Kimlik doğrulama (giriş, oturum)
 - Sensitive area: Tenant izolasyonu ve yetkilendirme (BR-1, BR-2)
+- R-08 (2026-11-19, yunusemretapan): Req. 6 mobil "kullanım" tanımı açılıştaki oturum doğrulamasını kapsayacak, Req. 9 /
+  AC-6 kimlik doğrulama kapısını (giriş, yenileme, çıkış) istisna sayacak şekilde netleştirildi — kaynak: review 1 I-1,
+  review 2 I-4. Yeni kabul kriteri yok; kod davranışı değişmedi (delta plan: plan 0003 A-9).
 - Güvenlik kuralları `docs/security.md` (AuthN/AuthZ) ile bağlıdır: şifre saklama yöntemi, kısa ömürlü erişim +
   dönen yenileme oturumu, varsayılan reddet.
 - Split: proposed 0003 (giriş ve oturum) → 0004 (2FA, TOTP) → 0005 (kullanıcı ve rol yönetimi, davet) → 0006 (şifre
@@ -101,7 +107,8 @@ yönetimi ekranları ve davet (0005), 2FA (0004), şifre sıfırlama (0006), SSO
 - [ ] AC-5 — Kilitleme sınırları: 4 başarısız denemeden sonra doğru şifre girişi açar ve sayacı sıfırlar; 5. başarısız
   denemeden sonra doğru şifre de reddedilir; kilit 15 dakika dolunca doğru şifre yeniden girişi açar.
   Aynı kaynaktan bir dakikada 21. giriş denemesi (farklı hesaplara olsa da) reddedilir; 20. deneme işlenir.
-- [ ] AC-6 — Varsayılan reddet: giriş yapmamış istekler durum sorgusu dışında reddedilir (durum sorgusu açık kalır);
+- [ ] AC-6 — Varsayılan reddet: giriş yapmamış istekler durum sorgusu ve giriş/yenileme/çıkış dışında reddedilir (durum
+  sorgusu açık kalır; çıkış kanıtlanmamış hiçbir oturumu kapatmaz);
   giriş yapmış kullanıcının yetki gereksinimi tanımlanmamış bir işleme isteği de reddedilir.
 - [ ] AC-7 — Kurum bağlamı: A kurumunun kullanıcısının oturumuyla yapılan her istek A bağlamında çalışır; istekte
   B kurumunu işaret eden bilgi gönderilse de yanıt B'ye ait hiçbir veri içermez.

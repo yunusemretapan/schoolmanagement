@@ -29,6 +29,8 @@
   Uygulama veritabanına süper kullanıcı olmayan, `BYPASSRLS` yetkisi olmayan bir rolle bağlanır.
 - **2FA (TOTP) zorunlu:** Kurucu/Yönetici ve Muhasebe rolleri. Diğer rollerde isteğe bağlı.
 - **Varsayılan reddet:** Her command/query bir `@RequiresPermission` taşır; taşımayan reddedilir (`AuthorizationBehavior`).
+  Bilinçli `@Public` istisnaları: durum sorgusu ve kimlik doğrulama kapısı (giriş, oturum yenileme, çıkış). Çıkış yalnızca
+  çağıranın kanıtladığı oturumu kapatır (spec 0003, R-08).
 - Yetki kapsamı: kurum → şube → sınıf → öğrenci (BR-2). Tenant: Hibernate filtresi + PostgreSQL RLS (BR-1).
 - Login'de kaynak başına rate limit (dakikada 20) ve hesap başına kilitleme (5 hata → 15 dk); hatalı giriş, olmayan hesap ve
   kilitli hesap aynı yanıtı alır (spec 0003).
