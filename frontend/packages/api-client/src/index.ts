@@ -64,7 +64,10 @@ export interface AuthOptions {
 export interface ApiClient {
   getSystemStatus(signal?: AbortSignal): Promise<SystemStatus>;
   login(identifier: string, password: string, signal?: AbortSignal): Promise<void>;
-  /** Opens the app on an existing session, if there is one. */
+  /**
+   * Opens the app on an existing session, if there is one: true / false. Rejects with a network ApiError when the
+   * server cannot be reached; the stored session is then kept for the next try (review 1, L-2).
+   */
   restoreSession(): Promise<boolean>;
   logout(): Promise<void>;
   getMe(signal?: AbortSignal): Promise<CurrentUser>;
@@ -77,7 +80,9 @@ export function createApiClient(
 ): ApiClient {
   const client = createClient<paths>({ baseUrl, fetch: (request) => fetchImpl(request) });
   const { clientType, tokens } = auth;
-  let refreshing: Promise<boolean> | null = null;
+  /** ok: new tokens · refused: the server ended the session · unreachable: no answer; tokens kept (review 1, L-2). */
+  type RefreshResult = 'ok' | 'refused' | 'unreachable';
+  let refreshing: Promise<RefreshResult> | null = null;
 
   async function store(response: TokenResponse): Promise<void> {
     tokens.accessToken = response.accessToken;
@@ -95,24 +100,30 @@ export function createApiClient(
    * One refresh at a time: two parallel refreshes would present the same token twice, which the server treats as
    * reuse and answers by ending the session (spec 0003, Req. 6).
    */
-  function refresh(): Promise<boolean> {
-    refreshing ??= (async () => {
+  function refresh(): Promise<RefreshResult> {
+    refreshing ??= (async (): Promise<RefreshResult> => {
       try {
         const refreshToken = clientType === 'MOBILE' ? await tokens.loadRefreshToken() : null;
         if (clientType === 'MOBILE' && refreshToken === null) {
-          return false;
+          return 'refused';
         }
-        const { data } = await client.POST('/api/v1/auth/refresh', {
-          body: refreshToken === null ? undefined : { refreshToken },
-        });
-        if (data === undefined) {
+        const { data, response } = await withTimeout(LOGIN_TIMEOUT_MS, undefined, (signal) =>
+          client.POST('/api/v1/auth/refresh', {
+            body: refreshToken === null ? undefined : { refreshToken },
+            signal,
+          }),
+        );
+        if (data !== undefined) {
+          await store(data);
+          return 'ok';
+        }
+        if (response.status === 401) {
           await forget();
-          return false;
+          return 'refused';
         }
-        await store(data);
-        return true;
+        return 'unreachable'; // a server error is not a verdict on the session
       } catch {
-        return false;
+        return 'unreachable';
       } finally {
         refreshing = null;
       }
@@ -129,8 +140,14 @@ export function createApiClient(
     call: (headers: Record<string, string>) => Promise<{ data?: T; error?: unknown; response: Response }>,
   ): Promise<T> {
     let result = await call(bearer());
-    if (result.response.status === 401 && (await refresh())) {
-      result = await call(bearer());
+    if (result.response.status === 401) {
+      const refreshed = await refresh();
+      if (refreshed === 'unreachable') {
+        throw new ApiError(undefined, undefined);
+      }
+      if (refreshed === 'ok') {
+        result = await call(bearer());
+      }
     }
     if (result.response.status === 401) {
       await forget();
@@ -167,7 +184,13 @@ export function createApiClient(
       });
     },
 
-    restoreSession: () => refresh(),
+    async restoreSession() {
+      const result = await refresh();
+      if (result === 'unreachable') {
+        throw new ApiError(undefined, undefined);
+      }
+      return result === 'ok';
+    },
 
     /** Always asks the server, even with an expired access token (review 1, H-1): the refresh token proves the session. */
     async logout() {

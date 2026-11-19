@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAppearance } from './appearance/AppearanceProvider';
 import { useAuth } from './auth/AuthProvider';
 import { LoginScreen } from './features/auth/LoginScreen';
@@ -19,7 +19,7 @@ type Screen = 'main' | 'status' | 'showcase';
 export function Screens() {
   const { t } = useTranslation();
   const { scheme, theme } = useAppearance();
-  const { status } = useAuth();
+  const { status, retry } = useAuth();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [screen, setScreen] = useState<Screen>('main');
   // The showcase goes back to where it was opened from (home or the status screen).
@@ -47,6 +47,17 @@ export function Screens() {
         </Text>
       </View>
     );
+  } else if (status === 'unreachable') {
+    content = (
+      <View style={styles.center}>
+        <Text role="alert" style={styles.error}>
+          {t('auth.unreachable')}
+        </Text>
+        <Pressable role="button" accessibilityLabel={t('auth.retry')} onPress={retry} style={styles.button}>
+          <Text style={styles.buttonLabel}>{t('auth.retry')}</Text>
+        </Pressable>
+      </View>
+    );
   } else if (current === 'status') {
     content = <StatusScreen onBack={toMain} onOpenShowcase={signedIn ? showcaseFromStatus : undefined} />;
   } else if (current === 'showcase') {
@@ -69,5 +80,15 @@ function createStyles(theme: NativeTheme) {
   return StyleSheet.create({
     center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.canvas },
     muted: { ...theme.text('md'), color: theme.colors.inkMuted },
+    error: { ...theme.text('md', 'semibold'), color: theme.colors.danger, marginBottom: theme.spacing.md },
+    button: {
+      minHeight: theme.size.control,
+      paddingHorizontal: theme.spacing.lg,
+      backgroundColor: theme.colors.brand,
+      borderRadius: theme.radius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    buttonLabel: { ...theme.text('md', 'semibold'), color: theme.colors.onBrand },
   });
 }

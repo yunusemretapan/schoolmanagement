@@ -225,6 +225,54 @@ describe('logout with an expired access token (review 1, H-1)', () => {
   });
 });
 
+describe('an unreachable server is not the end of the session (review 1, L-2)', () => {
+  const offline: typeof fetch = async () => {
+    throw new TypeError('offline');
+  };
+
+  it('a signed-in call keeps the stored refresh token and fails as a network error', async () => {
+    const tokens = createMemoryTokenStore();
+    tokens.accessToken = 'old-access';
+    await tokens.saveRefreshToken('r1');
+    const onSessionExpired = vi.fn();
+    const { fetchImpl } = backend({
+      'GET /api/v1/me': () => problem(401, 'AUTH_UNAUTHENTICATED'),
+      'POST /api/v1/auth/refresh': () => offline(new Request('http://x')),
+    });
+
+    await expect(
+      createApiClient('http://api.test', fetchImpl, {
+        clientType: 'MOBILE',
+        tokens,
+        onSessionExpired,
+      }).getMe(),
+    ).rejects.toEqual(new ApiError(undefined, undefined));
+    expect(await tokens.loadRefreshToken()).toBe('r1');
+    expect(onSessionExpired).not.toHaveBeenCalled();
+  });
+
+  it('a server error during refresh keeps the session too', async () => {
+    const tokens = createMemoryTokenStore();
+    await tokens.saveRefreshToken('r1');
+    const { fetchImpl } = backend({ 'POST /api/v1/auth/refresh': () => problem(503, 'INTERNAL_ERROR') });
+
+    await expect(
+      createApiClient('http://api.test', fetchImpl, { clientType: 'MOBILE', tokens }).restoreSession(),
+    ).rejects.toEqual(new ApiError(undefined, undefined));
+    expect(await tokens.loadRefreshToken()).toBe('r1');
+  });
+
+  it('restoring offline rejects as a network error and keeps the stored token', async () => {
+    const tokens = createMemoryTokenStore();
+    await tokens.saveRefreshToken('r1');
+
+    await expect(
+      createApiClient('http://api.test', offline, { clientType: 'MOBILE', tokens }).restoreSession(),
+    ).rejects.toEqual(new ApiError(undefined, undefined));
+    expect(await tokens.loadRefreshToken()).toBe('r1');
+  });
+});
+
 describe('restoreSession and logout', () => {
   it('mobile without a stored refresh token has no session to restore and asks nothing', async () => {
     const { fetchImpl } = backend({});

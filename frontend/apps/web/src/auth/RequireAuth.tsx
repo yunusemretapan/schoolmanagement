@@ -16,7 +16,7 @@ export interface ReturnState {
  */
 export function RequireAuth({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
-  const { status } = useAuth();
+  const { status, retry } = useAuth();
   const location = useLocation();
 
   if (status === 'restoring') {
@@ -25,6 +25,24 @@ export function RequireAuth({ children }: { children: ReactNode }) {
         <p role="status" aria-live="polite" className="text-md text-ink-muted">
           {t('auth.restoring')}
         </p>
+      </main>
+    );
+  }
+  if (status === 'unreachable') {
+    return (
+      <main className="grid min-h-dvh place-items-center bg-canvas p-lg font-sans text-ink">
+        <div className="flex flex-col items-center gap-md">
+          <p role="alert" className="text-md font-semibold text-danger">
+            {t('auth.unreachable')}
+          </p>
+          <button
+            type="button"
+            onClick={retry}
+            className="min-h-control rounded-md bg-brand px-lg py-sm font-semibold text-on-brand outline-focus focus-visible:outline-[length:var(--sos-border-thick)] focus-visible:outline-offset-[var(--sos-border-thick)]"
+          >
+            {t('auth.retry')}
+          </button>
+        </div>
       </main>
     );
   }

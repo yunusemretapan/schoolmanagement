@@ -79,7 +79,9 @@
       "invalidCredentials": "E-posta/telefon veya şifre hatalı",
       "rateLimited": "Çok fazla deneme yapıldı, lütfen biraz sonra tekrar deneyin",
       "network": "Sunucuya ulaşılamıyor, tekrar deneyin"
-    }
+    },
+    "unreachable": "Sunucuya ulaşılamıyor",
+    "retry": "Tekrar dene"
   },
   "home": {
     "title": "Ana sayfa",

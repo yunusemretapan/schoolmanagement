@@ -3,7 +3,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { useApi } from '../api/ApiProvider';
 import type { SessionExpiry } from './sessionExpiry';
 
-export type AuthStatus = 'restoring' | 'signedOut' | 'signedIn';
+/** unreachable: the stored session could not be checked (offline); it is kept for retry (review 1, L-2). */
+export type AuthStatus = 'restoring' | 'unreachable' | 'signedOut' | 'signedIn';
 
 interface AuthContextValue {
   status: AuthStatus;
@@ -11,6 +12,8 @@ interface AuthContextValue {
   expired: boolean;
   signIn(identifier: string, password: string): Promise<void>;
   signOut(): Promise<void>;
+  /** Checks the stored session again after "unreachable". */
+  retry(): void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -24,16 +27,27 @@ export function AuthProvider({ expiry, children }: { expiry: SessionExpiry; chil
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<AuthStatus>('restoring');
   const [expired, setExpired] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
-    void api.restoreSession().then((restored) => {
-      if (active) setStatus(restored ? 'signedIn' : 'signedOut');
-    });
+    api.restoreSession().then(
+      (restored) => {
+        if (active) setStatus(restored ? 'signedIn' : 'signedOut');
+      },
+      () => {
+        if (active) setStatus('unreachable');
+      },
+    );
     return () => {
       active = false;
     };
-  }, [api]);
+  }, [api, attempt]);
+
+  const retry = useCallback(() => {
+    setStatus('restoring');
+    setAttempt((n) => n + 1);
+  }, []);
 
   useEffect(
     () =>
@@ -61,7 +75,10 @@ export function AuthProvider({ expiry, children }: { expiry: SessionExpiry; chil
     setStatus('signedOut');
   }, [api, queryClient]);
 
-  const value = useMemo(() => ({ status, expired, signIn, signOut }), [status, expired, signIn, signOut]);
+  const value = useMemo(
+    () => ({ status, expired, signIn, signOut, retry }),
+    [status, expired, signIn, signOut, retry],
+  );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

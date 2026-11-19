@@ -1,3 +1,4 @@
+import { ApiError } from '@schoolos/api-client';
 import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -58,6 +59,24 @@ describe('RequireAuth (web)', () => {
       'Oturumunuz sona erdi, lütfen tekrar giriş yapın',
     );
     expect(pathname()).toBe('/giris');
+  });
+
+  it('offline at start: "Sunucuya ulaşılamıyor" with retry, and retry opens the app (review 1, L-2)', async () => {
+    const user = userEvent.setup();
+    let online = false;
+    const restoreSession = vi.fn(async () => {
+      if (!online) throw new ApiError(undefined, undefined);
+      return true;
+    });
+    renderApp({ api: fakeApi({ restoreSession }), path: '/' });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Sunucuya ulaşılamıyor');
+    expect(pathname()).toBe('/');
+    online = true;
+    await user.click(screen.getByRole('button', { name: 'Tekrar dene' }));
+
+    expect(await screen.findByText('Hoş geldiniz, Ayşe Yılmaz')).toBeInTheDocument();
+    expect(restoreSession).toHaveBeenCalledTimes(2);
   });
 
   it('a signed-out user never fetches the account', async () => {
