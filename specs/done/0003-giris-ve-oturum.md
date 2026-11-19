@@ -1,6 +1,6 @@
 # Spec 0003 — Giriş ve oturum
 
-- Status: In progress
+- Status: Shipped
 - Mode: lite
 - Plan: `specs/plans/0003-plan.md`
 - Self-critique: done
@@ -95,49 +95,73 @@ yönetimi ekranları ve davet (0005), 2FA (0004), şifre sıfırlama (0006), SSO
   spec'te), "beni hatırla" seçeneği, tüm cihazlardan çıkış, telefonla SMS doğrulaması, audit log ekranı.
 
 ## Acceptance criteria
-- [ ] AC-1 — Operatör aracıyla bir kurum ve ilk Kurucu hesabı oluşturulur; aynı e-posta veya telefonla ikinci bir hesap
+- [x] AC-1 — Operatör aracıyla bir kurum ve ilk Kurucu hesabı oluşturulur; aynı e-posta veya telefonla ikinci bir hesap
   oluşturma girişimi (başka kurumda bile) ve 10 karakterden kısa şifre reddedilir. Örnek kullanıcılar geliştirme/test ortamında vardır, üretim
   yapılandırmasında oluşmaz.
-- [ ] AC-2 — Doğru e-posta + şifre ile giriş başarılıdır; e-posta farklı büyük/küçük harfle yazılsa da aynı hesaba
+- [x] AC-2 — Doğru e-posta + şifre ile giriş başarılıdır; e-posta farklı büyük/küçük harfle yazılsa da aynı hesaba
   girilir. Ana sayfada kullanıcının adı, kurum adı ve rolleri görünür (birden fazla rol varsa hepsi).
-- [ ] AC-3 — Telefonla giriş: `05321234567`, `5321234567` ve `+90 532 123 45 67` aynı hesaba girer; geçersiz biçim
+- [x] AC-3 — Telefonla giriş: `05321234567`, `5321234567` ve `+90 532 123 45 67` aynı hesaba girer; geçersiz biçim
   (ör. 9 hane, harf içeren) istek gönderilmeden alan hatası verir.
-- [ ] AC-4 — Var olmayan kimlik, yanlış şifre ve kilitli hesap aynı mesajı ve aynı hata yanıtını üretir; yanıt hesabın
+- [x] AC-4 — Var olmayan kimlik, yanlış şifre ve kilitli hesap aynı mesajı ve aynı hata yanıtını üretir; yanıt hesabın
   varlığını belli eden hiçbir alan içermez.
-- [ ] AC-5 — Kilitleme sınırları: 4 başarısız denemeden sonra doğru şifre girişi açar ve sayacı sıfırlar; 5. başarısız
+- [x] AC-5 — Kilitleme sınırları: 4 başarısız denemeden sonra doğru şifre girişi açar ve sayacı sıfırlar; 5. başarısız
   denemeden sonra doğru şifre de reddedilir; kilit 15 dakika dolunca doğru şifre yeniden girişi açar.
   Aynı kaynaktan bir dakikada 21. giriş denemesi (farklı hesaplara olsa da) reddedilir; 20. deneme işlenir.
-- [ ] AC-6 — Varsayılan reddet: giriş yapmamış istekler durum sorgusu ve giriş/yenileme/çıkış dışında reddedilir (durum
+- [x] AC-6 — Varsayılan reddet: giriş yapmamış istekler durum sorgusu ve giriş/yenileme/çıkış dışında reddedilir (durum
   sorgusu açık kalır; çıkış kanıtlanmamış hiçbir oturumu kapatmaz);
   giriş yapmış kullanıcının yetki gereksinimi tanımlanmamış bir işleme isteği de reddedilir.
-- [ ] AC-7 — Kurum bağlamı: A kurumunun kullanıcısının oturumuyla yapılan her istek A bağlamında çalışır; istekte
+- [x] AC-7 — Kurum bağlamı: A kurumunun kullanıcısının oturumuyla yapılan her istek A bağlamında çalışır; istekte
   B kurumunu işaret eden bilgi gönderilse de yanıt B'ye ait hiçbir veri içermez.
-- [ ] AC-8 — Oturum süreleri: web oturumu 12 saat hareketsizlikten sonra düşer, öncesinde kullanım süreyi uzatır;
+- [x] AC-8 — Oturum süreleri: web oturumu 12 saat hareketsizlikten sonra düşer, öncesinde kullanım süreyi uzatır;
   mobil oturum son başarılı oturumlu istekten 30 gün sonra düşer, böyle bir istek süreyi uzatır; düşen oturum giriş ekranına "Oturumunuz
   sona erdi" mesajıyla yönlendirir.
-- [ ] AC-9 — Çıkış: çıkış sonrası o cihazın oturumuyla yapılan istek reddedilir; aynı kullanıcının başka cihazdaki
+- [x] AC-9 — Çıkış: çıkış sonrası o cihazın oturumuyla yapılan istek reddedilir; aynı kullanıcının başka cihazdaki
   oturumu çalışmaya devam eder; geri tuşu/tarayıcı geçmişi korumalı ekranı göstermez. Eskimiş bir yenileme bilgisi
   yeniden kullanılırsa o cihazın oturumu (son yenilenmiş hali dahil) geçersiz olur.
-- [ ] AC-10 — Giriş ekranı durumları (web ve mobil): boş, alan doğrulama hatası, gönderiliyor (düğme devre dışı, çift
+- [x] AC-10 — Giriş ekranı durumları (web ve mobil): boş, alan doğrulama hatası, gönderiliyor (düğme devre dışı, çift
   gönderim yok), hatalı giriş, ağ hatası (10 sn zaman aşımı dahil); her hatada girilen kimlik korunur, şifre temizlenir.
   Erişilebilirlik bölümündeki klavye sırası, etiketler, duyurular ve kontrast açık/koyu görünümde sağlanır.
-- [ ] AC-11 — Korumalı adresler: sistem durumu ekranı giriş yapmadan, giriş ekranındaki bağlantıyla açılır; giriş yapmamış kullanıcı `/tasarim` (web) veya mobildeki vitrin bağlantısıyla vitrine
+- [x] AC-11 — Korumalı adresler: sistem durumu ekranı giriş yapmadan, giriş ekranındaki bağlantıyla açılır; giriş yapmamış kullanıcı `/tasarim` (web) veya mobildeki vitrin bağlantısıyla vitrine
   ulaşamaz, giriş ekranına yönlenir; web'de giriş sonrası istediği adrese döner.
-- [ ] AC-12 — Expo web kökeninden (yapılandırmada tanımlı) giriş ve oturumlu istekler çalışır; tanımlı olmayan bir
+- [x] AC-12 — Expo web kökeninden (yapılandırmada tanımlı) giriş ve oturumlu istekler çalışır; tanımlı olmayan bir
   kökenden gelen tarayıcı isteği reddedilir.
 
+## Evidence
+Review round 1 → fix-1 → review round 2 → fix-2 → review round 3 (temiz), salt okunur reviewer; VERIFY ayrı salt okunur QA
+oturumunda · `CHECK GREEN (full, 10 steps, 261 s) @6dc8afe` (sonrası yalnızca `specs/`). Kasıtlı kırılmalar B1–B19 repo
+dışındaki bir klonda yapıldı, hiçbiri commit edilmedi. Gerçek Postgres 18 gözlemleri O-1…O-10 (dev compose, klondan derlenen jar,
+curl + psql) — B-1'in otomatik test açığı açık kalır. Ayrıntı ve triage: `specs/plans/0003-plan.md`.
+
+| Acceptance criterion | Evidence | Status |
+|---|---|---|
+| AC-1 | `ProvisionTenantCommandHandlerTest`, `DevSeedRunnerTest` — kırıldı (B1 tekillik, B2 şifre uzunluğu); O-1 dev tohumu | PASS |
+| AC-2 | `LoginCommandHandlerTest` › `emailCaseDoesNotMatter`, `GetCurrentUserQueryHandlerTest` › `returnsNameInstitutionAndEveryRole`, web/mobil `HomeScreen.test.tsx`; O-2 | PASS |
+| AC-3 | `PhoneNumberNormalizerTest`, `LoginIdentifierTest`, `loginSchema.test.ts`, `normalizePhone.test.ts`, web/mobil `LoginScreen.test.tsx`; O-4 | PASS |
+| AC-4 | `LoginCommandHandlerTest` › `unknownIdentifierWrongPasswordAndLockedAccountGetTheSameRefusal`, `AuthControllerTest` › `unknownWrongAndLockedLookExactlyAlike` — kırıldı (B3); O-3 | PASS |
+| AC-5 | `LoginAttemptPolicyTest`, `LoginCommandHandlerTest`, `InMemorySourceRateLimiterTest` — kırıldı (B4 eşik, B5 15 dk, B6 21. deneme); O-3 paralel 8 deneme → kilit (review 1 M-1), O-8 20. deneme 200 / 21. deneme 429 | PASS |
+| AC-6 | `AuthorizationBehaviorTest`, `SecurityConfigTest` — kırıldı (B7 behavior, B8 HTTP kapısı); O-2, O-5 (R-08: giriş/yenileme/çıkış istisna) | PASS |
+| AC-7 | `JwtAuthenticationFilterTest` › `tenantHintsInHeadersOrParametersAreIgnored`, `TransactionBehaviorTest`, `GetCurrentUserQueryHandlerTest` — kırıldı (B9, B10); O-1 RLS (bağlanmamış: 0 kullanıcı / 0 kurum), O-2 kurum ipuçları yok sayıldı, `tid` değiştirilmiş token 401 | PASS |
+| AC-8 | `SessionPolicyTest`, `RefreshSessionCommandHandlerTest`, `auth.test.ts`, web `RequireAuth.test.tsx`, mobil `AuthProvider.test.tsx` — kırıldı (B11, B12, B18); O-6 11s59dk 200 / 12 sa 401, 29g23s59dk 200 / 30 gün 401. Not: R3 (en fazla 15 dk erken düşme), review 2 I-5 | PASS |
+| AC-9 | `LogoutCommandHandlerTest`, `RefreshSessionCommandHandlerTest` › `reusingAnOldRefreshToken…`, web `RequireAuth.test.tsx` › `after signing out, Back…` — kırıldı (B13, B14, B16); O-5 süresi dolmuş erişimle çıkış (review 1 H-1), O-7 diğer cihaz açık, yeniden kullanımda zincir iptali | PASS |
+| AC-10 | web/mobil `LoginScreen.test.tsx` (tüm durumlar, kimlik korunur / şifre temizlenir, etiketler, Tab sırası, Enter), `auth.test.ts` › `gives up after 10 s` — kırıldı (B19); S-1…S-6; kontrast: spec 0002 token testleri + galeri, SHIP'te insan değerlendirmesi | PASS |
+| AC-11 | web `RequireAuth.test.tsx`, web `LoginScreen.test.tsx` (durum bağlantısı), mobil `Screens.test.tsx` — kırıldı (B16); S-12, S-13 | PASS |
+| AC-12 | `CorsConfigTest` — kırıldı (B15); O-9 izinli köken 200, diğer köken 403 | PASS |
+
+UI: S-1…S-13 agent-captured (web + Expo web, açık/koyu), judged by yunusemretapan at SHIP, 2026-11-20. A-8 mobil açılış ekranı ve
+Android geri hareketi Expo web'de oluşmuyor; davranış testlerle kanıtlı, yerel cihaz görüntüsü alınmadı.
+
 ## Definition of Done
-- [ ] Every acceptance criterion mapped to proof (test or reproducible observation)
-- [ ] `scripts/check` green
-- [ ] Independent review done; real findings fixed, noise rejected with written rationale, deferred ones in `specs/backlog.md`
-- [ ] Docs / ADRs updated if behavior or architecture changed
-- [ ] Spec moved to `specs/done/` (it becomes immutable there)
+- [x] Every acceptance criterion mapped to proof (test or reproducible observation)
+- [x] `scripts/check` green
+- [x] Independent review done; real findings fixed, noise rejected with written rationale, deferred ones in `specs/backlog.md`
+- [x] Docs / ADRs updated if behavior or architecture changed
+- [x] Spec moved to `specs/done/` (it becomes immutable there)
 
 ## Scorecard (fill at ship — honest numbers make the process improvable)
 | Metric | Value |
 |---|---|
-| Spec revisions | |
-| Fix rounds | |
-| Review findings: real / noise / deferred | |
-| Regressions introduced | |
-| Bugs escaped to production | |
+| Spec revisions | 1 (R-08: Req. 6 / Req. 9 / AC-6 netleştirmesi, A-9) |
+| Fix rounds | 2 |
+| Review findings: real / noise / deferred | 12 / 2 / 1 (review 1: 9 real, 1 investigate; review 2: 2 real, 2 noise, 1 investigate; review 3: temiz; VERIFY 1: 1 real, 1 defer → B-17; 2 investigate R-08 ile kapandı) |
+| Regressions introduced | 0 |
+| Bugs escaped to production | 0 |
