@@ -59,3 +59,6 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
   introspection ile PASS (spec 0001 AC-6 emsali); yerel gözlem ek güvence — Source: spec 0002, VERIFY round 1 (G-1) — Severity: low
   — Recommendation: Android emülatör (ve imkân olursa iOS simülatör) development build'de gözlem + ekran görüntüsü; aksayan
   davranış bug raporu olur — Deferred by: yunusemretapan, 2026-11-18, emülatör kurulumu sonraya bırakıldı
+- **B-15** — Güvenlik olaylarının (başarılı/başarısız giriş, kilitlenme, oturum zinciri iptali) kalıcı kaydı yok; yalnızca ID içeren
+  uygulama logu var — Source: spec 0003, self-critique (G4) — Severity: low — Recommendation: audit log (BR-6) spec'iyle birlikte
+  append-only güvenlik olayı kaydı — Deferred by: yunusemretapan, 2026-11-19, audit log spec'ine bırakıldı
