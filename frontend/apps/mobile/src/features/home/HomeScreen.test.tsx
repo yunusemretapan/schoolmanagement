@@ -1,6 +1,6 @@
-import type { CurrentUser } from '@schoolos/api-client';
+import { ApiError, type CurrentUser } from '@schoolos/api-client';
 import { screen, userEvent, within } from '@testing-library/react-native';
-import { fakeApi, renderMobile } from '../../test/renderMobile';
+import { fakeApi, ME, renderMobile } from '../../test/renderMobile';
 
 /** Spec 0003, AC-2 (name, institution, every role) and the home screen states — mobile. */
 describe('HomeScreen (mobile)', () => {
@@ -21,6 +21,23 @@ describe('HomeScreen (mobile)', () => {
     const roles = within(screen.getByTestId('roles'));
     expect(roles.getByText('Öğretmen')).toBeOnTheScreen();
     expect(roles.getByText('Veli')).toBeOnTheScreen();
+  });
+
+  it('a failed load shows the error, and "Tekrar dene" loads again (A-3; review 1, L-1)', async () => {
+    const user = userEvent.setup();
+    let fail = true;
+    const getMe = jest.fn(async () => {
+      if (fail) throw new ApiError(undefined, undefined);
+      return ME;
+    });
+    await renderMobile({ api: signedIn({ getMe }) });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Bilgileriniz yüklenemedi');
+    fail = false;
+    await user.press(screen.getByRole('button', { name: 'Tekrar dene' }));
+
+    expect(await screen.findByText('Hoş geldiniz, Ayşe Yılmaz')).toBeOnTheScreen();
+    expect(getMe).toHaveBeenCalledTimes(2);
   });
 
   it('opens the design showcase and returns with "Geri"', async () => {

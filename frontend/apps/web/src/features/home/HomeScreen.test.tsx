@@ -1,8 +1,8 @@
-import type { CurrentUser } from '@schoolos/api-client';
+import { ApiError, type CurrentUser } from '@schoolos/api-client';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { fakeApi, pathname, renderApp } from '../../test/renderApp';
+import { fakeApi, ME, pathname, renderApp } from '../../test/renderApp';
 
 /** Spec 0003, AC-2 (name, institution, every role) and the home screen states — web. */
 describe('HomeScreen (web)', () => {
@@ -23,6 +23,23 @@ describe('HomeScreen (web)', () => {
     const roles = within(screen.getByRole('list'));
     expect(roles.getByText('Öğretmen')).toBeInTheDocument();
     expect(roles.getByText('Veli')).toBeInTheDocument();
+  });
+
+  it('a failed load shows the error, and "Tekrar dene" loads again (A-3; review 1, L-1)', async () => {
+    const user = userEvent.setup();
+    let fail = true;
+    const getMe = vi.fn(async () => {
+      if (fail) throw new ApiError(undefined, undefined);
+      return ME;
+    });
+    renderApp({ api: signedIn({ getMe }) });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Bilgileriniz yüklenemedi');
+    fail = false;
+    await user.click(screen.getByRole('button', { name: 'Tekrar dene' }));
+
+    expect(await screen.findByText('Hoş geldiniz, Ayşe Yılmaz')).toBeInTheDocument();
+    expect(getMe).toHaveBeenCalledTimes(2);
   });
 
   it('links to the status screen and the design showcase', async () => {

@@ -101,6 +101,25 @@ describe('LoginScreen (mobile)', () => {
     expect(passwordField()).toHaveDisplayValue('');
   });
 
+  it('too many attempts: its own message, identifier kept, password cleared (A-3; review 1, L-1)', async () => {
+    const user = userEvent.setup();
+    await openLogin({
+      login: async () => {
+        throw new ApiError(429, 'IDENTITY_RATE_LIMITED');
+      },
+    });
+
+    await user.type(identifierField(), 'veli@ornek.test');
+    await user.type(passwordField(), 'Ornek-Sifre-2026');
+    await user.press(submitButton());
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Çok fazla deneme yapıldı, lütfen biraz sonra tekrar deneyin',
+    );
+    expect(identifierField()).toHaveDisplayValue('veli@ornek.test');
+    expect(passwordField()).toHaveDisplayValue('');
+  });
+
   it('the keyboard "go" on the password submits', async () => {
     const user = userEvent.setup();
     const { login } = await openLogin();

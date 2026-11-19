@@ -18,6 +18,7 @@ import com.schoolos.application.features.identity.commands.RefreshSessionCommand
 import com.schoolos.application.features.identity.constants.IdentityErrorCodes;
 import com.schoolos.application.features.identity.dtos.AuthOutcome;
 import com.schoolos.core.application.mediator.Mediator;
+import com.schoolos.core.crosscutting.exceptions.TooManyRequestsException;
 import com.schoolos.domain.identity.ClientType;
 import com.schoolos.webapi.errors.GlobalExceptionHandler;
 import jakarta.servlet.http.Cookie;
@@ -63,6 +64,18 @@ class AuthControllerTest {
                 .doesNotContain("ayse")
                 .doesNotContain("locked")
                 .doesNotContain("exist");
+    }
+
+    @Test
+    void sourceOverTheRateLimitGets429WithItsCodeReview1L1() throws Exception {
+        when(mediator.send(any(LoginCommand.class)))
+                .thenThrow(new TooManyRequestsException(IdentityErrorCodes.RATE_LIMITED));
+
+        mvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginBody("WEB")))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.code").value("IDENTITY_RATE_LIMITED"));
     }
 
     @Test
