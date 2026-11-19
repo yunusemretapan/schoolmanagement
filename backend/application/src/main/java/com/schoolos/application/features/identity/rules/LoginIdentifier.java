@@ -11,7 +11,7 @@ public record LoginIdentifier(Kind kind, String value) {
     }
 
     public static Optional<LoginIdentifier> parse(String raw) {
-        if (raw == null || raw.isBlank()) {
+        if (raw == null || raw.isBlank() || raw.length() > EmailNormalizer.MAX_LENGTH) {
             return Optional.empty();
         }
         if (raw.contains("@")) {

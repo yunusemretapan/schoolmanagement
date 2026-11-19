@@ -4,8 +4,13 @@
  */
 const SEPARATORS = /[\s\-()]/g;
 const MOBILE = /^5\d{9}$/;
+const MAX_PHONE_LENGTH = 32;
+
+/** RFC 5321 path limit; checked before any pattern runs (review 1, H-2). */
+export const MAX_IDENTIFIER_LENGTH = 254;
 
 export function normalizePhone(raw: string): string | null {
+  if (raw.length > MAX_PHONE_LENGTH) return null;
   const digits = raw.trim().replace(SEPARATORS, '');
   let national: string;
   if (digits.startsWith('+90')) {
@@ -22,10 +27,12 @@ export function normalizePhone(raw: string): string | null {
   return MOBILE.test(national) ? `+90${national}` : null;
 }
 
-const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+// Domain labels separated by mandatory dots: no overlapping repetition, linear matching (review 1, H-2).
+const EMAIL = /^[^@\s]+@[^@\s.]+(?:\.[^@\s.]+)+$/;
 
 /** An e-mail if it holds an `@`, otherwise a phone number — the same rule as the backend. */
 export function isEmailOrPhone(raw: string): boolean {
+  if (raw.length > MAX_IDENTIFIER_LENGTH) return false;
   const value = raw.trim();
   return value.includes('@') ? EMAIL.test(value) : normalizePhone(value) !== null;
 }

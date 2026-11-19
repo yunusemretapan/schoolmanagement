@@ -13,10 +13,13 @@ public final class PhoneNumberNormalizer {
     private static final Pattern SEPARATORS = Pattern.compile("[\\s\\-()]");
     private static final Pattern MOBILE = Pattern.compile("^5\\d{9}$");
 
+    /** Generous for spacing and punctuation; anything longer is not a phone number (review 1, H-2). */
+    public static final int MAX_LENGTH = 32;
+
     private PhoneNumberNormalizer() {}
 
     public static Optional<String> normalize(String raw) {
-        if (raw == null) {
+        if (raw == null || raw.length() > MAX_LENGTH) {
             return Optional.empty();
         }
         String digits = SEPARATORS.matcher(raw.strip()).replaceAll("");

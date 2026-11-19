@@ -1,6 +1,7 @@
 package com.schoolos.application.features.identity.commands;
 
 import com.schoolos.application.features.identity.dtos.AuthOutcome;
+import com.schoolos.application.features.identity.rules.EmailNormalizer;
 import com.schoolos.core.application.mediator.Request;
 import com.schoolos.core.security.Public;
 import com.schoolos.domain.identity.ClientType;
@@ -14,7 +15,7 @@ import jakarta.validation.constraints.Size;
  */
 @Public
 public record LoginCommand(
-        @NotBlank String identifier,
+        @NotBlank @Size(max = EmailNormalizer.MAX_LENGTH) String identifier,
         @NotBlank @Size(max = 128) String password,
         @NotNull ClientType clientType,
         @NotBlank String source)

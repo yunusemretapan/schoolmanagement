@@ -1,5 +1,7 @@
 package com.schoolos.application.features.identity.commands;
 
+import com.schoolos.application.features.identity.rules.EmailNormalizer;
+import com.schoolos.application.features.identity.rules.PhoneNumberNormalizer;
 import com.schoolos.core.application.mediator.Request;
 import com.schoolos.core.security.Permission;
 import com.schoolos.core.security.RequiresPermission;
@@ -19,8 +21,8 @@ import java.util.UUID;
 public record CreateSeedUserCommand(
         @NotNull UUID tenantId,
         @NotBlank String fullName,
-        String email,
-        String phone,
+        @Size(max = EmailNormalizer.MAX_LENGTH) String email,
+        @Size(max = PhoneNumberNormalizer.MAX_LENGTH) String phone,
         @Size(max = 128) String password,
         @NotEmpty Set<Role> roles)
         implements Request<UUID> {

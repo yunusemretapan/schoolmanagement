@@ -84,6 +84,7 @@ Spec 0002; ayrıntı: `docs/design/motion.md`.
 - Hibernate filtresi `EntityManager.find` (ve Spring Data `findById`) için çalışmaz; tenant'a bağlı okuma JPQL ile yapılır, RLS ikinci hat — from spec 0003 build step 1
 - Spring Security'de `CorsConfigurationSource` parametre olarak enjekte edilirse Spring MVC'nin `mvcHandlerMappingIntrospector` bean'i de aday olur ve başlatma çöker — `.cors(Customizer.withDefaults())` + `corsConfigurationSource` adlı bean — from spec 0003 build step 5
 - Dönen refresh token'la iki paralel yenileme, ikincisini "yeniden kullanım" yapar ve oturumu iptal ettirir — istemci yenilemeyi tek uçuşta (single-flight) yapar (`@schoolos/api-client`) — from spec 0003 build step 6
+- Doğrulama regex'leri sınırsız girdide karesel geri izleme yapabilir (`[^@\s]+\.[^@\s]+` gibi çakışan tekrarlar; 80 KB → 14 s) ve doğrulama rate limit'ten önce çalışır — önce uzunluk sınırı, sonra çakışmayan desen — from spec 0003 review 1 H-2 (A-7)
 - RNTL 14'te `act` asenkrondur; senkron `act(() => …)` sonrası durum güncellenmemiş olabilir — `await act(async () => …)` — from spec 0003 build step 8
 - Windows satır sonları — `.gitattributes` ile LF; `mvnw` ve `mvnw.cmd` ikisi de commit edilir — from bootstrap; Windows'tan eklenen `mvnw` git'e çalıştırılamaz (100644) girer ve Linux CI `Permission denied` verir — `git update-index --chmod=+x backend/mvnw` — from spec 0002 SHIP (A-9)
 

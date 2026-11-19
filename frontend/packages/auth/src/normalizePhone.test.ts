@@ -19,6 +19,19 @@ describe('normalizePhone', () => {
 });
 
 describe('isEmailOrPhone', () => {
+  it('rejects hostile long input quickly (review 1, H-2)', () => {
+    const start = performance.now();
+    expect(isEmailOrPhone(`a@${'a.'.repeat(40_000)}@`)).toBe(false);
+    expect(isEmailOrPhone(`${'a'.repeat(250)}@b.co`)).toBe(false);
+    expect(normalizePhone('5'.repeat(40_000))).toBeNull();
+    expect(performance.now() - start).toBeLessThan(500);
+  });
+
+  it('domain labels must be non-empty', () => {
+    expect(isEmailOrPhone('veli@ornek..test')).toBe(false);
+    expect(isEmailOrPhone('veli@okul.k12.tr')).toBe(true);
+  });
+
   it('accepts e-mails and mobile numbers, nothing else', () => {
     expect(isEmailOrPhone('Kurucu@Ornek.test')).toBe(true);
     expect(isEmailOrPhone('0532 123 45 67')).toBe(true);
