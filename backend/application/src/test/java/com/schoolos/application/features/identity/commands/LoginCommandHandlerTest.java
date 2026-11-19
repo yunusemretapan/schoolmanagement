@@ -90,6 +90,14 @@ class LoginCommandHandlerTest {
     }
 
     @Test
+    void theAccountRowIsLockedBeforeTheAttemptIsCountedReview1M1() {
+        login("ayse@ornek.test", "Yanlis-Sifre-2026");
+        login("0532 123 45 67", "Yanlis-Sifre-2026");
+
+        assertThat(fx.locks).containsExactly("identity:ayse@ornek.test", "identity:+905321234567");
+    }
+
+    @Test
     void emailCaseDoesNotMatter() {
         assertThat(login("AYSE@Ornek.TEST", PASSWORD)).isInstanceOf(AuthOutcome.Issued.class);
     }

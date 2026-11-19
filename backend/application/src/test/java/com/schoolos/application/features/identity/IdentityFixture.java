@@ -41,6 +41,8 @@ public final class IdentityFixture {
     public final Map<UUID, Tenant> tenants = new HashMap<>();
     public final Map<UUID, Session> sessions = new HashMap<>();
     public final List<UUID> bindings = new ArrayList<>();
+    /** Row locks the handlers asked for, in order ("identity:<value>", "session:<id>"): review 1, M-1. */
+    public final List<String> locks = new ArrayList<>();
 
     private final AtomicInteger idCounter = new AtomicInteger();
     private final AtomicInteger secretCounter = new AtomicInteger();
@@ -85,6 +87,18 @@ public final class IdentityFixture {
                 return identities.values().stream()
                         .filter(i -> phone.equals(i.phone()))
                         .findFirst();
+            }
+
+            @Override
+            public Optional<LoginIdentity> lockByEmail(String email) {
+                locks.add("identity:" + email);
+                return findByEmail(email);
+            }
+
+            @Override
+            public Optional<LoginIdentity> lockByPhone(String phone) {
+                locks.add("identity:" + phone);
+                return findByPhone(phone);
             }
 
             @Override
@@ -140,6 +154,12 @@ public final class IdentityFixture {
             @Override
             public Optional<Session> findById(UUID sessionId) {
                 return Optional.ofNullable(sessions.get(sessionId));
+            }
+
+            @Override
+            public Optional<Session> lockById(UUID sessionId) {
+                locks.add("session:" + sessionId);
+                return findById(sessionId);
             }
 
             @Override

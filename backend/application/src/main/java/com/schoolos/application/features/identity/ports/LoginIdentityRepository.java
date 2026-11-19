@@ -10,6 +10,14 @@ public interface LoginIdentityRepository {
 
     Optional<LoginIdentity> findByPhone(String phone);
 
+    /**
+     * Reads and locks the row until the transaction ends ({@code SELECT … FOR UPDATE}), so parallel login attempts on
+     * one account are counted one after another and the lockout limit holds (review 1, M-1).
+     */
+    Optional<LoginIdentity> lockByEmail(String email);
+
+    Optional<LoginIdentity> lockByPhone(String phone);
+
     void create(LoginIdentity identity);
 
     void update(LoginIdentity identity);

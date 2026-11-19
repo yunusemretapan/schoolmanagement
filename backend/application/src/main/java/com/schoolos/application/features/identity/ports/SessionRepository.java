@@ -9,6 +9,9 @@ public interface SessionRepository {
 
     Optional<Session> findById(UUID sessionId);
 
+    /** Reads and locks the session row, so two refreshes with one token cannot both win (review 1, M-1). */
+    Optional<Session> lockById(UUID sessionId);
+
     void create(Session session);
 
     void update(Session session);

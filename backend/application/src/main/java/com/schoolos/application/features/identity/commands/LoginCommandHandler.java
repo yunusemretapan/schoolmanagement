@@ -117,8 +117,8 @@ public final class LoginCommandHandler implements RequestHandler<LoginCommand, A
 
     private Optional<LoginIdentity> find(LoginIdentifier identifier) {
         return switch (identifier.kind()) {
-            case EMAIL -> identities.findByEmail(identifier.value());
-            case PHONE -> identities.findByPhone(identifier.value());
+            case EMAIL -> identities.lockByEmail(identifier.value());
+            case PHONE -> identities.lockByPhone(identifier.value());
         };
     }
 }

@@ -9,6 +9,7 @@ import com.schoolos.domain.identity.Session;
 import com.schoolos.domain.identity.Tenant;
 import com.schoolos.domain.identity.UserAccount;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceContext;
 import java.util.Optional;
 import java.util.UUID;
@@ -81,11 +82,26 @@ final class JpaIdentityRepositories {
             return findBy("phone", phone);
         }
 
+        @Override
+        public Optional<LoginIdentity> lockByEmail(String email) {
+            return findBy("email", email, LockModeType.PESSIMISTIC_WRITE);
+        }
+
+        @Override
+        public Optional<LoginIdentity> lockByPhone(String phone) {
+            return findBy("phone", phone, LockModeType.PESSIMISTIC_WRITE);
+        }
+
         private Optional<LoginIdentity> findBy(String field, String value) {
+            return findBy(field, value, LockModeType.NONE);
+        }
+
+        private Optional<LoginIdentity> findBy(String field, String value, LockModeType lock) {
             return em.createQuery(
                             "select i from LoginIdentityEntity i where i." + field + " = :value",
                             LoginIdentityEntity.class)
                     .setParameter("value", value)
+                    .setLockMode(lock)
                     .getResultStream()
                     .findFirst()
                     .map(LoginIdentityEntity::toDomain);
@@ -112,6 +128,12 @@ final class JpaIdentityRepositories {
         @Override
         public Optional<Session> findById(UUID sessionId) {
             return Optional.ofNullable(em.find(SessionEntity.class, sessionId)).map(SessionEntity::toDomain);
+        }
+
+        @Override
+        public Optional<Session> lockById(UUID sessionId) {
+            return Optional.ofNullable(em.find(SessionEntity.class, sessionId, LockModeType.PESSIMISTIC_WRITE))
+                    .map(SessionEntity::toDomain);
         }
 
         @Override

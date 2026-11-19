@@ -58,7 +58,7 @@ public final class RefreshSessionCommandHandler implements RequestHandler<Refres
         if (parsed.isEmpty()) {
             return EXPIRED;
         }
-        Optional<Session> found = sessions.findById(parsed.get().sessionId());
+        Optional<Session> found = sessions.lockById(parsed.get().sessionId());
         if (found.isEmpty() || found.get().isRevoked()) {
             return EXPIRED;
         }

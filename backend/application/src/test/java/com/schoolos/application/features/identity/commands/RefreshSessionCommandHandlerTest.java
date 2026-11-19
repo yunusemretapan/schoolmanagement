@@ -79,6 +79,17 @@ class RefreshSessionCommandHandlerTest {
     }
 
     @Test
+    void theSessionRowIsLockedBeforeTheSecretIsCheckedReview1M1() {
+        String token = openSession(ClientType.WEB);
+
+        refresh(token);
+
+        assertThat(fx.locks)
+                .containsExactly(
+                        "session:" + RefreshTokens.parse(token).orElseThrow().sessionId());
+    }
+
+    @Test
     void webSessionDropsTwelveHoursAfterLastUseAndUseSlidesIt() {
         String token = openSession(ClientType.WEB);
 
