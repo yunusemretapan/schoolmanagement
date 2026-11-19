@@ -10,11 +10,24 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useCallback, useEffect, useState } from 'react';
 import { ApiProvider } from './src/api/ApiProvider';
 import { AppearanceProvider } from './src/appearance/AppearanceProvider';
+import { AuthProvider } from './src/auth/AuthProvider';
+import { createSessionExpiry } from './src/auth/sessionExpiry';
+import { createDeviceTokenStore } from './src/auth/tokenStore';
 import { Screens } from './src/Screens';
 import { nativeTheme } from './src/theme';
 import './src/i18n';
 
-const api = createApiClient(process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:8080');
+// Mobile: the refresh token in SecureStore (memory on Expo web), the access token in memory (plan 0003, R2).
+const expiry = createSessionExpiry();
+const api = createApiClient(
+  process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:8080',
+  globalThis.fetch,
+  {
+    clientType: 'MOBILE',
+    tokens: createDeviceTokenStore(),
+    onSessionExpired: expiry.notify,
+  },
+);
 
 // Keep the splash until fonts and saved appearance are known: no wrong-theme or fallback-font first frame
 // (spec 0002, plan R5).
@@ -46,7 +59,11 @@ export default function App() {
       <ApiProvider client={api}>
         <AppearanceProvider onReady={onAppearanceReady}>
           {/* A font that fails to load falls back to the system font rather than blocking the app. */}
-          {fontsSettled && <Screens />}
+          {fontsSettled && (
+            <AuthProvider expiry={expiry}>
+              <Screens />
+            </AuthProvider>
+          )}
         </AppearanceProvider>
       </ApiProvider>
     </QueryClientProvider>

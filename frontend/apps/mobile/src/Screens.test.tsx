@@ -1,28 +1,15 @@
-import type { ApiClient, SystemStatus } from '@schoolos/api-client';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen, userEvent } from '@testing-library/react-native';
+import { act, screen, userEvent } from '@testing-library/react-native';
 import { BackHandler } from 'react-native';
-import { ApiProvider } from './api/ApiProvider';
-import { AppearanceProvider } from './appearance/AppearanceProvider';
-import { Screens } from './Screens';
-import { createMemoryStorage } from './test/device';
+import { fakeApi, renderMobile } from './test/renderMobile';
 
-const up: ApiClient['getSystemStatus'] = async (): Promise<SystemStatus> => ({
-  status: 'UP',
-  version: '0.1.0',
-});
-
+/**
+ * Spec 0002's showcase journey, now from a signed-in session (spec 0003, AC-11 closes the showcase to signed-out
+ * users, B-10): home → status screen → showcase. The assertions below are unchanged.
+ */
 async function renderScreens() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } });
-  await render(
-    <QueryClientProvider client={client}>
-      <ApiProvider client={{ getSystemStatus: up }}>
-        <AppearanceProvider storage={createMemoryStorage()} configuredBrand={null}>
-          <Screens />
-        </AppearanceProvider>
-      </ApiProvider>
-    </QueryClientProvider>,
-  );
+  const user = userEvent.setup();
+  await renderMobile({ api: fakeApi({ restoreSession: async () => true }) });
+  await user.press(await screen.findByRole('link', { name: 'Sistem durumu' }));
   await screen.findByText('Sistem çalışıyor');
 }
 
@@ -65,5 +52,51 @@ describe('Screens (mobile, spec 0002 User experience — access)', () => {
     } finally {
       listen.mockRestore();
     }
+  });
+});
+
+describe('Screens (mobile, spec 0003 — access)', () => {
+  it('signed out: the login screen, with the status screen one link away and back', async () => {
+    const user = userEvent.setup();
+    await renderMobile();
+
+    expect(await screen.findByRole('heading', { name: 'Giriş yap' })).toBeOnTheScreen();
+    await user.press(screen.getByRole('link', { name: 'Sistem durumu' }));
+    expect(await screen.findByText('Sistem çalışıyor')).toBeOnTheScreen();
+
+    await user.press(screen.getByRole('button', { name: 'Geri' }));
+    expect(await screen.findByRole('heading', { name: 'Giriş yap' })).toBeOnTheScreen();
+  });
+
+  it('signed out: the status screen offers no way into the showcase (AC-11)', async () => {
+    const user = userEvent.setup();
+    await renderMobile();
+
+    await user.press(await screen.findByRole('link', { name: 'Sistem durumu' }));
+    await screen.findByText('Sistem çalışıyor');
+
+    expect(screen.queryByRole('link', { name: 'Tasarım vitrini' })).toBeNull();
+  });
+
+  it('while the stored session is being checked, nothing signed-in is shown', async () => {
+    await renderMobile({ api: fakeApi({ restoreSession: () => new Promise<boolean>(() => undefined) }) });
+
+    expect(await screen.findByText('Oturum kontrol ediliyor…')).toBeOnTheScreen();
+    expect(screen.queryByText(/Hoş geldiniz/)).toBeNull();
+  });
+
+  it('a session that ends on its own returns to the login screen with the notice, even from the showcase', async () => {
+    const user = userEvent.setup();
+    const { expiry } = await renderMobile({ api: fakeApi({ restoreSession: async () => true }) });
+    await user.press(await screen.findByRole('link', { name: 'Tasarım vitrini' }));
+    await screen.findByRole('heading', { name: 'Tasarım vitrini' });
+
+    await act(async () => expiry.notify());
+
+    expect(await screen.findByRole('heading', { name: 'Giriş yap' })).toBeOnTheScreen();
+    expect(screen.getByTestId('session-expired')).toHaveTextContent(
+      'Oturumunuz sona erdi, lütfen tekrar giriş yapın',
+    );
+    expect(screen.queryByRole('heading', { name: 'Tasarım vitrini' })).toBeNull();
   });
 });

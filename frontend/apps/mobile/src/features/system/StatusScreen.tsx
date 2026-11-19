@@ -13,8 +13,18 @@ const DOT: Record<StatusView['kind'], keyof NativeTheme['colors']> = {
   unreachable: 'danger',
 };
 
-/** `onOpenShowcase` shows the "Tasarım vitrini" link (spec 0002: open in every build until B-10). */
-export function StatusScreen({ onOpenShowcase }: { onOpenShowcase?: () => void }) {
+/**
+ * `onOpenShowcase` shows the "Tasarım vitrini" link — signed-in users only since spec 0003 (AC-11, B-10).
+ * `onBack` shows "Geri", returning to the login or home screen. Android's back gesture is left to the system here
+ * (the shipped spec 0002 test pins that the status screen does not capture it).
+ */
+export function StatusScreen({
+  onOpenShowcase,
+  onBack,
+}: {
+  onOpenShowcase?: () => void;
+  onBack?: () => void;
+}) {
   const { t } = useTranslation();
   const { view, retry } = useSystemStatus();
   const { theme } = useAppearance();
@@ -36,6 +46,16 @@ export function StatusScreen({ onOpenShowcase }: { onOpenShowcase?: () => void }
   return (
     <View style={styles.screen}>
       <View style={styles.card}>
+        {onBack && (
+          <Pressable
+            role="button"
+            accessibilityLabel={t('status.back')}
+            onPress={onBack}
+            style={({ pressed }) => [styles.back, pressed && styles.buttonPressed]}
+          >
+            <Text style={styles.linkLabel}>{t('status.back')}</Text>
+          </Pressable>
+        )}
         <View style={styles.header}>
           <View style={styles.logo}>
             <Text style={styles.logoLetter}>{t('app.name').charAt(0)}</Text>
@@ -150,6 +170,12 @@ function createStyles(theme: NativeTheme) {
     },
     buttonPressed: { opacity: theme.opacity.pressed, transform: [{ scale: theme.motion.pressScale }] },
     buttonLabel: { ...theme.text('md', 'semibold'), color: theme.colors.onBrand },
+    back: {
+      minHeight: theme.size.control,
+      alignSelf: 'flex-start',
+      justifyContent: 'center',
+      marginBottom: theme.spacing.sm,
+    },
     link: {
       marginTop: theme.spacing.lg,
       minHeight: theme.size.control,
