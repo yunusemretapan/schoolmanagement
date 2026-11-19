@@ -10,7 +10,8 @@
     "runningAnnouncement": "Sistem çalışıyor, Sürüm {{version}}",
     "unreachable": "Sunucuya ulaşılamıyor",
     "retry": "Tekrar dene",
-    "loading": "Yükleniyor"
+    "loading": "Yükleniyor",
+    "back": "Geri"
   },
   "appearance": {
     "open": "Görünüm",
@@ -63,5 +64,44 @@
       "duration": "{{name}} · {{ms}} ms",
       "play": "Oynat"
     }
+  },
+  "auth": {
+    "title": "Giriş yap",
+    "subtitle": "Hesabınızla devam edin",
+    "identifier": "E-posta veya telefon",
+    "password": "Şifre",
+    "showPassword": "Şifreyi göster",
+    "submit": "Giriş yap",
+    "submitting": "Giriş yapılıyor…",
+    "statusLink": "Sistem durumu",
+    "restoring": "Oturum kontrol ediliyor…",
+    "sessionExpired": "Oturumunuz sona erdi, lütfen tekrar giriş yapın",
+    "errors": {
+      "required": "Bu alan zorunlu",
+      "invalidIdentifier": "Geçerli bir e-posta veya telefon girin",
+      "invalidCredentials": "E-posta/telefon veya şifre hatalı",
+      "rateLimited": "Çok fazla deneme yapıldı, lütfen biraz sonra tekrar deneyin",
+      "network": "Sunucuya ulaşılamıyor, tekrar deneyin"
+    },
+    "unreachable": "Sunucuya ulaşılamıyor",
+    "retry": "Tekrar dene"
+  },
+  "home": {
+    "title": "Ana sayfa",
+    "greeting": "Hoş geldiniz, {{name}}",
+    "institution": "Kurum",
+    "roles": "Roller",
+    "status": "Sistem durumu",
+    "showcase": "Tasarım vitrini",
+    "logout": "Çıkış yap",
+    "loading": "Yükleniyor",
+    "error": "Bilgileriniz yüklenemedi",
+    "retry": "Tekrar dene"
+  },
+  "roles": {
+    "ADMIN": "Kurucu / Yönetici",
+    "TEACHER": "Öğretmen",
+    "GUARDIAN": "Veli",
+    "ACCOUNTANT": "Muhasebe / İdari personel"
   }
 }

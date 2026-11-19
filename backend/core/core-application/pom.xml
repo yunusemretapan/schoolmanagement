@@ -15,6 +15,18 @@
       <groupId>com.schoolos</groupId>
       <artifactId>core-crosscutting</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.schoolos</groupId>
+      <artifactId>core-security</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate.validator</groupId>
+      <artifactId>hibernate-validator</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
-
 </project>

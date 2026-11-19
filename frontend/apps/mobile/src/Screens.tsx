@@ -1,23 +1,109 @@
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAppearance } from './appearance/AppearanceProvider';
+import { useAuth } from './auth/AuthProvider';
+import { LoginScreen } from './features/auth/LoginScreen';
 import { DesignShowcase } from './features/design/DesignShowcase';
+import { HomeScreen } from './features/home/HomeScreen';
 import { StatusScreen } from './features/system/StatusScreen';
+import type { NativeTheme } from './theme';
 
-/** Two screens only: a state switch is enough until spec 0004 decides on navigation (plan 0002). */
+type Screen = 'main' | 'status' | 'showcase';
+
+/**
+ * Screen switch (no navigation library; plan 0002). Signed out: login, with the status screen one link away.
+ * Signed in: home → status / showcase. The showcase is reachable only signed in (spec 0003, AC-11; B-10).
+ */
 export function Screens() {
-  const { scheme } = useAppearance();
-  const [screen, setScreen] = useState<'status' | 'showcase'>('status');
-  const openShowcase = useCallback(() => setScreen('showcase'), []);
-  const backToStatus = useCallback(() => setScreen('status'), []);
+  const { t } = useTranslation();
+  const { scheme, theme } = useAppearance();
+  const { status, retry } = useAuth();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  const [screen, setScreen] = useState<Screen>('main');
+  // The showcase goes back to where it was opened from (home or the status screen).
+  const [showcaseFrom, setShowcaseFrom] = useState<'main' | 'status'>('main');
+  const toMain = useCallback(() => setScreen('main'), []);
+  const toStatus = useCallback(() => setScreen('status'), []);
+  const showcaseFromMain = useCallback(() => {
+    setShowcaseFrom('main');
+    setScreen('showcase');
+  }, []);
+  const showcaseFromStatus = useCallback(() => {
+    setShowcaseFrom('status');
+    setScreen('showcase');
+  }, []);
+  const backFromShowcase = useCallback(() => setScreen(showcaseFrom), [showcaseFrom]);
+  const signedIn = status === 'signedIn';
+  const current: Screen = !signedIn && screen === 'showcase' ? 'main' : screen;
+
+  let content;
+  if (status === 'restoring') {
+    content = (
+      <View style={styles.center}>
+        <Text accessibilityLiveRegion="polite" style={styles.muted}>
+          {t('auth.restoring')}
+        </Text>
+      </View>
+    );
+  } else if (current === 'status') {
+    content = <StatusScreen onBack={toMain} onOpenShowcase={signedIn ? showcaseFromStatus : undefined} />;
+  } else if (status === 'unreachable') {
+    content = (
+      <View style={styles.center}>
+        <Text role="alert" style={styles.error}>
+          {t('auth.unreachable')}
+        </Text>
+        <Pressable role="button" accessibilityLabel={t('auth.retry')} onPress={retry} style={styles.button}>
+          <Text style={styles.buttonLabel}>{t('auth.retry')}</Text>
+        </Pressable>
+        {/* The status screen needs no session and is most useful exactly now (review 2, L-6). */}
+        <Pressable
+          role="link"
+          accessibilityLabel={t('auth.statusLink')}
+          onPress={toStatus}
+          style={styles.link}
+        >
+          <Text style={styles.linkLabel}>{t('auth.statusLink')}</Text>
+        </Pressable>
+      </View>
+    );
+  } else if (current === 'showcase') {
+    content = <DesignShowcase onBack={backFromShowcase} />;
+  } else if (signedIn) {
+    content = <HomeScreen onOpenStatus={toStatus} onOpenShowcase={showcaseFromMain} />;
+  } else {
+    content = <LoginScreen onOpenStatus={toStatus} />;
+  }
+
   return (
     <>
-      {screen === 'showcase' ? (
-        <DesignShowcase onBack={backToStatus} />
-      ) : (
-        <StatusScreen onOpenShowcase={openShowcase} />
-      )}
+      {content}
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
     </>
   );
+}
+
+function createStyles(theme: NativeTheme) {
+  return StyleSheet.create({
+    center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.canvas },
+    muted: { ...theme.text('md'), color: theme.colors.inkMuted },
+    error: { ...theme.text('md', 'semibold'), color: theme.colors.danger, marginBottom: theme.spacing.md },
+    button: {
+      minHeight: theme.size.control,
+      paddingHorizontal: theme.spacing.lg,
+      backgroundColor: theme.colors.brand,
+      borderRadius: theme.radius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    buttonLabel: { ...theme.text('md', 'semibold'), color: theme.colors.onBrand },
+    link: { minHeight: theme.size.control, justifyContent: 'center', marginTop: theme.spacing.sm },
+    linkLabel: {
+      ...theme.text('sm', 'semibold'),
+      color: theme.colors.brandText,
+      textDecorationLine: 'underline',
+    },
+  });
 }

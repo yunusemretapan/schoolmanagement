@@ -1,8 +1,24 @@
 spring:
   application:
     name: schoolos
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/schoolos}
+    username: ${DB_USER:schoolos_app}
+    password: ${DB_PASSWORD:}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
 server:
   error:
     include-stacktrace: never
     include-message: never
     include-exception: false
+app:
+  security:
+    # Required outside the dev profile; no default on purpose (docs/security.md, Secrets).
+    jwt-secret: ${JWT_SECRET}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}

@@ -30,16 +30,9 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
   — Source: spec 0001, review round 1 (I-1) — Severity: info — Recommendation: ortak `packages/i18n` (ve paylaşılan hook)
   — Deferred by: yunusemretapan, 2026-11-17, plan bunu onayladı; ayrışma riski ileride. Not (VERIFY V-F1): web `tr-TR.json`'daki
   `status.runningAnnouncement` yalnızca mobilde kullanılıyor; ortak paket gelince tek kopyada kalır
-- **B-7** — Yetkilendirme spec'i için notlar: durum sorgusu açık bir `@Public` (veya eşdeğeri) işaretiyle tek istisna olmalı;
-  Expo web (8081) ↔ backend (8080) CORS ayarı yok — Source: spec 0001, review round 1 (I-2, I-3;
-  `backend/webapi/.../config/MediatorConfig.java:21`) — Severity: info — Recommendation: yetkilendirme spec'inin kabul
-  kriterlerine ekle; CORS'u ilk ihtiyaç duyan spec'te — Deferred by: yunusemretapan, 2026-11-17, kimlik doğrulama kapsam dışı
 - **B-8** — 415 `Accept` başlığının korunması testsiz (405 `Allow` test ediliyor; kod yolu ortak `framework.getHeaders()`)
   — Source: spec 0001, VERIFY round 1 (V-F2; `backend/webapi/.../errors/GlobalExceptionHandlerTest.java`) — Severity: low
   — Recommendation: sonraki backend spec'inde 415 için `Accept` başlığı assert'i — Deferred by: yunusemretapan, 2026-11-17, risk düşük
-- **B-10** — Tasarım vitrini (web `/tasarim`, mobil bağlantı) giriş sistemi olmadığı için her build'de herkese açık
-  — Source: spec 0002, self-critique G3 — Severity: low — Recommendation: yetkilendirme spec'inde vitrini yönetici rolüne ve
-  geliştirme ortamına kısıtla — Deferred by: yunusemretapan, 2026-11-17, giriş sistemi henüz yok
 - **B-11** — Mobil `AppearancePanel` radyoları react-native-web çıktısında `aria-checked` taşımıyor (RN-web
   `accessibilityState.checked`'i çevirmiyor); yerel platformda sorun yok — Source: spec 0002, VERIFY round 1 (I-1;
   `frontend/apps/mobile/src/appearance/AppearancePanel.tsx`, OptionGroup) — Severity: info — Recommendation: mobil web
@@ -59,3 +52,15 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
   introspection ile PASS (spec 0001 AC-6 emsali); yerel gözlem ek güvence — Source: spec 0002, VERIFY round 1 (G-1) — Severity: low
   — Recommendation: Android emülatör (ve imkân olursa iOS simülatör) development build'de gözlem + ekran görüntüsü; aksayan
   davranış bug raporu olur — Deferred by: yunusemretapan, 2026-11-18, emülatör kurulumu sonraya bırakıldı
+- **B-15** — Güvenlik olaylarının (başarılı/başarısız giriş, kilitlenme, oturum zinciri iptali) kalıcı kaydı yok; yalnızca ID içeren
+  uygulama logu var — Source: spec 0003, self-critique (G4) — Severity: low — Recommendation: audit log (BR-6) spec'iyle birlikte
+  append-only güvenlik olayı kaydı — Deferred by: yunusemretapan, 2026-11-19, audit log spec'ine bırakıldı
+- **B-16** — Giriş rate limit'i tek sunucunun belleğinde ve kaynak olarak `remoteAddr` kullanıyor: birden çok sunucuda sayaç
+  bölünür; ters vekil (reverse proxy) arkasında tüm kullanıcılar vekilin adresini paylaşır — Source: spec 0003, plan R4
+  (`backend/webapi/.../security/InMemorySourceRateLimiter.java`) — Severity: medium — Recommendation: canlıya çıkıştan önce
+  güvenilen vekil başlığını (`X-Forwarded-For`, yalnızca bilinen vekilden) okuyan kaynak çözümü ve paylaşılan sayaç
+  (Postgres veya Redis) — Deferred by: yunusemretapan, 2026-11-19, plan 0003 R4 kararı; tek sunuculu geliştirme
+- **B-17** — Bozuk JSON gövdesi (`HttpMessageNotReadableException`) 400 yerine 500 `INTERNAL_ERROR` dönüyor ve ERROR log'u
+  üretiyor; iç ayrıntı sızmıyor — Source: spec 0003, VERIFY round 1 (F-1; `backend/webapi/.../errors/GlobalExceptionHandler.java`)
+  — Severity: low — Recommendation: okunamayan gövdeyi 400 `VALIDATION_FAILED`'e eşle, 4xx'i ERROR'a yazma; bir webapi testiyle
+  — Deferred by: yunusemretapan, 2026-11-20, spec 0001'den beri var, spec dışı

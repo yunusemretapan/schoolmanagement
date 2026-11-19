@@ -15,14 +15,16 @@
 ## Language & framework versions
 Sabitlendiği yer: `backend/pom.xml`, `frontend/**/package.json` + `package-lock.json`, `frontend/.nvmrc` (spec 0001).
 - Backend: **Java 25 LTS**, **Spring Boot 4.1.2** (`spring-boot-starter-webmvc`), Maven 3.9.16 (wrapper `mvnw` / `mvnw.cmd`),
-  Error Prone 2.52, Spotless 3.11 + Palantir Java Format 2.103. Flyway, Spring Data JPA, JobRunr: ilk ihtiyaç duyan spec ekler.
-- Veritabanı: **PostgreSQL 18** (ilk veritabanı spec'inde bağlanır).
+  Error Prone 2.52, Spotless 3.11 + Palantir Java Format 2.103. Spec 0003: Spring Data JPA (Hibernate 7.4), Flyway 12.4
+  (+ `flyway-database-postgresql`), Spring Security 7.1 (+ `spring-security-oauth2-jose`: Nimbus JWT), Bean Validation,
+  PostgreSQL JDBC 42.7 — hepsi Boot 4.1.2 BOM'undan; Bouncy Castle `bcprov-jdk18on` 1.87 (Argon2id). JobRunr: ilk ihtiyaç duyan spec ekler.
+- Veritabanı: **PostgreSQL 18** (spec 0003; yerelde `backend/compose.yaml`).
 - Frontend: **Node 26 LTS**, **TypeScript 6.0** (7.x `typescript-eslint` ile uyumsuz), **React 19.3.0**, Vite 8, Tailwind CSS 4.3,
   TanStack Query 5, i18next 27; test: Vitest 5 + Testing Library. Radix UI 1.8.1 (`radix-ui`), Inter (`@fontsource-variable/inter`
-  5.3.0, OFL-1.1) — spec 0002. Motion, Zod: ilk ihtiyaç duyan spec ekler.
+  5.3.0, OFL-1.1) — spec 0002. Spec 0003: React Router 7.18.6 (ADR 0004), Zod 4.6.7 (`@schoolos/auth`). Motion: ilk ihtiyaç duyan spec ekler.
 - Mobil: **Expo SDK 58** (React Native 0.88.1, React 19.3.0); test: jest-expo 58 + React Native Testing Library 14.
   Spec 0002: Reanimated 4.7.1 + Worklets 0.13.0, AsyncStorage 2.2.0, `expo-font` / `expo-splash-screen` ~58.0,
-  Inter (`@expo-google-fonts/inter` 0.4.2, OFL-1.1). Gesture Handler, Skia: ilk ihtiyaç duyan spec ekler; sürüm her zaman
+  Inter (`@expo-google-fonts/inter` 0.4.2, OFL-1.1). Spec 0003: `expo-secure-store` ~58.0.3. Gesture Handler, Skia: ilk ihtiyaç duyan spec ekler; sürüm her zaman
   Expo'nun `bundledNativeModules` listesinden.
 - AI: Claude API (`claude-sonnet-5-5`) + ayrı bir STT servisi (spec'te seçilir).
 - Sürüm yükseltmesi kendi spec'iyle yapılır; Expo paketleri `npx expo install` ile SDK'nın izin verdiği sürüme.
@@ -78,6 +80,12 @@ Spec 0002; ayrıntı: `docs/design/motion.md`.
 - RN'de `role` taşıyan ama `accessible` olmayan `View` RNTL'nin `getByRole`'üne görünmez; grubu `accessible` yapmak ise VoiceOver'da çocuklarını gizler — kapsayıcıyı testID ile bul, rol ve adını prop olarak doğrula — from spec 0002 build step 5
 - Expo `app.json` `userInterfaceStyle: "light"` yerel build'de `useColorScheme()`'i hep 'light'a kilitler; Jest sahtesi bunu yakalamaz — tema destekleyen uygulamada `"automatic"` + `expo-system-ui` (Android) ve `app.json`'u okuyan test — from spec 0002 review 1 H-1 (A-4)
 - Tailwind v4 `transition-*` ve Reanimated `withTiming` / `FadeIn` gibi builder'lar eğri ya da süre verilmezse kendi varsayılanını kullanır (`cubic-bezier(0.4, 0, 0.2, 1)`, `Easing.inOut(quad)`, 300 ms); değer yazılmadığı için regex lint görmez — varsayılanı kaynağında kapat: web `index.css` kilitleri + `--default-transition-*` token'a bağlı, mobil zamanlama yalnızca `src/motion/timing` üzerinden — from spec 0002 review 3 M-1 (A-7)
+- PostgreSQL süper kullanıcısı (ve `BYPASSRLS` rolü) Row-Level Security'yi `FORCE` olsa bile atlar; Docker imajının `POSTGRES_USER`'ı süper kullanıcıdır — uygulama `schoolos_app` gibi süper olmayan bir rolle bağlanır (`backend/compose.yaml`) — from spec 0003 build step 1
+- Hibernate filtresi `EntityManager.find` (ve Spring Data `findById`) için çalışmaz; tenant'a bağlı okuma JPQL ile yapılır, RLS ikinci hat — from spec 0003 build step 1
+- Spring Security'de `CorsConfigurationSource` parametre olarak enjekte edilirse Spring MVC'nin `mvcHandlerMappingIntrospector` bean'i de aday olur ve başlatma çöker — `.cors(Customizer.withDefaults())` + `corsConfigurationSource` adlı bean — from spec 0003 build step 5
+- Dönen refresh token'la iki paralel yenileme, ikincisini "yeniden kullanım" yapar ve oturumu iptal ettirir — istemci yenilemeyi tek uçuşta (single-flight) yapar (`@schoolos/api-client`) — from spec 0003 build step 6
+- Doğrulama regex'leri sınırsız girdide karesel geri izleme yapabilir (`[^@\s]+\.[^@\s]+` gibi çakışan tekrarlar; 80 KB → 14 s) ve doğrulama rate limit'ten önce çalışır — önce uzunluk sınırı, sonra çakışmayan desen — from spec 0003 review 1 H-2 (A-7)
+- RNTL 14'te `act` asenkrondur; senkron `act(() => …)` sonrası durum güncellenmemiş olabilir — `await act(async () => …)` — from spec 0003 build step 8
 - Windows satır sonları — `.gitattributes` ile LF; `mvnw` ve `mvnw.cmd` ikisi de commit edilir — from bootstrap; Windows'tan eklenen `mvnw` git'e çalıştırılamaz (100644) girer ve Linux CI `Permission denied` verir — `git update-index --chmod=+x backend/mvnw` — from spec 0002 SHIP (A-9)
 
 ## Enforced by tooling

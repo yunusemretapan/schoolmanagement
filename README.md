@@ -234,6 +234,31 @@ Everything is plain Markdown and POSIX shell — edit, don't fork the philosophy
   (`Status:` values, `Approved by / on:`) stay English so the gates keep working.
 - Want stack presets? That's the packs layer — coming after v1 proves the core.
 
+## Bu proje: yerel çalıştırma (Okul Yönetim Platformu)
+
+`./scripts/check` veritabanı istemez (ADR 0003). Uygulamayı yerelde çalıştırmak için (spec 0003):
+
+```bash
+cd backend
+cp .env.example .env                 # POSTGRES_PASSWORD ve DB_PASSWORD yalnızca yerel değerler
+docker compose up -d                 # PostgreSQL 18; uygulama süper olmayan schoolos_app rolüyle bağlanır (RLS)
+./mvnw -q -DskipTests install
+DB_PASSWORD=<.env'deki değer> SPRING_PROFILES_ACTIVE=dev java -jar webapi/target/webapi-0.1.0.jar
+```
+
+`dev` profili Flyway migration'larını uygular ve örnek kullanıcıları oluşturur (yalnızca geliştirmede; şifre
+`app.dev-seed.password`): `kurucu@`, `ogretmen@`, `veli@`, `muhasebe@`, `ogretmen.veli@ornek.test` ve ikinci kurum
+`kurucu@deneme.test`. Web: `cd frontend && npm run dev -w @schoolos/web` (Vite `/api`'yi 8080'e aktarır). Expo web
+(8081) için CORS kökeni `dev` profilinde tanımlıdır.
+
+**Operatör aracı** — gerçek bir kurum ve ilk Kurucu hesabı (arayüz yok; şifre argüman değil, ortam değişkeni):
+
+```bash
+PROVISION_FOUNDER_PASSWORD=... JWT_SECRET=... DB_PASSWORD=... java -jar webapi/target/webapi-0.1.0.jar \
+  --spring.main.web-application-type=none --provision-tenant \
+  --institution-name="Örnek Koleji" --founder-name="Ad Soyad" --email=kurucu@okul.com.tr --phone=05320000000
+```
+
 ## License
 
 MIT

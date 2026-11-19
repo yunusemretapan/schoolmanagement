@@ -6,6 +6,7 @@ import { ApiProvider } from '../../api/ApiProvider';
 import { AppearanceProvider } from '../../appearance/AppearanceProvider';
 import { createMemoryStorage } from '../../test/device';
 import { StatusScreen } from './StatusScreen';
+import { fakeApi } from '../../test/renderMobile';
 
 async function renderWith(getSystemStatus: ApiClient['getSystemStatus']) {
   const client = new QueryClient({
@@ -14,7 +15,7 @@ async function renderWith(getSystemStatus: ApiClient['getSystemStatus']) {
   });
   await render(
     <QueryClientProvider client={client}>
-      <ApiProvider client={{ getSystemStatus }}>
+      <ApiProvider client={fakeApi({ getSystemStatus })}>
         <AppearanceProvider storage={createMemoryStorage()} configuredBrand={null}>
           <StatusScreen />
         </AppearanceProvider>
