@@ -1,6 +1,6 @@
 import type { ApiClient, CurrentUser } from '@schoolos/api-client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { useEffect } from 'react';
 import { MemoryRouter, useLocation, useNavigate, type NavigateFunction } from 'react-router';
 import { AppRoutes } from '../App';
@@ -29,22 +29,27 @@ export function fakeApi(overrides: Partial<ApiClient> = {}): ApiClient {
   };
 }
 
-let currentPath = '';
 let navigateFn: NavigateFunction | null = null;
 
-/** Records the router's current path (and its navigate) so tests can assert where the user ended up. */
+/**
+ * Renders the router's current path into the DOM, committed together with the screen it belongs to, so a test
+ * that has found the screen reads the matching path (no effect timing in between). Keeps navigate for goBack().
+ */
 function LocationProbe() {
   const location = useLocation();
   const navigate = useNavigate();
   useEffect(() => {
-    currentPath = location.pathname;
     navigateFn = navigate;
-  }, [location, navigate]);
-  return null;
+  }, [navigate]);
+  return (
+    <output data-testid="router-location" hidden>
+      {location.pathname}
+    </output>
+  );
 }
 
 export function pathname(): string {
-  return currentPath;
+  return screen.getByTestId('router-location').textContent ?? '';
 }
 
 /** The browser's Back button, through the router's own history. */
