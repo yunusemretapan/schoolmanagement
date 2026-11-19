@@ -85,6 +85,11 @@ final class SecurityTestContext implements AutoCloseable {
             return "login";
         }
 
+        @PostMapping(SecurityConfig.LOGOUT_PATH)
+        String logout() {
+            return "logout";
+        }
+
         /** Echoes the tenant the request runs in. */
         @GetMapping("/api/v1/me")
         String me() {

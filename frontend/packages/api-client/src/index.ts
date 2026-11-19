@@ -169,11 +169,14 @@ export function createApiClient(
 
     restoreSession: () => refresh(),
 
+    /** Always asks the server, even with an expired access token (review 1, H-1): the refresh token proves the session. */
     async logout() {
       try {
-        if (tokens.accessToken !== null) {
-          await client.POST('/api/v1/auth/logout', { headers: bearer() });
-        }
+        const refreshToken = clientType === 'MOBILE' ? await tokens.loadRefreshToken() : null;
+        await client.POST('/api/v1/auth/logout', {
+          headers: bearer(),
+          body: refreshToken === null ? undefined : { refreshToken },
+        });
       } catch {
         // Signing out locally must work offline too; the server session then simply expires.
       } finally {

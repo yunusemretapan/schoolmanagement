@@ -38,7 +38,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
  * HTTP security: stateless bearer tokens, default deny at the door (spec 0003, Req. 9). Only the status query and
- * login/refresh are open; everything else needs a valid access token, and the Mediator's AuthorizationBehavior
+ * login/refresh/logout are open (logout must work after the access token expired: review 1, H-1); everything else needs a valid access token, and the Mediator's AuthorizationBehavior
  * checks the permission behind it. CSRF protection is off because no endpoint trusts an ambient credential except
  * refresh, whose cookie is SameSite=Strict and scoped to the auth path ({@link RefreshCookie}).
  */
@@ -50,6 +50,7 @@ public class SecurityConfig {
     public static final String STATUS_PATH = "/api/v1/system/status";
     public static final String LOGIN_PATH = "/api/v1/auth/login";
     public static final String REFRESH_PATH = "/api/v1/auth/refresh";
+    public static final String LOGOUT_PATH = "/api/v1/auth/logout";
 
     @Bean
     SecurityFilterChain apiSecurity(HttpSecurity http, TokenService tokens, SessionValidator sessions)
@@ -64,7 +65,7 @@ public class SecurityConfig {
                 .anonymous(anonymous -> anonymous.disable())
                 .authorizeHttpRequests(requests -> requests.requestMatchers(HttpMethod.GET, STATUS_PATH)
                         .permitAll()
-                        .requestMatchers(HttpMethod.POST, LOGIN_PATH, REFRESH_PATH)
+                        .requestMatchers(HttpMethod.POST, LOGIN_PATH, REFRESH_PATH, LOGOUT_PATH)
                         .permitAll()
                         .anyRequest()
                         .authenticated())

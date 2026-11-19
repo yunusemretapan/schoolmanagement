@@ -70,7 +70,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** End this device's session (spec 0003). Bearer token required. */
+        /**
+         * End this device's session (spec 0003). Public, so it works after the access token expired.
+         * @description The session is found from the bearer token when valid, otherwise from the refresh token (MOBILE body, WEB cookie). Always 204; the WEB cookie is cleared.
+         */
         post: operations["logout"];
         delete?: never;
         options?: never;
@@ -254,7 +257,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RefreshRequest"];
+            };
+        };
         responses: {
             /** @description Signed out. */
             204: {

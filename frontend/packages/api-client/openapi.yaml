@@ -76,9 +76,16 @@ paths:
   /api/v1/auth/logout:
     post:
       operationId: logout
-      summary: End this device's session (spec 0003). Bearer token required.
-      security:
-        - bearer: []
+      summary: End this device's session (spec 0003). Public, so it works after the access token expired.
+      description: >-
+        The session is found from the bearer token when valid, otherwise from the refresh token (MOBILE body, WEB
+        cookie). Always 204; the WEB cookie is cleared.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
       responses:
         '204':
           description: Signed out.

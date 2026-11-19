@@ -3,6 +3,7 @@ package com.schoolos.application.features.identity.commands;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.schoolos.application.features.identity.IdentityFixture;
+import com.schoolos.application.features.identity.rules.RefreshTokens;
 import com.schoolos.application.features.identity.rules.SessionActivityChecker;
 import com.schoolos.core.security.CurrentUser;
 import com.schoolos.core.security.CurrentUserHolder;
@@ -46,11 +47,33 @@ class LogoutCommandHandlerTest {
         CurrentUserHolder.set(
                 new CurrentUser(admin.id(), admin.tenantId(), laptop, Set.of("ADMIN"), Set.of(Permission.SESSION_END)));
 
-        handler.handle(new LogoutCommand());
+        handler.handle(new LogoutCommand(null));
 
         assertThat(fx.sessions.get(laptop).revokedAt()).isEqualTo(fx.clock.instant());
         assertThat(checker.isActive(laptop)).isFalse();
         assertThat(checker.isActive(phone)).isTrue();
+    }
+
+    @Test
+    void withAnExpiredAccessTokenTheRefreshTokenEndsTheSessionReview1H1() {
+        UUID laptop = open(ClientType.WEB);
+        fx.sessions.put(laptop, fx.sessions.get(laptop).rotated(RefreshTokens.hash("current"), fx.clock.instant()));
+
+        handler.handle(new LogoutCommand(RefreshTokens.format(laptop, "current")));
+
+        assertThat(checker.isActive(laptop)).isFalse();
+    }
+
+    @Test
+    void aRefreshTokenThatDoesNotMatchEndsNothing() {
+        UUID laptop = open(ClientType.WEB);
+        fx.sessions.put(laptop, fx.sessions.get(laptop).rotated(RefreshTokens.hash("current"), fx.clock.instant()));
+
+        handler.handle(new LogoutCommand(RefreshTokens.format(laptop, "guessed")));
+        handler.handle(new LogoutCommand("garbage"));
+        handler.handle(new LogoutCommand(null));
+
+        assertThat(checker.isActive(laptop)).isTrue();
     }
 
     @Test

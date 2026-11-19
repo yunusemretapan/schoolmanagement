@@ -158,6 +158,29 @@ class AuthControllerTest {
     }
 
     @Test
+    void logoutWithoutAValidAccessTokenUsesTheCookieAndStillClearsItReview1H1() throws Exception {
+        mvc.perform(post("/api/v1/auth/logout").cookie(new Cookie("sos_refresh", "sid.current")))
+                .andExpect(status().isNoContent())
+                .andExpect(header().string("Set-Cookie", containsString("Max-Age=0")));
+
+        ArgumentCaptor<LogoutCommand> sent = ArgumentCaptor.forClass(LogoutCommand.class);
+        verify(mediator).send(sent.capture());
+        assertThat(sent.getValue().refreshToken()).isEqualTo("sid.current");
+    }
+
+    @Test
+    void mobileLogoutSendsTheRefreshTokenInTheBody() throws Exception {
+        mvc.perform(post("/api/v1/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"refreshToken\":\"sid.mobile\"}"))
+                .andExpect(status().isNoContent());
+
+        ArgumentCaptor<LogoutCommand> sent = ArgumentCaptor.forClass(LogoutCommand.class);
+        verify(mediator).send(sent.capture());
+        assertThat(sent.getValue().refreshToken()).isEqualTo("sid.mobile");
+    }
+
+    @Test
     void logoutEndsTheSessionAndClearsTheCookie() throws Exception {
         mvc.perform(post("/api/v1/auth/logout"))
                 .andExpect(status().isNoContent())

@@ -75,9 +75,16 @@ public class AuthController {
         return respond(outcome);
     }
 
+    /**
+     * Works with an expired access token too (review 1, H-1): the session is then found from the refresh token in the
+     * body (mobile) or the cookie (web). The cookie is cleared whatever happens.
+     */
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout() {
-        mediator.send(new LogoutCommand());
+    public ResponseEntity<Void> logout(
+            @RequestBody(required = false) RefreshRequest body,
+            @CookieValue(name = RefreshCookie.NAME, required = false) String cookie) {
+        String token = body != null && body.refreshToken() != null ? body.refreshToken() : cookie;
+        mediator.send(new LogoutCommand(token));
         return ResponseEntity.noContent()
                 .header(HttpHeaders.SET_COOKIE, RefreshCookie.clear().toString())
                 .build();

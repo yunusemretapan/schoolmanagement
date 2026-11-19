@@ -194,6 +194,37 @@ describe('signed-in calls', () => {
   });
 });
 
+describe('logout with an expired access token (review 1, H-1)', () => {
+  it('web still asks the server (the cookie identifies the session) and forgets the access token', async () => {
+    const tokens = createMemoryTokenStore();
+    const { fetchImpl, requests } = backend({
+      'POST /api/v1/auth/logout': () => new Response(null, { status: 204 }),
+    });
+
+    await createApiClient('http://api.test', fetchImpl, { clientType: 'WEB', tokens }).logout();
+
+    expect(requests).toHaveLength(1);
+    expect(requests[0]?.headers.get('Authorization')).toBeNull();
+    expect(await requests[0]?.text()).toBe('');
+  });
+
+  it('mobile sends the stored refresh token and then forgets it', async () => {
+    const tokens = createMemoryTokenStore();
+    tokens.accessToken = 'expired-access';
+    await tokens.saveRefreshToken('r1');
+    const { fetchImpl, requests } = backend({
+      'POST /api/v1/auth/logout': () => new Response(null, { status: 204 }),
+    });
+
+    await createApiClient('http://api.test', fetchImpl, { clientType: 'MOBILE', tokens }).logout();
+
+    expect(await requests[0]?.json()).toEqual({ refreshToken: 'r1' });
+    expect(requests[0]?.headers.get('Authorization')).toBe('Bearer expired-access');
+    expect(await tokens.loadRefreshToken()).toBeNull();
+    expect(tokens.accessToken).toBeNull();
+  });
+});
+
 describe('restoreSession and logout', () => {
   it('mobile without a stored refresh token has no session to restore and asks nothing', async () => {
     const { fetchImpl } = backend({});

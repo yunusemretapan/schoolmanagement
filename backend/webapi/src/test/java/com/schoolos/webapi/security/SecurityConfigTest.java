@@ -35,6 +35,11 @@ class SecurityConfigTest {
     }
 
     @Test
+    void logoutIsOpenSoAnExpiredAccessTokenCanStillSignOutReview1H1() throws Exception {
+        web.mvc.perform(post("/api/v1/auth/logout")).andExpect(status().isOk());
+    }
+
+    @Test
     void everythingElseWithoutATokenIs401WithAProblemCode() throws Exception {
         web.mvc
                 .perform(get("/api/v1/me"))
