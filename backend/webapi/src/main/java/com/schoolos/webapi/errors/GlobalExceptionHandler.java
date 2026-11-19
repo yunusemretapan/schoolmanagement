@@ -3,6 +3,10 @@ package com.schoolos.webapi.errors;
 import com.schoolos.core.crosscutting.exceptions.BusinessException;
 import com.schoolos.core.crosscutting.exceptions.ErrorCode;
 import com.schoolos.core.crosscutting.exceptions.NotFoundException;
+import com.schoolos.core.crosscutting.exceptions.TooManyRequestsException;
+import com.schoolos.core.crosscutting.exceptions.ValidationException;
+import com.schoolos.core.security.AuthorizationException;
+import com.schoolos.core.security.UnauthenticatedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -22,18 +26,43 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    static final String CODE = "code";
+    static final String CODE = Problems.CODE;
+    static final String ERRORS = "errors";
 
     private static final Logger LOG = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class, NotFoundException.class})
     public ProblemDetail notFound(Exception exception) {
-        return problem(HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
+        return Problems.of(HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND);
     }
 
     @ExceptionHandler(BusinessException.class)
     public ProblemDetail business(BusinessException exception) {
-        return problem(HttpStatus.UNPROCESSABLE_CONTENT, exception.code());
+        return Problems.of(HttpStatus.UNPROCESSABLE_CONTENT, exception.code());
+    }
+
+    /** 400 with field → code; the client builds the message (spec 0003, AC-3 server side). */
+    @ExceptionHandler(ValidationException.class)
+    public ProblemDetail validation(ValidationException exception) {
+        ProblemDetail problem = Problems.of(HttpStatus.BAD_REQUEST, ValidationException.CODE);
+        problem.setProperty(ERRORS, exception.fieldErrors());
+        return problem;
+    }
+
+    @ExceptionHandler(UnauthenticatedException.class)
+    public ProblemDetail unauthenticated(UnauthenticatedException exception) {
+        return Problems.of(HttpStatus.UNAUTHORIZED, UnauthenticatedException.CODE);
+    }
+
+    @ExceptionHandler(AuthorizationException.class)
+    public ProblemDetail forbidden(AuthorizationException exception) {
+        LOG.warn("Request refused: {}", exception.getMessage()); // names a request type, never personal data
+        return Problems.of(HttpStatus.FORBIDDEN, AuthorizationException.CODE);
+    }
+
+    @ExceptionHandler(TooManyRequestsException.class)
+    public ProblemDetail tooManyRequests(TooManyRequestsException exception) {
+        return Problems.of(HttpStatus.TOO_MANY_REQUESTS, exception.code());
     }
 
     /**
@@ -51,23 +80,17 @@ public class GlobalExceptionHandler {
             } else {
                 LOG.debug("Request rejected by Spring MVC with {}", status.value());
             }
-            return ResponseEntity.status(status).headers(framework.getHeaders()).body(problem(status, codeFor(status)));
+            return ResponseEntity.status(status)
+                    .headers(framework.getHeaders())
+                    .body(Problems.of(status, codeFor(status)));
         }
         LOG.error("Unhandled exception", exception);
         return ResponseEntity.internalServerError()
-                .body(problem(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_ERROR));
+                .body(Problems.of(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_ERROR));
     }
 
     private static ErrorCode codeFor(HttpStatusCode status) {
         HttpStatus known = HttpStatus.resolve(status.value());
         return new ErrorCode(known == null ? "HTTP_" + status.value() : known.name());
-    }
-
-    private static ProblemDetail problem(HttpStatusCode status, ErrorCode code) {
-        ProblemDetail problem = ProblemDetail.forStatus(status);
-        HttpStatus known = HttpStatus.resolve(status.value());
-        problem.setTitle(known == null ? "HTTP " + status.value() : known.getReasonPhrase());
-        problem.setProperty(CODE, code.value());
-        return problem;
     }
 }
