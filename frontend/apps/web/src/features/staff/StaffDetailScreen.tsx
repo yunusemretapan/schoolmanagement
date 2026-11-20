@@ -1,6 +1,6 @@
 import type { InvitationLink, StaffDetail } from '@schoolos/api-client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
 import { useApi } from '../../api/ApiProvider';
@@ -75,6 +75,16 @@ function StaffEditor({ detail }: { detail: StaffDetail }) {
   const [message, setMessage] = useState<{ kind: 'saved' | 'error'; key: string } | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [link, setLink] = useState<InvitationLink | null>(null);
+  // Deactivating or reactivating swaps the button under the keyboard user's focus (review 1, L-3): once the
+  // request is over, focus lands on the button now in its place, so the result is found where the action was.
+  const accountAction = useRef<HTMLButtonElement>(null);
+  const refocus = useRef(false);
+
+  useEffect(() => {
+    if (!refocus.current || busy) return;
+    refocus.current = false;
+    accountAction.current?.focus();
+  }, [busy]);
 
   const isAdmin = detail.roles.includes('ADMIN');
   const blockReason = detail.lastActiveAdmin
@@ -178,9 +188,13 @@ function StaffEditor({ detail }: { detail: StaffDetail }) {
       <div className="flex flex-col gap-sm border-t border-line pt-md">
         {detail.status === 'INACTIVE' ? (
           <button
+            ref={accountAction}
             type="button"
             disabled={busy}
-            onClick={() => void run(async () => show(await api.reactivateStaff(detail.id)))}
+            onClick={() => {
+              refocus.current = true;
+              void run(async () => show(await api.reactivateStaff(detail.id)));
+            }}
             className={SECONDARY}
           >
             {t('staff.reactivate')}
@@ -188,6 +202,7 @@ function StaffEditor({ detail }: { detail: StaffDetail }) {
         ) : (
           <>
             <button
+              ref={accountAction}
               type="button"
               disabled={busy || blockReason !== null}
               aria-describedby={blockReason === null ? undefined : 'deactivate-reason'}
@@ -214,6 +229,7 @@ function StaffEditor({ detail }: { detail: StaffDetail }) {
         onCancel={() => setConfirming(false)}
         onConfirm={() => {
           setConfirming(false);
+          refocus.current = true;
           void run(async () => show(await api.deactivateStaff(detail.id)));
         }}
       />

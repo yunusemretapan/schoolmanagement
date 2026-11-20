@@ -134,6 +134,25 @@ describe('StaffDetailScreen (web)', () => {
     expect(await screen.findByText('Aktif')).toBeInTheDocument();
   });
 
+  it('after confirming, focus lands on the button that took its place, and back again (review 1, L-3)', async () => {
+    const user = userEvent.setup();
+    renderApp({
+      api: asAdmin({
+        getStaff: async () => detail(),
+        deactivateStaff: async () => detail({ status: 'INACTIVE' }),
+        reactivateStaff: async () => detail(),
+      }),
+      path: PATH,
+    });
+
+    await user.click(await screen.findByRole('button', { name: 'Pasifleştir' }));
+    await user.click(screen.getAllByRole('button', { name: 'Pasifleştir' }).at(-1)!);
+
+    expect(await screen.findByRole('button', { name: 'Yeniden etkinleştir' })).toHaveFocus();
+    await user.click(screen.getByRole('button', { name: 'Yeniden etkinleştir' }));
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Pasifleştir' })).toHaveFocus());
+  });
+
   it('the last active administrator: role and deactivation are disabled with the reason', async () => {
     renderApp({
       api: asAdmin({ getStaff: async () => detail({ roles: ['ADMIN'], lastActiveAdmin: true }) }),
