@@ -327,6 +327,28 @@ final class JpaInstitutionRepositories {
             return any("gradeLevelId", gradeLevelId);
         }
 
+        @Override
+        public Set<UUID> usedCampusIds() {
+            return used("campusId");
+        }
+
+        @Override
+        public Set<UUID> usedTermIds() {
+            return used("termId");
+        }
+
+        @Override
+        public Set<UUID> usedGradeLevelIds() {
+            return used("gradeLevelId");
+        }
+
+        /** {@code field} is one of this class's constants, never input. */
+        private Set<UUID> used(String field) {
+            return Set.copyOf(em.createQuery("select distinct c." + field + " from ClassGroupEntity c", UUID.class)
+                    .getResultList());
+        }
+
+        /** {@code field} is one of this class's constants, never input. */
         private boolean any(String field, UUID id) {
             return em.createQuery("select count(c) from ClassGroupEntity c where c." + field + " = :id", Long.class)
                             .setParameter("id", id)

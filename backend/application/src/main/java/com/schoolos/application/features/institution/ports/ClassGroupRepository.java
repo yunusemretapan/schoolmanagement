@@ -3,6 +3,7 @@ package com.schoolos.application.features.institution.ports;
 import com.schoolos.domain.institution.ClassGroup;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /** Class groups of the bound institution only (BR-1). */
@@ -21,6 +22,13 @@ public interface ClassGroupRepository {
     boolean anyInTerm(UUID termId);
 
     boolean anyOfGradeLevel(UUID gradeLevelId);
+
+    /** Campuses, terms and grade levels that class groups belong to, in one read each (the structure view). */
+    Set<UUID> usedCampusIds();
+
+    Set<UUID> usedTermIds();
+
+    Set<UUID> usedGradeLevelIds();
 
     void create(ClassGroup group);
 
