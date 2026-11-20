@@ -12,6 +12,8 @@ import com.schoolos.application.features.identity.ports.UserRepository;
 import com.schoolos.application.features.identity.rules.StaffSearchTerm;
 import com.schoolos.core.application.behaviors.TenantSessionPort;
 import com.schoolos.core.application.behaviors.TransactionPort;
+import com.schoolos.core.application.events.DomainEvent;
+import com.schoolos.core.application.events.DomainEventPublisher;
 import com.schoolos.core.crosscutting.ids.IdGenerator;
 import com.schoolos.core.security.PasswordHasher;
 import com.schoolos.domain.identity.AccountStatus;
@@ -57,6 +59,10 @@ public final class IdentityFixture {
     public final List<AuditEvent> audit = new ArrayList<>();
 
     public final List<UUID> bindings = new ArrayList<>();
+    /** Domain events published, in order (ADR 0006); handlers of other modules are not run here. */
+    public final List<DomainEvent> events = new ArrayList<>();
+    /** The tenant bound when each event was published (empty when none was). */
+    public final List<Optional<UUID>> eventTenants = new ArrayList<>();
     /**
      * Row locks the handlers asked for, in order ("identity:<value or user id>", "session:<id>", "invitation:<id>",
      * "invitations-of:<user id>", "tenant:<id>"), and "rule:last-admin" when the last-admin rule was checked: review 1, M-1; plan 0004, R3.
@@ -274,6 +280,13 @@ public final class IdentityFixture {
     }
 
     /** Append only, and only into the bound tenant (RLS WITH CHECK). */
+    public DomainEventPublisher eventPublisher() {
+        return event -> {
+            events.add(event);
+            eventTenants.add(boundTenant());
+        };
+    }
+
     public AuditLog auditLog() {
         return event -> {
             if (!boundTenant().map(event.tenantId()::equals).orElse(false)) {

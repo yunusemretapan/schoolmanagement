@@ -44,6 +44,7 @@ import com.schoolos.core.application.behaviors.TenantSessionPort;
 import com.schoolos.core.application.behaviors.TransactionBehavior;
 import com.schoolos.core.application.behaviors.TransactionPort;
 import com.schoolos.core.application.behaviors.ValidationBehavior;
+import com.schoolos.core.application.events.DomainEventPublisher;
 import com.schoolos.core.application.mediator.Mediator;
 import com.schoolos.core.application.mediator.RequestHandler;
 import com.schoolos.core.crosscutting.ids.IdGenerator;
@@ -129,8 +130,10 @@ public class MediatorConfig {
             TenantSessionPort tenantSession,
             PasswordHasher passwords,
             IdGenerator ids,
-            Clock clock) {
-        return new ProvisionTenantCommandHandler(tenants, users, identities, tenantSession, passwords, ids, clock);
+            Clock clock,
+            DomainEventPublisher events) {
+        return new ProvisionTenantCommandHandler(
+                tenants, users, identities, tenantSession, passwords, ids, clock, events);
     }
 
     @Bean

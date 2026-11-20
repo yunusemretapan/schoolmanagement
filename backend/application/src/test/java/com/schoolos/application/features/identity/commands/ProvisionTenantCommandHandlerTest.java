@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.schoolos.application.features.identity.IdentityFixture;
 import com.schoolos.application.features.identity.constants.IdentityErrorCodes;
 import com.schoolos.application.features.identity.dtos.ProvisionedAccount;
+import com.schoolos.application.features.identity.events.TenantProvisioned;
 import com.schoolos.core.crosscutting.exceptions.BusinessException;
 import com.schoolos.domain.identity.LoginIdentity;
 import com.schoolos.domain.identity.Role;
@@ -24,10 +25,21 @@ class ProvisionTenantCommandHandlerTest {
             fx.tenantSession(),
             fx.passwords,
             fx.ids,
-            fx.clock);
+            fx.clock,
+            fx.eventPublisher());
 
     private final CreateSeedUserCommandHandler seed = new CreateSeedUserCommandHandler(
             fx.userRepository(), fx.identityRepository(), fx.tenantSession(), fx.passwords, fx.ids, fx.clock);
+
+    @Test
+    void theNewInstitutionIsAnnouncedInTheSameTransactionWithTheTenantBound() {
+        ProvisionedAccount created = provision.handle(new ProvisionTenantCommand(
+                " Örnek Koleji ", "Kurucu Bey", "kurucu@ornek.test", null, "Ornek-Sifre-2026"));
+
+        // spec 0005, Req. 3 / AC-3: the institution's first campus is created from this event
+        assertThat(fx.events).containsExactly(new TenantProvisioned(created.tenantId(), "Örnek Koleji"));
+        assertThat(fx.eventTenants).containsExactly(java.util.Optional.of(created.tenantId()));
+    }
 
     @Test
     void createsTheInstitutionAndItsFounderAsAdmin() {
