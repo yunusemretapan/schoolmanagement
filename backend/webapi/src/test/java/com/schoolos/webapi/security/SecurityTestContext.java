@@ -98,6 +98,16 @@ final class SecurityTestContext implements AutoCloseable {
             return "logout";
         }
 
+        @PostMapping(SecurityConfig.INVITATION_LOOKUP_PATH)
+        String invitationLookup() {
+            return "lookup";
+        }
+
+        @PostMapping(SecurityConfig.INVITATION_ACCEPT_PATH)
+        String invitationAccept() {
+            return "accept";
+        }
+
         /** Echoes the tenant the request runs in. */
         @GetMapping("/api/v1/me")
         String me() {

@@ -269,9 +269,16 @@ final class JpaIdentityRepositories {
     @Repository
     static class Staff implements StaffDirectory {
 
+        /**
+         * Hibernate's {@code array_position}, which answers 0 (not null) when the role is absent. Not
+         * {@code array_contains}: it binds {@code varchar[]}, and PostgreSQL has no {@code text[] @> varchar[]}
+         * operator. Both found against PostgreSQL in the plan 0004 step 5 smoke run; unit tests cannot see them.
+         */
+        private static final String HAS_ROLE = "array_position(u.roles, '%s') > 0";
+
         private static final String FROM = " from UserEntity u join LoginIdentityEntity i on i.userId = u.id"
-                + " where i.tenantId = u.tenantId and (array_contains(u.roles, 'ADMIN')"
-                + " or array_contains(u.roles, 'TEACHER') or array_contains(u.roles, 'ACCOUNTANT'))";
+                + " where i.tenantId = u.tenantId and (" + HAS_ROLE.formatted("ADMIN") + " or "
+                + HAS_ROLE.formatted("TEACHER") + " or " + HAS_ROLE.formatted("ACCOUNTANT") + ")";
         private static final String SEARCH = " and (lower(u.fullName) like :text escape '\\'"
                 + " or i.email like :text escape '\\' or i.phone like :digits)";
         /** Matches no stored phone: every stored number starts with {@code +}. */
@@ -302,7 +309,7 @@ final class JpaIdentityRepositories {
         public long countActiveAdmins() {
             return em.createQuery(
                             "select count(u) from UserEntity u join LoginIdentityEntity i on i.userId = u.id"
-                                    + " where array_contains(u.roles, 'ADMIN') and i.status = :active",
+                                    + " where " + HAS_ROLE.formatted("ADMIN") + " and i.status = :active",
                             Long.class)
                     .setParameter("active", AccountStatus.ACTIVE)
                     .getSingleResult();

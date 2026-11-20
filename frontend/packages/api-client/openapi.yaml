@@ -114,6 +114,245 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/staff:
+    get:
+      operationId: listStaff
+      summary: The institution's staff, searched and paged (spec 0004). Administrators only.
+      security:
+        - bearer: []
+      parameters:
+        - name: q
+          in: query
+          required: false
+          description: Part of a name, e-mail or phone number (any spelling).
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          description: Counts from 0; 50 per page.
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: A page of staff.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffPage'
+        default:
+          description: 400 VALIDATION_FAILED, 401 AUTH_UNAUTHENTICATED, 403 AUTH_FORBIDDEN.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+    post:
+      operationId: inviteStaff
+      summary: Invite a staff member; returns the one-time link's token (spec 0004).
+      security:
+        - bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffBody'
+      responses:
+        '201':
+          description: Invited.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationLink'
+        default:
+          description: 400 VALIDATION_FAILED, 401, 403, 422 IDENTITY_IDENTIFIER_TAKEN (wherever it is used).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/staff/{staffId}:
+    get:
+      operationId: getStaff
+      summary: One staff member (spec 0004). Another institution's id answers like an unknown one.
+      security:
+        - bearer: []
+      parameters:
+        - name: staffId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The staff member.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffDetail'
+        default:
+          description: 401 AUTH_UNAUTHENTICATED, 403 AUTH_FORBIDDEN (not an administrator), 404 NOT_FOUND.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+    put:
+      operationId: updateStaff
+      summary: Name and staff roles; e-mail and phone only while invited (spec 0004). A Veli role is kept.
+      security:
+        - bearer: []
+      parameters:
+        - name: staffId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffBody'
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffDetail'
+        default:
+          description: 400 VALIDATION_FAILED, 401, 403, 404, 422 IDENTITY_IDENTIFIER_TAKEN | IDENTITY_IDENTIFIER_LOCKED | IDENTITY_LAST_ADMIN | IDENTITY_SELF_CHANGE.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/staff/{staffId}/invitation:
+    post:
+      operationId: renewInvitation
+      summary: A new 72-hour link for an invited account; the old one stops working.
+      security:
+        - bearer: []
+      parameters:
+        - name: staffId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: New link.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationLink'
+        default:
+          description: 401, 403, 404, 422 IDENTITY_STAFF_STATE.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/staff/{staffId}/deactivation:
+    post:
+      operationId: deactivateStaff
+      summary: 'Deactivate: every session ends at once, the account stays (spec 0004).'
+      security:
+        - bearer: []
+      parameters:
+        - name: staffId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Deactivated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffDetail'
+        default:
+          description: 401, 403, 404, 422 IDENTITY_SELF_CHANGE | IDENTITY_LAST_ADMIN | IDENTITY_STAFF_STATE.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/staff/{staffId}/reactivation:
+    post:
+      operationId: reactivateStaff
+      summary: 'Reactivate: active with the old password, or invited again (spec 0004).'
+      security:
+        - bearer: []
+      parameters:
+        - name: staffId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Reactivated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffDetail'
+        default:
+          description: 401, 403, 404, 422 IDENTITY_STAFF_STATE.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/invitations/lookup:
+    post:
+      operationId: getInvitation
+      summary: 'Whom a link invites (spec 0004). Public: the token is the credential.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvitationLookupRequest'
+      responses:
+        '200':
+          description: Name and institution.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationInfo'
+        default:
+          description: '400 VALIDATION_FAILED, 404 NOT_FOUND (invalid, expired, used or revoked: one answer), 429 IDENTITY_RATE_LIMITED.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/invitations/accept:
+    post:
+      operationId: acceptInvitation
+      summary: Set the password from a link (spec 0004). Public; no automatic sign-in.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvitationAcceptRequest'
+      responses:
+        '200':
+          description: The identifier to sign in with.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcceptedInvitation'
+        default:
+          description: 400 VALIDATION_FAILED (password PASSWORD_TOO_SHORT), 404 NOT_FOUND, 429 IDENTITY_RATE_LIMITED.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
 components:
   securitySchemes:
     bearer:
@@ -173,6 +412,136 @@ components:
     Role:
       type: string
       enum: [ADMIN, TEACHER, GUARDIAN, ACCOUNTANT]
+    AccountStatus:
+      type: string
+      enum: [INVITED, ACTIVE, INACTIVE]
+    StaffBody:
+      type: object
+      additionalProperties: false
+      required: [fullName, roles]
+      properties:
+        fullName:
+          type: string
+        email:
+          type: [string, 'null']
+        phone:
+          type: [string, 'null']
+        roles:
+          type: array
+          description: Staff roles only (ADMIN, TEACHER, ACCOUNTANT); GUARDIAN is refused.
+          items:
+            $ref: '#/components/schemas/Role'
+    StaffSummary:
+      type: object
+      additionalProperties: false
+      required: [id, fullName, email, phone, roles, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        email:
+          type: [string, 'null']
+        phone:
+          type: [string, 'null']
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+        status:
+          $ref: '#/components/schemas/AccountStatus'
+    StaffPage:
+      type: object
+      additionalProperties: false
+      required: [items, page, pageSize, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaffSummary'
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+    StaffDetail:
+      type: object
+      additionalProperties: false
+      required: [id, fullName, email, phone, roles, status, invitationExpiresAt, self, lastActiveAdmin]
+      properties:
+        id:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        email:
+          type: [string, 'null']
+        phone:
+          type: [string, 'null']
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+        status:
+          $ref: '#/components/schemas/AccountStatus'
+        invitationExpiresAt:
+          type: [string, 'null']
+          format: date-time
+          description: Set while a usable invitation link exists.
+        self:
+          type: boolean
+          description: The caller's own account.
+        lastActiveAdmin:
+          type: boolean
+          description: The institution's only active administrator.
+    InvitationLink:
+      type: object
+      additionalProperties: false
+      required: [staffId, token, expiresAt]
+      properties:
+        staffId:
+          type: string
+          format: uuid
+        token:
+          type: string
+          description: The web app builds <origin>/davet#<token>; shown once, never stored by the server.
+        expiresAt:
+          type: string
+          format: date-time
+    InvitationLookupRequest:
+      type: object
+      additionalProperties: false
+      required: [token]
+      properties:
+        token:
+          type: string
+    InvitationAcceptRequest:
+      type: object
+      additionalProperties: false
+      required: [token, password]
+      properties:
+        token:
+          type: string
+        password:
+          type: string
+    InvitationInfo:
+      type: object
+      additionalProperties: false
+      required: [fullName, institutionName]
+      properties:
+        fullName:
+          type: string
+        institutionName:
+          type: string
+    AcceptedInvitation:
+      type: object
+      additionalProperties: false
+      required: [identifier]
+      properties:
+        identifier:
+          type: string
     SystemStatusResponse:
       type: object
       additionalProperties: false
