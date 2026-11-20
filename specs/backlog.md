@@ -68,3 +68,8 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
   üretiyor; iç ayrıntı sızmıyor — Source: spec 0003, VERIFY round 1 (F-1; `backend/webapi/.../errors/GlobalExceptionHandler.java`)
   — Severity: low — Recommendation: okunamayan gövdeyi 400 `VALIDATION_FAILED`'e eşle, 4xx'i ERROR'a yazma; bir webapi testiyle
   — Deferred by: yunusemretapan, 2026-11-20, spec 0001'den beri var, spec dışı
+- **B-18** — Personel araması terimi (ad, e-posta, telefon parçası) adres satırında `GET /api/v1/staff?q=` ile gidiyor; ters
+  vekil veya erişim loglarına kişisel veri düşebilir (docs/security.md "log'da kişisel veri yok"); uygulamada erişim logu yok —
+  Source: spec 0004, review round 1 (L-2; `backend/webapi/.../controllers/StaffController.java`) — Severity: low —
+  Recommendation: dağıtım spec'inde vekil loglarından query string'i at ya da aramayı POST gövdesine taşı — Deferred by:
+  yunusemretapan, 2026-11-20, erişim logu dağıtımla gelir
