@@ -1,5 +1,6 @@
 package com.schoolos.persistence.identity;
 
+import com.schoolos.application.features.identity.constants.IdentityErrorCodes;
 import com.schoolos.application.features.identity.ports.AuditLog;
 import com.schoolos.application.features.identity.ports.InvitationRepository;
 import com.schoolos.application.features.identity.ports.LoginIdentityRepository;
@@ -9,6 +10,7 @@ import com.schoolos.application.features.identity.ports.TenantLock;
 import com.schoolos.application.features.identity.ports.TenantRepository;
 import com.schoolos.application.features.identity.ports.UserRepository;
 import com.schoolos.application.features.identity.rules.StaffSearchTerm;
+import com.schoolos.core.crosscutting.exceptions.BusinessException;
 import com.schoolos.domain.identity.AccountStatus;
 import com.schoolos.domain.identity.AuditEvent;
 import com.schoolos.domain.identity.Invitation;
@@ -19,11 +21,15 @@ import com.schoolos.domain.identity.UserAccount;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TypedQuery;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -155,13 +161,47 @@ final class JpaIdentityRepositories {
         @Override
         public void create(LoginIdentity identity) {
             em.persist(new LoginIdentityEntity(identity));
+            flushIdentifiers();
         }
 
         @Override
         public void update(LoginIdentity identity) {
             LoginIdentityEntity entity = em.find(LoginIdentityEntity.class, identity.userId());
+            LoginIdentity before = entity.toDomain();
             entity.apply(identity);
+            if (!Objects.equals(before.email(), identity.email())
+                    || !Objects.equals(before.phone(), identity.phone())) {
+                flushIdentifiers();
+            }
         }
+
+        /**
+         * Writes a new or changed e-mail / phone now, so that the unique index decides a race the business check
+         * lost: two invitations with one identifier at the same moment end in IDENTITY_IDENTIFIER_TAKEN (422), not
+         * in a 500 at commit (spec 0004 review 1, L-4). Postgres names the indexes {@code <table>_<column>_key}.
+         */
+        private void flushIdentifiers() {
+            try {
+                em.flush();
+            } catch (PersistenceException e) {
+                if (violatesIdentifierIndex(e)) {
+                    throw new BusinessException(IdentityErrorCodes.IDENTIFIER_TAKEN, "Identifier already in use");
+                }
+                throw e;
+            }
+        }
+
+        private static boolean violatesIdentifierIndex(Throwable e) {
+            for (Throwable t = e; t != null; t = t.getCause()) {
+                if (t instanceof ConstraintViolationException violation) {
+                    return IDENTIFIER_INDEXES.contains(violation.getConstraintName());
+                }
+            }
+            return false;
+        }
+
+        private static final Set<String> IDENTIFIER_INDEXES =
+                Set.of("login_identities_email_key", "login_identities_phone_key");
     }
 
     @Repository
