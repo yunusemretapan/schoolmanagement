@@ -1,12 +1,10 @@
-import type { CurrentUser } from '@schoolos/api-client';
-import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
-import { useApi } from '../../api/ApiProvider';
 import { AppearancePanel } from '../../appearance/AppearancePanel';
 import { useAuth } from '../../auth/AuthProvider';
 import { LOGIN_PATH } from '../../auth/RequireAuth';
+import { useMe } from '../../auth/useMe';
 
 const LINK =
   'block rounded-md border border-line px-md py-sm text-md font-medium text-ink outline-focus hover:bg-sunken focus-visible:outline-[length:var(--sos-border-thick)]';
@@ -14,16 +12,10 @@ const LINK =
 /** Spec 0003, Req. 10: who is signed in, for which institution, with which roles; status, showcase and sign-out. */
 export function HomeScreen() {
   const { t } = useTranslation();
-  const api = useApi();
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const [signingOut, setSigningOut] = useState(false);
-  const me = useQuery<CurrentUser>({
-    queryKey: ['me'],
-    queryFn: ({ signal }) => api.getMe(signal),
-    retry: false,
-    refetchOnWindowFocus: false,
-  });
+  const me = useMe();
 
   async function logout() {
     setSigningOut(true);
@@ -87,6 +79,11 @@ export function HomeScreen() {
         </section>
 
         <nav className="flex flex-col gap-sm">
+          {me.isSuccess && me.data.roles.includes('ADMIN') && (
+            <Link to="/personel" className={LINK}>
+              {t('home.staff')}
+            </Link>
+          )}
           <Link to="/durum" className={LINK}>
             {t('home.status')}
           </Link>

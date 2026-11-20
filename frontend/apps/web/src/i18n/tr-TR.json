@@ -81,7 +81,8 @@
       "network": "Sunucuya ulaşılamıyor, tekrar deneyin"
     },
     "unreachable": "Sunucuya ulaşılamıyor",
-    "retry": "Tekrar dene"
+    "retry": "Tekrar dene",
+    "invitationAccepted": "Şifreniz belirlendi, giriş yapabilirsiniz"
   },
   "home": {
     "title": "Ana sayfa",
@@ -93,12 +94,91 @@
     "logout": "Çıkış yap",
     "loading": "Yükleniyor",
     "error": "Bilgileriniz yüklenemedi",
-    "retry": "Tekrar dene"
+    "retry": "Tekrar dene",
+    "staff": "Personel"
   },
   "roles": {
     "ADMIN": "Kurucu / Yönetici",
     "TEACHER": "Öğretmen",
     "GUARDIAN": "Veli",
     "ACCOUNTANT": "Muhasebe / İdari personel"
+  },
+  "staff": {
+    "title": "Personel",
+    "invite": "Personel davet et",
+    "inviteTitle": "Personel davet et",
+    "inviteSubmit": "Davet oluştur",
+    "inviting": "Davet oluşturuluyor…",
+    "search": "Ad, e-posta veya telefonla ara",
+    "contact": "E-posta / telefon",
+    "statusLabel": "Durum",
+    "status": {
+      "INVITED": "Davet bekliyor",
+      "ACTIVE": "Aktif",
+      "INACTIVE": "Pasif"
+    },
+    "noMatch": "Aramanızla eşleşen personel yok",
+    "listError": "Personel listesi yüklenemedi",
+    "pagination": "Sayfalar",
+    "previous": "Önceki",
+    "next": "Sonraki",
+    "pageOf": "Sayfa {{page}} / {{pages}}",
+    "backHome": "Ana sayfaya dön",
+    "backToList": "Personel listesine dön",
+    "forbidden": "Bu sayfayı görüntüleme yetkiniz yok",
+    "fields": {
+      "fullName": "Ad soyad",
+      "email": "E-posta",
+      "phone": "Cep telefonu",
+      "roles": "Roller"
+    },
+    "identifiersLocked": "E-posta ve telefon yalnızca davet beklerken değiştirilebilir",
+    "linkReady": "Davet bağlantısı hazır. Bağlantıyı personele kendi kanalınızdan iletin.",
+    "linkExpires": "Bağlantı {{at}} tarihine kadar geçerli",
+    "noLink": "Geçerli bir davet bağlantısı yok",
+    "copyLink": "Bağlantıyı kopyala",
+    "copied": "Bağlantı kopyalandı",
+    "copyFailed": "Bağlantı kopyalanamadı; elle seçip kopyalayın",
+    "renewLink": "Yeni davet bağlantısı oluştur",
+    "save": "Kaydet",
+    "saving": "Kaydediliyor…",
+    "saved": "Değişiklikler kaydedildi",
+    "deactivate": "Pasifleştir",
+    "reactivate": "Yeniden etkinleştir",
+    "cancel": "Vazgeç",
+    "confirmTitle": "Personeli pasifleştir",
+    "confirmMessage": "{{name}} artık sisteme giremeyecek. Pasifleştirilsin mi?",
+    "blocked": {
+      "self": "Kendi hesabınızı pasifleştiremez, kendi yönetici rolünüzü kaldıramazsınız"
+    },
+    "errors": {
+      "required": "Bu alan zorunlu",
+      "emailOrPhone": "E-posta veya telefondan en az birini girin",
+      "invalidEmail": "Geçerli bir e-posta girin",
+      "invalidPhone": "Geçerli bir cep telefonu girin",
+      "roleRequired": "En az bir rol seçin",
+      "identifierTaken": "Bu e-posta veya telefon kullanılamıyor",
+      "identifierLocked": "Etkin hesabın e-posta ve telefonu değiştirilemez",
+      "lastAdmin": "Kurumda en az bir aktif yönetici kalmalı",
+      "selfChange": "Bunu kendi hesabınız için yapamazsınız",
+      "staffState": "Bu işlem hesabın şu anki durumuna uygun değil",
+      "notFound": "Personel bulunamadı",
+      "invalid": "Girilen bilgiler geçersiz",
+      "unexpected": "İşlem tamamlanamadı"
+    }
+  },
+  "invitation": {
+    "title": "Şifrenizi belirleyin",
+    "invited": "{{name}}, {{institution}} sizi davet etti.",
+    "password": "Şifre",
+    "passwordRepeat": "Şifre (tekrar)",
+    "submit": "Şifremi belirle",
+    "submitting": "Kaydediliyor…",
+    "invalid": "Bu davet bağlantısı geçerli değil. Kurumunuzun yöneticisinden yeni bir bağlantı isteyin.",
+    "errors": {
+      "tooShort": "Şifre en az 10 karakter olmalı",
+      "mismatch": "Şifreler eşleşmiyor",
+      "rateLimited": "Çok fazla deneme yapıldı, biraz sonra tekrar deneyin"
+    }
   }
 }
