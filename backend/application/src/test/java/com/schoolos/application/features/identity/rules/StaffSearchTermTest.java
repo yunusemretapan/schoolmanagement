@@ -22,10 +22,21 @@ class StaffSearchTermTest {
     @Test
     void namesAndEmailsMatchCaseInsensitivelyByPart() {
         assertThat(finds("ayşe", "Ayşe Yılmaz", null, null)).isTrue();
-        assertThat(finds("YILMAZ", "Ayşe Yılmaz", null, null)).isFalse(); // Turkish dotless ı is not y-i-l-m-a-z
+        assertThat(finds("YILMAZ", "Ayşe Yılmaz", null, null)).isTrue(); // review 1, L-1: Turkish I letters fold alike
         assertThat(finds("YILmaz", "Ayşe YILMAZ", null, null)).isTrue();
         assertThat(finds("ORNEK.test", "Ali", "ali@ornek.test", null)).isTrue();
         assertThat(finds("veli", "Ali", "ali@ornek.test", null)).isFalse();
+    }
+
+    @Test
+    void theTurkishILettersMatchEachOtherInBothCases() {
+        // review 1, L-1: "ışıl" finds "Işıl"; Java and PostgreSQL lower-case I, İ and ı differently
+        assertThat(finds("ışıl", "Işıl Kaya", null, null)).isTrue();
+        assertThat(finds("IŞIL", "Işıl Kaya", null, null)).isTrue();
+        assertThat(finds("irmak", "İrmak Su", null, null)).isTrue();
+        assertThat(finds("İRMAK", "irmak su", null, null)).isTrue();
+        assertThat(StaffSearchTerm.parse("İstanbul").orElseThrow().text()).isEqualTo("istanbul");
+        assertThat(StaffSearchTerm.fold("Işıl İrmak")).isEqualTo("işil irmak");
     }
 
     @Test

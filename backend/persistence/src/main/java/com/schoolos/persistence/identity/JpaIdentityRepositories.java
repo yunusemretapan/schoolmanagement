@@ -329,7 +329,11 @@ final class JpaIdentityRepositories {
         private static final String FROM = " from UserEntity u join LoginIdentityEntity i on i.userId = u.id"
                 + " where i.tenantId = u.tenantId and (" + HAS_ROLE.formatted("ADMIN") + " or "
                 + HAS_ROLE.formatted("TEACHER") + " or " + HAS_ROLE.formatted("ACCOUNTANT") + ")";
-        private static final String SEARCH = " and (lower(u.fullName) like :text escape '\\'"
+        /** {@link StaffSearchTerm#fold} in JPQL: the Turkish I letters become {@code i} before {@code lower}. */
+        private static final String FOLDED_NAME =
+                "lower(replace(replace(replace(u.fullName, 'İ', 'i'), 'I', 'i'), 'ı', 'i'))";
+
+        private static final String SEARCH = " and (" + FOLDED_NAME + " like :text escape '\\'"
                 + " or i.email like :text escape '\\' or i.phone like :digits)";
         /** Matches no stored phone: every stored number starts with {@code +}. */
         private static final String NO_PHONE = "-";

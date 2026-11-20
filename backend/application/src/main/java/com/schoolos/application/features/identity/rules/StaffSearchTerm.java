@@ -22,7 +22,16 @@ public record StaffSearchTerm(String text, String phoneDigits) {
         if (trimmed.length() > MAX_LENGTH) {
             trimmed = trimmed.substring(0, MAX_LENGTH);
         }
-        return Optional.of(new StaffSearchTerm(trimmed.toLowerCase(Locale.ROOT), phoneDigits(trimmed)));
+        return Optional.of(new StaffSearchTerm(fold(trimmed), phoneDigits(trimmed)));
+    }
+
+    /**
+     * Case folding both sides agree on (spec 0004 review 1, L-1): the Turkish I letters (I, İ, ı, i) all become
+     * {@code i} first, then the rest is lower-cased. Java's and PostgreSQL's {@code lower} disagree on these letters
+     * (PostgreSQL's depends on the collation), so the database adapter applies the same replacements in its query.
+     */
+    public static String fold(String value) {
+        return value.replace('İ', 'i').replace('I', 'i').replace('ı', 'i').toLowerCase(Locale.ROOT);
     }
 
     private static String phoneDigits(String raw) {
@@ -40,7 +49,7 @@ public record StaffSearchTerm(String text, String phoneDigits) {
 
     /** The same rule in memory (tests and small lists); the database adapter applies it in its query. */
     public boolean matches(String fullName, String email, String phone) {
-        if (fullName != null && fullName.toLowerCase(Locale.ROOT).contains(text)) {
+        if (fullName != null && fold(fullName).contains(text)) {
             return true;
         }
         if (email != null && email.contains(text)) {

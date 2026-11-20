@@ -85,6 +85,10 @@ Spec 0002; ayrıntı: `docs/design/motion.md`.
 - Spring Security'de `CorsConfigurationSource` parametre olarak enjekte edilirse Spring MVC'nin `mvcHandlerMappingIntrospector` bean'i de aday olur ve başlatma çöker — `.cors(Customizer.withDefaults())` + `corsConfigurationSource` adlı bean — from spec 0003 build step 5
 - Dönen refresh token'la iki paralel yenileme, ikincisini "yeniden kullanım" yapar ve oturumu iptal ettirir — istemci yenilemeyi tek uçuşta (single-flight) yapar (`@schoolos/api-client`) — from spec 0003 build step 6
 - Doğrulama regex'leri sınırsız girdide karesel geri izleme yapabilir (`[^@\s]+\.[^@\s]+` gibi çakışan tekrarlar; 80 KB → 14 s) ve doğrulama rate limit'ten önce çalışır — önce uzunluk sınırı, sonra çakışmayan desen — from spec 0003 review 1 H-2 (A-7)
+- Türkçe I harflerinde Java ile PostgreSQL farklı küçük harfe çevirir: `"İ".toLowerCase(Locale.ROOT)` → `i̇` (iki karakter),
+  `lower('I')` → `i` (Postgres'te sonuç collation'a bağlı); bellekte ve sorguda ayrı `lower` kullanan arama "ışıl" ile
+  "Işıl"ı bulamaz — iki tarafta aynı katlama (`StaffSearchTerm.fold`: I/İ/ı → i, sonra `lower`), sorguda `replace` ile —
+  from spec 0004 review 1 L-1 (A-7)
 - Hibernate 7'nin HQL dizi fonksiyonları PostgreSQL'e beklenmedik çevrilir: `array_contains(textArray, 'X')` parametreyi
   `varchar[]` bağlar (`text[] @> varchar[]` operatörü yok, istek 500), `array_position` bulunamayınca `NULL` değil `0` döner
   (`is not null` her satırda doğru) — dizi koşulu `array_position(u.roles, 'X') > 0`; unit test görmez, yerel Postgres'te

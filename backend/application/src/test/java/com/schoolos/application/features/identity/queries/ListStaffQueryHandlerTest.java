@@ -54,7 +54,9 @@ class ListStaffQueryHandlerTest {
 
     @Test
     void searchesByNameEmailOrAnyFormOfThePhoneNumber() {
-        assertThat(s.list.handle(new ListStaffQuery("ALİ", 0)).items()).isEmpty(); // Turkish İ is not I
+        assertThat(s.list.handle(new ListStaffQuery("ALİ", 0)).items()) // review 1, L-1: Turkish "ALİ" is "ali"
+                .extracting(StaffSummary::fullName)
+                .containsExactly("Öğretmen Ali");
         assertThat(s.list.handle(new ListStaffQuery("ali", 0)).items())
                 .extracting(StaffSummary::fullName)
                 .containsExactly("Öğretmen Ali");
