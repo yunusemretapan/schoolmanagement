@@ -2,6 +2,7 @@ package com.schoolos.application.features.identity.ports;
 
 import com.schoolos.domain.identity.LoginIdentity;
 import java.util.Optional;
+import java.util.UUID;
 
 /** Platform-wide login identities (not tenant-bound: plan 0003, R1). Values are already normalized. */
 public interface LoginIdentityRepository {
@@ -17,6 +18,9 @@ public interface LoginIdentityRepository {
     Optional<LoginIdentity> lockByEmail(String email);
 
     Optional<LoginIdentity> lockByPhone(String phone);
+
+    /** The account's identity in any tenant; callers check the tenant themselves (spec 0004). */
+    Optional<LoginIdentity> findByUserId(UUID userId);
 
     void create(LoginIdentity identity);
 

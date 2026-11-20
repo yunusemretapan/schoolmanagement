@@ -10,4 +10,6 @@ public interface UserRepository {
     Optional<UserAccount> findById(UUID userId);
 
     void create(UserAccount user);
+
+    void update(UserAccount user);
 }

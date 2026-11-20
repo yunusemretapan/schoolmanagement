@@ -37,9 +37,13 @@ class UserEntity extends BaseTenantEntity {
     UserEntity(UserAccount user) {
         super(user.tenantId());
         this.id = user.id();
+        this.createdAt = user.createdAt();
+        apply(user);
+    }
+
+    final void apply(UserAccount user) {
         this.fullName = user.fullName();
         this.roles = user.roles().stream().map(Role::name).sorted().toArray(String[]::new);
-        this.createdAt = user.createdAt();
     }
 
     UserAccount toDomain() {

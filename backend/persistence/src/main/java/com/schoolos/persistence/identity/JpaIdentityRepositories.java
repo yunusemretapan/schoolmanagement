@@ -1,9 +1,17 @@
 package com.schoolos.persistence.identity;
 
+import com.schoolos.application.features.identity.ports.AuditLog;
+import com.schoolos.application.features.identity.ports.InvitationRepository;
 import com.schoolos.application.features.identity.ports.LoginIdentityRepository;
 import com.schoolos.application.features.identity.ports.SessionRepository;
+import com.schoolos.application.features.identity.ports.StaffDirectory;
+import com.schoolos.application.features.identity.ports.TenantLock;
 import com.schoolos.application.features.identity.ports.TenantRepository;
 import com.schoolos.application.features.identity.ports.UserRepository;
+import com.schoolos.application.features.identity.rules.StaffSearchTerm;
+import com.schoolos.domain.identity.AccountStatus;
+import com.schoolos.domain.identity.AuditEvent;
+import com.schoolos.domain.identity.Invitation;
 import com.schoolos.domain.identity.LoginIdentity;
 import com.schoolos.domain.identity.Session;
 import com.schoolos.domain.identity.Tenant;
@@ -11,6 +19,9 @@ import com.schoolos.domain.identity.UserAccount;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Repository;
@@ -46,6 +57,21 @@ final class JpaIdentityRepositories {
     }
 
     @Repository
+    static class TenantRows implements TenantLock {
+
+        @PersistenceContext
+        private EntityManager em;
+
+        @Override
+        public void lock(UUID tenantId) {
+            em.createQuery("select t from TenantEntity t where t.id = :id", TenantEntity.class)
+                    .setParameter("id", tenantId)
+                    .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+                    .getResultList();
+        }
+    }
+
+    @Repository
     static class Users implements UserRepository {
 
         @PersistenceContext
@@ -53,16 +79,24 @@ final class JpaIdentityRepositories {
 
         @Override
         public Optional<UserAccount> findById(UUID userId) {
-            return em.createQuery("select u from UserEntity u where u.id = :id", UserEntity.class)
-                    .setParameter("id", userId)
-                    .getResultStream()
-                    .findFirst()
-                    .map(UserEntity::toDomain);
+            return entity(userId).map(UserEntity::toDomain);
         }
 
         @Override
         public void create(UserAccount user) {
             em.persist(new UserEntity(user));
+        }
+
+        @Override
+        public void update(UserAccount user) {
+            entity(user.id()).orElseThrow().apply(user);
+        }
+
+        private Optional<UserEntity> entity(UUID userId) {
+            return em.createQuery("select u from UserEntity u where u.id = :id", UserEntity.class)
+                    .setParameter("id", userId)
+                    .getResultStream()
+                    .findFirst();
         }
     }
 
@@ -90,6 +124,12 @@ final class JpaIdentityRepositories {
         @Override
         public Optional<LoginIdentity> lockByPhone(String phone) {
             return findBy("phone", phone, LockModeType.PESSIMISTIC_WRITE);
+        }
+
+        @Override
+        public Optional<LoginIdentity> findByUserId(UUID userId) {
+            return Optional.ofNullable(em.find(LoginIdentityEntity.class, userId))
+                    .map(LoginIdentityEntity::toDomain);
         }
 
         private Optional<LoginIdentity> findBy(String field, String value) {
@@ -145,6 +185,131 @@ final class JpaIdentityRepositories {
         public void update(Session session) {
             SessionEntity entity = em.find(SessionEntity.class, session.id());
             entity.apply(session);
+        }
+
+        @Override
+        public void revokeAllForUser(UUID userId, Instant now) {
+            em.createQuery(
+                            "select s from SessionEntity s where s.userId = :user and s.revokedAt is null",
+                            SessionEntity.class)
+                    .setParameter("user", userId)
+                    .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+                    .getResultList()
+                    .forEach(entity -> entity.apply(entity.toDomain().revoked(now)));
+        }
+    }
+
+    @Repository
+    static class Invitations implements InvitationRepository {
+
+        @PersistenceContext
+        private EntityManager em;
+
+        @Override
+        public Optional<Invitation> findById(UUID invitationId) {
+            return Optional.ofNullable(em.find(InvitationEntity.class, invitationId))
+                    .map(InvitationEntity::toDomain);
+        }
+
+        @Override
+        public Optional<Invitation> lockById(UUID invitationId) {
+            return Optional.ofNullable(em.find(InvitationEntity.class, invitationId, LockModeType.PESSIMISTIC_WRITE))
+                    .map(InvitationEntity::toDomain);
+        }
+
+        @Override
+        public Optional<Invitation> findUsableForUser(UUID userId, Instant now) {
+            return open(userId).stream()
+                    .map(InvitationEntity::toDomain)
+                    .filter(invitation -> invitation.isUsable(now))
+                    .findFirst();
+        }
+
+        @Override
+        public void create(Invitation invitation) {
+            em.persist(new InvitationEntity(invitation));
+        }
+
+        @Override
+        public void update(Invitation invitation) {
+            em.find(InvitationEntity.class, invitation.id()).apply(invitation);
+        }
+
+        @Override
+        public void revokeOpenForUser(UUID userId, Instant now) {
+            open(userId).forEach(entity -> entity.apply(entity.toDomain().revoked(now)));
+        }
+
+        private List<InvitationEntity> open(UUID userId) {
+            return em.createQuery(
+                            "select i from InvitationEntity i where i.userId = :user and i.usedAt is null"
+                                    + " and i.revokedAt is null order by i.createdAt desc",
+                            InvitationEntity.class)
+                    .setParameter("user", userId)
+                    .getResultList();
+        }
+    }
+
+    @Repository
+    static class Audit implements AuditLog {
+
+        @PersistenceContext
+        private EntityManager em;
+
+        @Override
+        public void append(AuditEvent event) {
+            em.persist(new AuditEventEntity(event));
+        }
+    }
+
+    /**
+     * Staff of the bound tenant: users (tenant filter + RLS) joined with their login identity. JPQL only, so the
+     * tenant filter applies (docs/conventions.md, Known traps).
+     */
+    @Repository
+    static class Staff implements StaffDirectory {
+
+        private static final String FROM = " from UserEntity u join LoginIdentityEntity i on i.userId = u.id"
+                + " where i.tenantId = u.tenantId and (array_contains(u.roles, 'ADMIN')"
+                + " or array_contains(u.roles, 'TEACHER') or array_contains(u.roles, 'ACCOUNTANT'))";
+        private static final String SEARCH = " and (lower(u.fullName) like :text escape '\\'"
+                + " or i.email like :text escape '\\' or i.phone like :digits)";
+        /** Matches no stored phone: every stored number starts with {@code +}. */
+        private static final String NO_PHONE = "-";
+
+        @PersistenceContext
+        private EntityManager em;
+
+        @Override
+        public Page search(Optional<StaffSearchTerm> term, int page, int pageSize) {
+            String where = term.isPresent() ? FROM + SEARCH : FROM;
+            TypedQuery<Long> count = em.createQuery("select count(u)" + where, Long.class);
+            TypedQuery<Object[]> rows =
+                    em.createQuery("select u, i" + where + " order by u.fullName, u.id", Object[].class);
+            term.ifPresent(t -> {
+                String text = "%" + escape(t.text()) + "%";
+                String digits = t.phoneDigits() == null ? NO_PHONE : "%" + t.phoneDigits() + "%";
+                count.setParameter("text", text).setParameter("digits", digits);
+                rows.setParameter("text", text).setParameter("digits", digits);
+            });
+            List<Row> found = rows.setFirstResult(page * pageSize).setMaxResults(pageSize).getResultList().stream()
+                    .map(r -> new Row(((UserEntity) r[0]).toDomain(), ((LoginIdentityEntity) r[1]).toDomain()))
+                    .toList();
+            return new Page(found, count.getSingleResult());
+        }
+
+        @Override
+        public long countActiveAdmins() {
+            return em.createQuery(
+                            "select count(u) from UserEntity u join LoginIdentityEntity i on i.userId = u.id"
+                                    + " where array_contains(u.roles, 'ADMIN') and i.status = :active",
+                            Long.class)
+                    .setParameter("active", AccountStatus.ACTIVE)
+                    .getSingleResult();
+        }
+
+        private static String escape(String text) {
+            return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
         }
     }
 }
