@@ -25,8 +25,22 @@ export function fakeApi(overrides: Partial<ApiClient> = {}): ApiClient {
     restoreSession: async () => false,
     logout: async () => undefined,
     getMe: async () => ME,
+    listStaff: notStubbed,
+    getStaff: notStubbed,
+    inviteStaff: notStubbed,
+    updateStaff: notStubbed,
+    renewInvitation: notStubbed,
+    deactivateStaff: notStubbed,
+    reactivateStaff: notStubbed,
+    getInvitation: notStubbed,
+    acceptInvitation: notStubbed,
     ...overrides,
   };
+}
+
+/** Staff and invitation calls (spec 0004) fail loudly unless a test stubs them. */
+async function notStubbed(): Promise<never> {
+  throw new Error('not stubbed in this test');
 }
 
 let navigateFn: NavigateFunction | null = null;
