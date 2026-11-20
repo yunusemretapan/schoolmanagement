@@ -17,7 +17,9 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
 - **B-1** — BR-1 tenant izolasyonu, PostgreSQL RLS ve Flyway migration davranışı otomatik testle kanıtlanmıyor
   (yalnızca unit test kararı) — Source: bootstrap 2026-11-17 — Severity: high (sensitive area: tenant izolasyonu)
   — Recommendation: Kapı 1'den (pilotta gerçek çocuk verisi) önce hassas alanlar için küçük bir Testcontainers seti
-  (ADR 0003, seçenek C) — Deferred by: ürün sahibi, 2026-11-17, yalnızca unit test tercihi
+  (ADR 0003, seçenek C) — Deferred by: ürün sahibi, 2026-11-17, yalnızca unit test tercihi. Not (spec 0004, plan R3, R5):
+  `audit_events`'in değiştirilemezliği (tetikleyici), personel değişikliklerindeki kurum satırı kilidi ve dizi sorguları da
+  unit testle kanıtlanmıyor; VERIFY'da yerel Postgres gözlemiyle gösterilir
 - **B-2** — e2e aday yolculukları: "veli taksit öder → makbuz oluşur", "öğretmen yoklama alır → veliye bildirim"
   — Source: bootstrap 2026-11-17 — Severity: low — Recommendation: ihtiyaç doğarsa ADR ile, bütçe ≤ 2 yolculuk / 5 dk,
   Playwright `--workers=1` — Deferred by: ürün sahibi, 2026-11-17, e2e şimdilik yok
@@ -54,7 +56,9 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
   davranış bug raporu olur — Deferred by: yunusemretapan, 2026-11-18, emülatör kurulumu sonraya bırakıldı
 - **B-15** — Güvenlik olaylarının (başarılı/başarısız giriş, kilitlenme, oturum zinciri iptali) kalıcı kaydı yok; yalnızca ID içeren
   uygulama logu var — Source: spec 0003, self-critique (G4) — Severity: low — Recommendation: audit log (BR-6) spec'iyle birlikte
-  append-only güvenlik olayı kaydı — Deferred by: yunusemretapan, 2026-11-19, audit log spec'ine bırakıldı
+  append-only güvenlik olayı kaydı — Deferred by: yunusemretapan, 2026-11-19, audit log spec'ine bırakıldı. Not (spec 0004):
+  append-only `audit_events` tablosu kuruldu ve personel yönetimi olaylarını yazıyor; giriş, kilitlenme ve oturum zinciri
+  iptali olayları hâlâ yazılmıyor
 - **B-16** — Giriş rate limit'i tek sunucunun belleğinde ve kaynak olarak `remoteAddr` kullanıyor: birden çok sunucuda sayaç
   bölünür; ters vekil (reverse proxy) arkasında tüm kullanıcılar vekilin adresini paylaşır — Source: spec 0003, plan R4
   (`backend/webapi/.../security/InMemorySourceRateLimiter.java`) — Severity: medium — Recommendation: canlıya çıkıştan önce

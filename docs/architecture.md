@@ -36,8 +36,8 @@ frontend/
 | Module | Single responsibility | Owns |
 |---|---|---|
 | `institution` | Kurum, şube, dönem, sınıf, sınıf seviyesi, ders programı | Akademik yapı, kurum ayarları |
-| `identity` | Giriş, oturum (cihaz başına dönen yenileme zinciri), kilitleme, kurum açma (operatör) | Giriş kimlikleri, oturumlar; `login_identities` ve `sessions` bilinçli olarak tenant'sız/RLS'siz (plan 0003, R1) |
-| `people` | Öğrenci, veli, kullanıcı, rol, kardeş bağlantısı, teslim alabilecek kişi, içe aktarma | Kişi kayıtları, rol atamaları |
+| `identity` | Giriş, oturum (cihaz başına dönen yenileme zinciri), kilitleme, kurum açma (operatör); kullanıcı hesabı, rol ve hesap durumu, personel daveti ve yönetimi (ADR 0005) | Kullanıcı hesapları ve rolleri, giriş kimlikleri, oturumlar, davet bağlantıları, değişiklik kaydı (`audit_events`, append-only); `login_identities`, `sessions` ve `invitations` bilinçli olarak tenant'sız/RLS'siz (plan 0003, R1; plan 0004, R4) |
+| `people` | Öğrenci, veli kaydı, kardeş bağlantısı, teslim alabilecek kişi, içe aktarma; veli hesabının öğrenciye bağı (hesabın kendisi `identity`'de: ADR 0005) | Kişi kayıtları |
 | `attendance` | Yoklama ve devamsızlık | Yoklama kayıtları |
 | `communication` | Duyuru, mesaj, onay formu, dosya/fotoğraf paylaşımı, bildirim gönderimi | İletişim kayıtları, okundu bilgisi |
 | `academics` | Ödev, teslim, not | Ödev ve not kayıtları |
@@ -66,8 +66,9 @@ Test kararı yalnızca unit (ADR 0003) olduğu için ayrı bir mimari test seti 
 2. `application`, `persistence` / `infrastructure` / `webapi` modüllerine bağımlı olmaz; onlara yalnızca port arayüzleriyle erişir.
 3. `webapi` repository'leri doğrudan çağırmaz; her işlem bir command/query üzerinden geçer.
    *İstisna (spec 0003, review 1 I-2):* kimlik doğrulama Mediator'dan önce olmak zorunda olduğu için
-   `JwtAuthenticationFilter` her istekte oturumun açık olduğunu `SessionValidator` (application: `SessionActivityChecker`)
-   üzerinden sorar; repository'ye doğrudan değil, application'daki bu tek servise gider.
+   `JwtAuthenticationFilter` her istekte oturumun açık olduğunu ve hesabın güncel rollerini `SessionValidator`
+   (application: `SessionActivityChecker`) üzerinden sorar; repository'ye doğrudan değil, application'daki bu tek servise
+   gider. Yetki token'daki rollerle değil bu güncel rollerle verilir (spec 0004, plan R2).
 4. Bir feature modülü başka bir feature'ın repository'sine veya entity'sine dokunmaz; yalnızca query, command veya domain event.
 5. Claude/STT istemcisine yalnızca `infrastructure.ai` erişir; AI'ya giden veri tek kapıdan geçer (BR-5).
 6. Frontend uygulamaları API'ye yalnızca `packages/api-client` üzerinden erişir; elle `fetch` yok.

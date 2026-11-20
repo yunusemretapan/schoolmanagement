@@ -29,12 +29,21 @@
   Uygulama veritabanına süper kullanıcı olmayan, `BYPASSRLS` yetkisi olmayan bir rolle bağlanır.
 - **2FA (TOTP) zorunlu:** Kurucu/Yönetici ve Muhasebe rolleri. Diğer rollerde isteğe bağlı.
 - **Varsayılan reddet:** Her command/query bir `@RequiresPermission` taşır; taşımayan reddedilir (`AuthorizationBehavior`).
-  Bilinçli `@Public` istisnaları: durum sorgusu ve kimlik doğrulama kapısı (giriş, oturum yenileme, çıkış). Çıkış yalnızca
-  çağıranın kanıtladığı oturumu kapatır (spec 0003, R-08).
+  Bilinçli `@Public` istisnaları: durum sorgusu, kimlik doğrulama kapısı (giriş, oturum yenileme, çıkış) ve davet bağlantısı
+  (bağlantıyı okuma ve şifre belirleme; spec 0004). Çıkış yalnızca çağıranın kanıtladığı oturumu kapatır (spec 0003, R-08).
+- **Roller her istekte güncel:** erişim token'ındaki roller yetki için kullanılmaz; filtre her istekte oturumu ve hesabın
+  güncel rollerini/durumunu okur (`SessionValidator`). Kaldırılan rol ve pasifleştirilen hesap bir sonraki istekte reddedilir;
+  pasifleştirme ayrıca hesabın tüm oturumlarını iptal eder (spec 0004, plan R2).
+- **Davet bağlantısı:** `<id>.<32 bayt rastgele>`; yalnızca SHA-256 özeti saklanır, sabit zamanlı karşılaştırılır. 72 saat
+  geçerli, tek kullanımlık; yenileme, kimlik değişikliği ve pasifleştirme eski bağlantıyı iptal eder. Web adresi
+  `/davet#<token>`: parça (fragment) sunucuya, loglara ve Referer'a gitmez; API token'ı gövdede alır. Geçersiz, süresi dolmuş,
+  kullanılmış ve tanınmayan bağlantı aynı 404'ü alır. Kaynak başına dakikada 20 deneme, girişten ayrı sayılır (spec 0004).
 - Yetki kapsamı: kurum → şube → sınıf → öğrenci (BR-2). Tenant: Hibernate filtresi + PostgreSQL RLS (BR-1).
 - Login'de kaynak başına rate limit (dakikada 20) ve hesap başına kilitleme (5 hata → 15 dk); hatalı giriş, olmayan hesap ve
   kilitli hesap aynı yanıtı alır (spec 0003).
-- Audit log (BR-6): append-only tablo; öğrenci kaydı görüntüleme dahil.
+- Audit log (BR-6): append-only tablo (`audit_events`: tetikleyici UPDATE/DELETE/TRUNCATE'i her rolde reddeder; tenant'lı,
+  RLS). Spec 0004 personel değişikliklerini yazar (kim, kime, ne, ne zaman; şifre, bağlantı ve iletişim bilgisi yazılmaz);
+  öğrenci kaydı görüntüleme kendi spec'inde eklenir.
 
 ## Dependencies
 - Yeni kütüphane: spec/planda gerekçe + insan onayı.
