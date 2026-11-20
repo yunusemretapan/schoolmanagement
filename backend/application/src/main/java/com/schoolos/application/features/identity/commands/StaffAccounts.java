@@ -78,9 +78,13 @@ public final class StaffAccounts {
     /**
      * Like {@link #load}, for a command that changes the account: the identity row is locked first and the account is
      * read after it, so a parallel command or invitation acceptance waits instead of being overwritten (review 1, M-1).
-     * Lock order everywhere: tenant (when the last-admin rule applies), identity, invitations.
+     * Lock order everywhere: tenant (when the last-admin rule applies), identity, invitations. The tenant boundary
+     * comes first: another institution's id is refused before its global identity row is locked (review 2, L2-1).
      */
     public Staff loadForChange(UUID staffId) {
+        if (!users.exists(staffId)) {
+            throw new NotFoundException("Staff");
+        }
         LoginIdentity identity = identities.lockByUserId(staffId).orElseThrow(() -> new NotFoundException("Staff"));
         UserAccount user = users.findById(staffId)
                 .filter(u -> u.roles().stream().anyMatch(Role::isStaff))

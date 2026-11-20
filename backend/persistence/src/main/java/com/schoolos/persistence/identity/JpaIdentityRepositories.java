@@ -89,6 +89,16 @@ final class JpaIdentityRepositories {
         }
 
         @Override
+        public boolean exists(UUID userId) {
+            // A scalar query: the tenant filter and RLS apply, and no entity is left in the persistence context to go
+            // stale before the caller's lock (review 2, L2-1).
+            return em.createQuery("select count(u) from UserEntity u where u.id = :id", Long.class)
+                            .setParameter("id", userId)
+                            .getSingleResult()
+                    > 0;
+        }
+
+        @Override
         public void create(UserAccount user) {
             em.persist(new UserEntity(user));
         }

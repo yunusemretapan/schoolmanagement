@@ -164,6 +164,11 @@ public final class IdentityFixture {
             }
 
             @Override
+            public boolean exists(UUID userId) {
+                return findById(userId).isPresent();
+            }
+
+            @Override
             public void create(UserAccount user) {
                 if (!boundTenant().map(user.tenantId()::equals).orElse(false)) {
                     throw new IllegalStateException("RLS WITH CHECK would refuse this insert");

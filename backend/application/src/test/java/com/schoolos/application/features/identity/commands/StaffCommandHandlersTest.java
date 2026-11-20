@@ -59,6 +59,21 @@ class StaffCommandHandlersTest {
     }
 
     @Test
+    void anotherInstitutionsIdIsRefusedBeforeItsLoginRowIsLocked() throws Throwable {
+        UUID foreign = s.otherAdmin.id();
+        for (Executable action : new Executable[] {
+            () -> s.update.handle(new UpdateStaffCommand(foreign, "X", "x@x.test", null, roles(Role.TEACHER))),
+            () -> s.deactivate.handle(new DeactivateStaffCommand(foreign)),
+            () -> s.reactivate.handle(new ReactivateStaffCommand(foreign)),
+            () -> s.renew.handle(new RenewInvitationCommand(foreign))
+        }) {
+            assertThatThrownBy(action::execute).isExactlyInstanceOf(NotFoundException.class);
+        }
+        // review 2, L2-1: the tenant boundary first; the other institution's global row is never locked
+        assertThat(s.fx.locks).doesNotContain("identity:" + foreign);
+    }
+
+    @Test
     void everyStaffChangeLeavesOneRecordWithWhoWhomWhatAndWhenButNoSecrets() {
         InvitationLink link =
                 s.invite.handle(new InviteStaffCommand("Yeni", "yeni@ornek.test", null, roles(Role.TEACHER)));
