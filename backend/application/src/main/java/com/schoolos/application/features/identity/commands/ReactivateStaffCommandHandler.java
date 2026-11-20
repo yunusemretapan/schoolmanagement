@@ -31,7 +31,7 @@ public final class ReactivateStaffCommandHandler implements RequestHandler<React
     @Override
     public StaffDetail handle(ReactivateStaffCommand command) {
         CurrentUser caller = StaffAccounts.caller();
-        StaffAccounts.Staff current = staff.load(command.staffId());
+        StaffAccounts.Staff current = staff.loadForChange(command.staffId());
         if (current.identity().status() != AccountStatus.INACTIVE) {
             throw new BusinessException(IdentityErrorCodes.STAFF_STATE, "Not inactive");
         }

@@ -75,6 +75,20 @@ public final class StaffAccounts {
         return new Staff(user, identity);
     }
 
+    /**
+     * Like {@link #load}, for a command that changes the account: the identity row is locked first and the account is
+     * read after it, so a parallel command or invitation acceptance waits instead of being overwritten (review 1, M-1).
+     * Lock order everywhere: tenant (when the last-admin rule applies), identity, invitations.
+     */
+    public Staff loadForChange(UUID staffId) {
+        LoginIdentity identity = identities.lockByUserId(staffId).orElseThrow(() -> new NotFoundException("Staff"));
+        UserAccount user = users.findById(staffId)
+                .filter(u -> u.roles().stream().anyMatch(Role::isStaff))
+                .filter(u -> identity.tenantId().equals(u.tenantId()))
+                .orElseThrow(() -> new NotFoundException("Staff"));
+        return new Staff(user, identity);
+    }
+
     public void record(CurrentUser caller, UUID target, AuditAction action, String detail) {
         audit.append(new AuditEvent(
                 ids.next(), caller.tenantId(), caller.userId(), target, action, detail, clock.instant()));

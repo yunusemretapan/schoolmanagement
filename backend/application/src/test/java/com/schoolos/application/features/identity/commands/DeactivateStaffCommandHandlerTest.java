@@ -118,4 +118,20 @@ class DeactivateStaffCommandHandlerTest {
                         .code())
                 .isEqualTo(IdentityErrorCodes.STAFF_STATE);
     }
+
+    @Test
+    void theAccountIsLockedAfterTheTenantAndBeforeItsLinks() {
+        InvitationLink link =
+                s.invite.handle(new InviteStaffCommand("Yeni", "yeni@ornek.test", null, roles(Role.TEACHER)));
+        s.fx.locks.clear();
+
+        s.deactivate.handle(new DeactivateStaffCommand(link.staffId()));
+
+        // review 1, M-1: an acceptance of the link at the same moment waits for this change
+        assertThat(s.fx.locks)
+                .containsSubsequence(
+                        "tenant:" + s.admin.tenantId(),
+                        "identity:" + link.staffId(),
+                        "invitations-of:" + link.staffId());
+    }
 }

@@ -71,4 +71,14 @@ class ReactivateStaffCommandHandlerTest {
                 .extracting(e -> ((BusinessException) e).code())
                 .isEqualTo(IdentityErrorCodes.STAFF_STATE);
     }
+
+    @Test
+    void reactivatingLocksTheAccount() {
+        s.deactivate.handle(new DeactivateStaffCommand(s.teacher.id()));
+        s.fx.locks.clear();
+
+        s.reactivate.handle(new ReactivateStaffCommand(s.teacher.id()));
+
+        assertThat(s.fx.locks).contains("identity:" + s.teacher.id());
+    }
 }

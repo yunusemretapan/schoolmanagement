@@ -161,4 +161,16 @@ class UpdateStaffCommandHandlerTest {
                 .isInstanceOf(com.schoolos.core.crosscutting.exceptions.NotFoundException.class);
         assertThat(s.user(s.otherAdmin.id()).roles()).containsExactly(Role.ADMIN);
     }
+
+    @Test
+    void changingAnInvitedAccountLocksItBeforeItsLinks() {
+        InvitationLink link =
+                s.invite.handle(new InviteStaffCommand("Yeni", "yeni@ornek.test", null, roles(Role.TEACHER)));
+        s.fx.locks.clear();
+
+        s.update.handle(new UpdateStaffCommand(link.staffId(), "Yeni", "dogru@ornek.test", null, roles(Role.TEACHER)));
+
+        // review 1, M-1: an acceptance of the link at the same moment waits for this change
+        assertThat(s.fx.locks).containsSubsequence("identity:" + link.staffId(), "invitations-of:" + link.staffId());
+    }
 }

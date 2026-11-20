@@ -66,7 +66,7 @@ public final class UpdateStaffCommandHandler implements RequestHandler<UpdateSta
     public StaffDetail handle(UpdateStaffCommand command) {
         CurrentUser caller = StaffAccounts.caller();
         tenantLock.lock(caller.tenantId());
-        StaffAccounts.Staff current = staff.load(command.staffId());
+        StaffAccounts.Staff current = staff.loadForChange(command.staffId());
         UserAccount user = current.user();
         LoginIdentity identity = current.identity();
 

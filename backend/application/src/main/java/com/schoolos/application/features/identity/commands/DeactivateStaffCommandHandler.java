@@ -55,7 +55,7 @@ public final class DeactivateStaffCommandHandler implements RequestHandler<Deact
     public StaffDetail handle(DeactivateStaffCommand command) {
         CurrentUser caller = StaffAccounts.caller();
         tenantLock.lock(caller.tenantId());
-        StaffAccounts.Staff current = staff.load(command.staffId());
+        StaffAccounts.Staff current = staff.loadForChange(command.staffId());
         StaffRules.ensureNotSelf(caller.userId(), current.user().id());
         if (current.identity().status() == AccountStatus.INACTIVE) {
             throw new BusinessException(IdentityErrorCodes.STAFF_STATE, "Already inactive");

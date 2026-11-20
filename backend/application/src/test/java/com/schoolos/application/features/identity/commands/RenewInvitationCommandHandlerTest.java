@@ -59,4 +59,14 @@ class RenewInvitationCommandHandlerTest {
                 .extracting(e -> ((BusinessException) e).code())
                 .isEqualTo(IdentityErrorCodes.STAFF_STATE);
     }
+
+    @Test
+    void renewingLocksTheAccountBeforeItsLinks() {
+        s.fx.locks.clear();
+
+        s.renew.handle(new RenewInvitationCommand(first.staffId()));
+
+        // review 1, M-1: an acceptance of the old link at the same moment waits for the renewal
+        assertThat(s.fx.locks).containsSubsequence("identity:" + first.staffId(), "invitations-of:" + first.staffId());
+    }
 }

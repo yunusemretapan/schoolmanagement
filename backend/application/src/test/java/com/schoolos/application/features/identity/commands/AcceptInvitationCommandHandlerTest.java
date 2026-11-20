@@ -149,4 +149,20 @@ class AcceptInvitationCommandHandlerTest {
     private UUID invitationId() {
         return InvitationPolicy.parse(link.token()).orElseThrow().invitationId();
     }
+
+    @Test
+    void acceptingLocksTheAccountBeforeTheLinkAsEveryStaffCommandDoes() {
+        take(link.token());
+
+        // review 1, M-1: the same lock order as the staff commands, so a parallel change waits, never overwrites
+        assertThat(s.fx.locks).containsSubsequence("identity:" + link.staffId(), "invitation:" + invitationId());
+    }
+
+    @Test
+    void readingALinkTakesNoLock() {
+        s.fx.locks.clear(); // the invitation itself revoked older links
+        look(link.token());
+
+        assertThat(s.fx.locks).isEmpty();
+    }
 }

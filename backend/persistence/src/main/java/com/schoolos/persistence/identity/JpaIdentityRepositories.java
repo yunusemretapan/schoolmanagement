@@ -132,6 +132,11 @@ final class JpaIdentityRepositories {
                     .map(LoginIdentityEntity::toDomain);
         }
 
+        @Override
+        public Optional<LoginIdentity> lockByUserId(UUID userId) {
+            return lockFresh(em, LoginIdentityEntity.class, userId).map(LoginIdentityEntity::toDomain);
+        }
+
         private Optional<LoginIdentity> findBy(String field, String value) {
             return findBy(field, value, LockModeType.NONE);
         }
@@ -213,8 +218,7 @@ final class JpaIdentityRepositories {
 
         @Override
         public Optional<Invitation> lockById(UUID invitationId) {
-            return Optional.ofNullable(em.find(InvitationEntity.class, invitationId, LockModeType.PESSIMISTIC_WRITE))
-                    .map(InvitationEntity::toDomain);
+            return lockFresh(em, InvitationEntity.class, invitationId).map(InvitationEntity::toDomain);
         }
 
         @Override
@@ -237,15 +241,21 @@ final class JpaIdentityRepositories {
 
         @Override
         public void revokeOpenForUser(UUID userId, Instant now) {
-            open(userId).forEach(entity -> entity.apply(entity.toDomain().revoked(now)));
+            open(userId, LockModeType.PESSIMISTIC_WRITE)
+                    .forEach(entity -> entity.apply(entity.toDomain().revoked(now)));
         }
 
         private List<InvitationEntity> open(UUID userId) {
+            return open(userId, LockModeType.NONE);
+        }
+
+        private List<InvitationEntity> open(UUID userId, LockModeType lock) {
             return em.createQuery(
                             "select i from InvitationEntity i where i.userId = :user and i.usedAt is null"
                                     + " and i.revokedAt is null order by i.createdAt desc",
                             InvitationEntity.class)
                     .setParameter("user", userId)
+                    .setLockMode(lock)
                     .getResultList();
         }
     }
@@ -318,5 +328,19 @@ final class JpaIdentityRepositories {
         private static String escape(String text) {
             return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
         }
+    }
+
+    /**
+     * {@code SELECT ... FOR UPDATE} that also refreshes an entity this transaction already read: a plain locking
+     * {@code find} on a managed entity takes the lock but keeps the stale state, and the later flush would write the
+     * stale columns back over a parallel change (spec 0004 review 1, M-1).
+     */
+    private static <T> Optional<T> lockFresh(EntityManager em, Class<T> type, UUID id) {
+        T entity = em.find(type, id);
+        if (entity == null) {
+            return Optional.empty();
+        }
+        em.refresh(entity, LockModeType.PESSIMISTIC_WRITE);
+        return Optional.of(entity);
     }
 }

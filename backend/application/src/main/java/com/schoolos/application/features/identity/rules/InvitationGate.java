@@ -11,7 +11,7 @@ import com.schoolos.domain.identity.Invitation;
 import com.schoolos.domain.identity.LoginIdentity;
 import java.time.Instant;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * The open door of an invitation link (spec 0004, Req. 5, 6; G4). Per source, at most 20 tries a minute, counted apart
@@ -36,19 +36,38 @@ public final class InvitationGate {
         this.rateLimiter = rateLimiter;
     }
 
-    /** Reads the invitation; {@code lock} reads and locks it instead, so one link is accepted once. */
+    /**
+     * Reads the invitation. With {@code lock}, for accepting: the account's identity row is locked first and the
+     * invitation after it (the order every staff command uses), and both are checked again under the locks, so one
+     * link is accepted once and a parallel change by the administrator is not overwritten (review 1, M-1).
+     */
     public Opened open(String token, String source, Instant now, boolean lock) {
         if (!rateLimiter.tryAcquire(SOURCE_PREFIX + source)) {
             throw new TooManyRequestsException(IdentityErrorCodes.RATE_LIMITED);
         }
-        Function<java.util.UUID, Optional<Invitation>> read = lock ? invitations::lockById : invitations::findById;
         return InvitationPolicy.parse(token)
-                .flatMap(parsed -> read.apply(parsed.invitationId())
-                        .filter(invitation -> InvitationPolicy.accepts(invitation, parsed.secret(), now)))
-                .flatMap(invitation -> identities
-                        .findByUserId(invitation.userId())
-                        .filter(identity -> identity.status() == AccountStatus.INVITED)
-                        .map(identity -> new Opened(invitation, identity)))
+                .flatMap(parsed -> {
+                    Predicate<Invitation> valid =
+                            invitation -> InvitationPolicy.accepts(invitation, parsed.secret(), now);
+                    Optional<Invitation> found =
+                            invitations.findById(parsed.invitationId()).filter(valid);
+                    if (!lock) {
+                        return found.flatMap(invitation -> identities
+                                .findByUserId(invitation.userId())
+                                .filter(InvitationGate::invited)
+                                .map(identity -> new Opened(invitation, identity)));
+                    }
+                    return found.flatMap(invitation -> identities.lockByUserId(invitation.userId()))
+                            .filter(InvitationGate::invited)
+                            .flatMap(identity -> invitations
+                                    .lockById(parsed.invitationId())
+                                    .filter(valid)
+                                    .map(invitation -> new Opened(invitation, identity)));
+                })
                 .orElseThrow(() -> new NotFoundException("Invitation"));
+    }
+
+    private static boolean invited(LoginIdentity identity) {
+        return identity.status() == AccountStatus.INVITED;
     }
 }

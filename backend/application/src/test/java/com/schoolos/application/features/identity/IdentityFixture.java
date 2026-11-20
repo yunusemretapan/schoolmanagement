@@ -58,8 +58,8 @@ public final class IdentityFixture {
 
     public final List<UUID> bindings = new ArrayList<>();
     /**
-     * Row locks the handlers asked for, in order ("identity:<value>", "session:<id>", "invitation:<id>",
-     * "tenant:<id>"), and "rule:last-admin" when the last-admin rule was checked: review 1, M-1; plan 0004, R3.
+     * Row locks the handlers asked for, in order ("identity:<value or user id>", "session:<id>", "invitation:<id>",
+     * "invitations-of:<user id>", "tenant:<id>"), and "rule:last-admin" when the last-admin rule was checked: review 1, M-1; plan 0004, R3.
      */
     public final List<String> locks = new ArrayList<>();
 
@@ -135,6 +135,12 @@ public final class IdentityFixture {
             @Override
             public Optional<LoginIdentity> findByUserId(UUID userId) {
                 return Optional.ofNullable(identities.get(userId));
+            }
+
+            @Override
+            public Optional<LoginIdentity> lockByUserId(UUID userId) {
+                locks.add("identity:" + userId);
+                return findByUserId(userId);
             }
 
             @Override
@@ -255,6 +261,7 @@ public final class IdentityFixture {
 
             @Override
             public void revokeOpenForUser(UUID userId, Instant now) {
+                locks.add("invitations-of:" + userId);
                 invitations.replaceAll((id, i) ->
                         i.userId().equals(userId) && i.usedAt() == null && i.revokedAt() == null ? i.revoked(now) : i);
             }

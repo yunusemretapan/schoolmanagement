@@ -28,7 +28,7 @@ public final class RenewInvitationCommandHandler implements RequestHandler<Renew
     @Override
     public InvitationLink handle(RenewInvitationCommand command) {
         CurrentUser caller = StaffAccounts.caller();
-        StaffAccounts.Staff current = staff.load(command.staffId());
+        StaffAccounts.Staff current = staff.loadForChange(command.staffId());
         if (current.identity().status() != AccountStatus.INVITED) {
             throw new BusinessException(IdentityErrorCodes.STAFF_STATE, "Only invited accounts get a link");
         }

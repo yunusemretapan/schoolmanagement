@@ -10,7 +10,10 @@ public interface InvitationRepository {
 
     Optional<Invitation> findById(UUID invitationId);
 
-    /** Reads and locks the row, so one link cannot be accepted twice in parallel. */
+    /**
+     * Reads the row fresh and locks it, so one link cannot be accepted twice in parallel. Taken after the identity
+     * lock ({@link LoginIdentityRepository#lockByUserId}).
+     */
     Optional<Invitation> lockById(UUID invitationId);
 
     /** The account's usable invitation at {@code now}, if any. */
@@ -20,6 +23,9 @@ public interface InvitationRepository {
 
     void update(Invitation invitation);
 
-    /** Revokes every not-yet-used, not-yet-revoked invitation of the account (spec 0004, Req. 5, 8, 11). */
+    /**
+     * Revokes every not-yet-used, not-yet-revoked invitation of the account (spec 0004, Req. 5, 8, 11), locking those
+     * rows. Callers hold the account's identity lock first.
+     */
     void revokeOpenForUser(UUID userId, Instant now);
 }
