@@ -73,3 +73,13 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
   Source: spec 0004, review round 1 (L-2; `backend/webapi/.../controllers/StaffController.java`) — Severity: low —
   Recommendation: dağıtım spec'inde vekil loglarından query string'i at ya da aramayı POST gövdesine taşı — Deferred by:
   yunusemretapan, 2026-11-20, erişim logu dağıtımla gelir
+- **B-19** — Davet kabulünde `invitations.used_at` işaretlemesi hiçbir testle kanıtlanmıyor: işaretleme silinince bütün testler
+  yeşil kalıyor; davranış başka yoldan korunuyor (kabulden sonra hesap aktif, kapı yalnızca davet bekleyen hesabı kabul ediyor)
+  — Source: spec 0004, VERIFY round 1 (Info-1, K-21; `AcceptInvitationCommandHandler`) — Severity: low — Recommendation:
+  `AcceptInvitationCommandHandlerTest`'e kabul edilen davetin `usedAt`'ının dolduğunu doğrulayan bir test — Deferred by:
+  yunusemretapan, 2026-11-21, davranış korunuyor, yalnızca test açığı
+- **B-20** — README'deki yerel geliştirme akışında (`npm run dev -w @schoolos/web` + dev profili) web'den giriş 403 "Invalid
+  CORS request" alıyor: Vite proxy Origin başlığını iletiyor, dev CORS yalnızca 8081'e izinli — Source: spec 0004, VERIFY
+  round 1 (Info-3; spec 0003 CORS yapılandırması) — Severity: low — Recommendation: dev profilinde Vite kökenini izinli
+  listeye ekle ya da proxy'de Origin'i yeniden yaz; README'yi güncelle — Deferred by: yunusemretapan, 2026-11-21, spec dışı,
+  geliştirici ortamı

@@ -1,6 +1,6 @@
 # Spec 0004 — Kullanıcı ve rol yönetimi
 
-- Status: In progress
+- Status: Shipped
 - Mode: lite
 - Plan: `specs/plans/0004-plan.md`
 - Self-critique: done
@@ -109,59 +109,83 @@ davetin sistem tarafından e-posta/SMS ile gönderilmesi.
   Faz 2 rolleri (Öğrenci, Rehber öğretmen), özel/ince taneli izin tanımlama (roller sabittir).
 
 ## Acceptance criteria
-- [ ] AC-1 — Yetki: Öğretmen, Muhasebe ve Veli rolüyle personel listeleme, davet, rol değiştirme, pasifleştirme ve
+- [x] AC-1 — Yetki: Öğretmen, Muhasebe ve Veli rolüyle personel listeleme, davet, rol değiştirme, pasifleştirme ve
   bağlantı yenileme istekleri reddedilir; bu kullanıcılarda "Personel" bağlantısı görünmez ve adres doğrudan açılırsa
   "yetkisiz" durumu gösterilir. Oturumsuz istek reddedilir.
-- [ ] AC-2 — Kurum sınırı: A kurumunun yöneticisi B kurumunun personelini listede ve aramada görmez; B kurumundaki bir
+- [x] AC-2 — Kurum sınırı: A kurumunun yöneticisi B kurumunun personelini listede ve aramada görmez; B kurumundaki bir
   personele doğrudan yapılan görüntüleme, rol değiştirme, pasifleştirme ve bağlantı yenileme istekleri, kaydın var
   olup olmadığını belli etmeyen aynı yanıtla reddedilir.
-- [ ] AC-3 — Liste ve arama: liste ad, iletişim, roller ve durum (davet bekliyor / aktif / pasif) gösterir; ad,
+- [x] AC-3 — Liste ve arama: liste ad, iletişim, roller ve durum (davet bekliyor / aktif / pasif) gösterir; ad,
   e-posta ve telefonun bir kısmıyla büyük/küçük harf duyarsız arama çalışır (`0532 123` ile `+905321234567` bulunur);
   yalnızca Veli rolü taşıyan hesap listede görünmez, Öğretmen + Veli olan kişi Veli rozetiyle görünür ve Veli rolü bu
   ekrandan değiştirilemez;
   51 personelde ilk sayfa 50, ikinci sayfa 1 kişi gösterir; liste ekranının yükleniyor, hazır, arama sonucu yok ve hata
   durumları gösterilir.
-- [ ] AC-4 — Davet oluşturma: geçerli bir davet *davet bekliyor* durumunda kişi ve bağlantı üretir; ad yokken, e-posta
+- [x] AC-4 — Davet oluşturma: geçerli bir davet *davet bekliyor* durumunda kişi ve bağlantı üretir; ad yokken, e-posta
   ve telefonun ikisi de yokken, rol seçilmemişken, geçersiz e-posta/telefonda ve Veli rolüyle istek reddedilir (arayüzde
   istek gönderilmeden alan mesajı); kurumda veya başka kurumda zaten kullanılan bir e-posta/telefon, hangi kurumda
   kullanıldığını belli etmeden reddedilir; formun gönderiliyor (çift gönderim yok), ağ hatası (girilenler korunur) ve
   başarı (bağlantı + kopyalama) durumları gösterilir.
-- [ ] AC-5 — Davet bağlantısı: bağlantı 71 sa 59 dk'da geçerli, 72 sa'te geçersizdir; bir kez kullanılınca ikinci
+- [x] AC-5 — Davet bağlantısı: bağlantı 71 sa 59 dk'da geçerli, 72 sa'te geçersizdir; bir kez kullanılınca ikinci
   kullanım geçersizdir; yeni bağlantı üretilince eskisi geçersiz olur; pasifleştirilen bekleyen davetin bağlantısı
   geçersizdir; e-posta/telefonu değiştirilen bekleyen davetin eski bağlantısı geçersizdir; geçersiz, süresi dolmuş, kullanılmış ve
   tanınmayan bağlantı aynı mesajı verir ve hiçbir hesap bilgisi göstermez; aynı kaynaktan dakikadaki 21. kabul denemesi
   reddedilir, pencere sonrası açılır.
-- [ ] AC-6 — Davet kabulü: geçerli bağlantıda ad ve kurum görünür; 9 karakterlik şifre ve eşleşmeyen şifreler istek
+- [x] AC-6 — Davet kabulü: geçerli bağlantıda ad ve kurum görünür; 9 karakterlik şifre ve eşleşmeyen şifreler istek
   gönderilmeden reddedilir, 10 karakterlik kabul edilir; kabulden sonra hesap *aktif* olur, kişi kimlik alanı dolu giriş
   ekranına yönlenir ve kendi kimliği ve şifresiyle giriş yapar; kabulden önce aynı kimlikle giriş denemesi spec 0003'ün genel hatalı giriş yanıtını alır;
   ekranın yükleniyor, gönderiliyor, başarı ve ağ hatası durumları gösterilir.
-- [ ] AC-7 — Rol değiştirme: eklenen rolün işlemleri ve kaldırılan rolün reddedilmesi, değişiklikten sonraki ilk
+- [x] AC-7 — Rol değiştirme: eklenen rolün işlemleri ve kaldırılan rolün reddedilmesi, değişiklikten sonraki ilk
   istekte yeniden giriş gerekmeden geçerlidir; tüm rolleri kaldırma isteği reddedilir; ad soyad her durumda,
   e-posta/telefon yalnızca davet bekliyorken değişir, aktif veya pasif hesabın e-posta/telefon değişikliği reddedilir; ayrıntı ekranının kaydediliyor,
   kaydedildi ve hata durumları gösterilir.
-- [ ] AC-8 — Pasifleştirme: onaydan sonra kişinin iki ayrı cihazdaki oturumlarının sonraki istekleri reddedilir ve
+- [x] AC-8 — Pasifleştirme: onaydan sonra kişinin iki ayrı cihazdaki oturumlarının sonraki istekleri reddedilir ve
   oturum yenilemeleri başarısız olur; doğru şifreyle giriş genel hatalı giriş yanıtını alır; onay penceresinde
   vazgeçmek hiçbir şeyi değiştirmez; yeniden etkinleştirilen daha önce aktif kişi eski şifresiyle giriş yapabilir; davet aşamasında
   pasifleştirilip yeniden etkinleştirilen kişi *davet bekliyor* durumuna döner ve eski bağlantısı geçersiz kalır.
-- [ ] AC-9 — Kurum yöneticisiz kalmaz: tek aktif yöneticinin yönetici rolünü kaldırma ve hesabını pasifleştirme
+- [x] AC-9 — Kurum yöneticisiz kalmaz: tek aktif yöneticinin yönetici rolünü kaldırma ve hesabını pasifleştirme
   reddedilir; yöneticinin kendi hesabını pasifleştirmesi ve kendi yönetici rolünü kaldırması reddedilir; iki aktif
   yönetici varken biri diğerini pasifleştirebilir; arayüzde engellenen kontrol devre dışıdır ve nedeni yazılıdır.
-- [ ] AC-10 — Değişiklik kaydı: davet oluşturma, bağlantı yenileme, kabul, rol ekleme, rol kaldırma, pasifleştirme ve
+- [x] AC-10 — Değişiklik kaydı: davet oluşturma, bağlantı yenileme, kabul, rol ekleme, rol kaldırma, pasifleştirme ve
   yeniden etkinleştirme ve bilgi düzenleme her biri yapan, hedef kişi, işlem ve zamanla bir kayıt üretir; kayıtlar değiştirilemez ve
   silinemez; hiçbir kayıtta şifre veya davet bağlantısı bulunmaz.
 
+## Evidence
+Review round 1 → fix-1 → review round 2 → fix-2 → review round 3 (temiz), salt okunur reviewer; VERIFY ayrı QA alt ajanında
+(izole worktree, yalnızca dosyalardan) · `CHECK GREEN (full, 10 steps, 295 s) @3261925` (sonrası yalnızca `specs/`). Kasıtlı
+kırmalar K-1…K-21 worktree'de yapıldı, hiçbiri commit edilmedi (K-21 kırmızıya düşmedi: B-19). Gerçek Postgres gözlemleri
+(dev compose, worktree'den derlenen jar, Node fetch + psql): R5 değiştirilemezlik, R3 kurum kilidi, M-1 kabul ↔ düzenleme
+yarışı (10 deneme, kayıp güncelleme 0), L-4 eşzamanlı aynı kimlik (5 deneme, 422), L-1 Türkçe arama, AC-8 oturum kapanışı —
+B-1'in otomatik test açığı açık kalır. Ayrıntı ve triage: `specs/plans/0004-plan.md`.
+
+| Acceptance criterion | Evidence | Status |
+|---|---|---|
+| AC-1 | `RolePermissionsTest`, `StaffControllerTest` › `teachersAccountantsAndGuardiansAreRefusedEveryStaffCall` / `withoutASignedInUserEveryStaffCallIs401`, web `RequireRole.test.tsx`, `StaffListScreen.test.tsx` — kırıldı (K-1, K-15); canlı 403 / 401 | PASS |
+| AC-2 | `StaffCommandHandlersTest` › `anotherInstitutionsStaffAndAnUnknownIdAreRefusedAlikeAndNothingChanges` / `anotherInstitutionsIdIsRefusedBeforeItsLoginRowIsLocked`, `ListStaffQueryHandlerTest` › `anotherInstitutionsAdministratorSeesOnlyTheirOwn` — kırıldı (K-2, K-3); canlı başka kurum = bilinmeyen id, aynı 404 | PASS |
+| AC-3 | `StaffSearchTermTest`, `ListStaffQueryHandlerTest`, web `StaffListScreen.test.tsx`; canlı L-1 araması | PASS |
+| AC-4 | `InviteStaffCommandValidatorTest`, `InviteStaffCommandHandlerTest`, web `InviteStaffScreen.test.tsx`; canlı aynı 422, Veli rolü 400 | PASS |
+| AC-5 | `InvitationPolicyTest`, `AccountLifecycleTest`, `RenewInvitationCommandHandlerTest`, `UpdateStaffCommandHandlerTest`, `DeactivateStaffCommandHandlerTest`, `AcceptInvitationCommandHandlerTest`, web `AcceptInvitationScreen.test.tsx` — kırıldı (K-4, K-5, K-6); canlı tek kullanım, 20/21. deneme 404/429, giriş kovası ayrı | PASS |
+| AC-6 | `AcceptInvitationCommandHandlerTest`, `AcceptInvitationCommandValidatorTest`, `LoginCommandHandlerTest`, web `AcceptInvitationScreen.test.tsx` — kırıldı (K-7, K-8); canlı kabul öncesi giriş 401, kabul 200 | PASS |
+| AC-7 | `SessionActivityCheckerTest`, `JwtAuthenticationFilterTest` › `permissionsComeFromTheAccountsCurrentRolesNotFromTheToken`, `UpdateStaffCommandHandlerTest`, web `StaffDetailScreen.test.tsx` — kırıldı (K-9, K-10); canlı aynı token 403 → 200 → 403 | PASS |
+| AC-8 | `DeactivateStaffCommandHandlerTest`, `SessionActivityCheckerTest`, `RefreshSessionCommandHandlerTest`, `LoginCommandHandlerTest`, `ReactivateStaffCommandHandlerTest`, web `ConfirmDialog.test.tsx`, `StaffDetailScreen.test.tsx` — kırıldı (K-11, K-12, K-13, K-16); canlı iki cihaz 401, yenileme ve giriş reddi, yeniden etkinleştirme | PASS |
+| AC-9 | `DeactivateStaffCommandHandlerTest`, `UpdateStaffCommandHandlerTest`, `ListStaffQueryHandlerTest`, web `StaffDetailScreen.test.tsx` — kırıldı (K-14, K-15, K-17); canlı R3: eşzamanlı karşılıklı pasifleştirme, her koşuda biri 422 | PASS |
+| AC-10 | `StaffCommandHandlersTest` › `everyStaffChangeLeavesOneRecordWithWhoWhomWhatAndWhenButNoSecrets`, `InviteStaffCommandHandlerTest`, `AcceptInvitationCommandHandlerTest`, `UpdateStaffCommandHandlerTest`, `AccountLifecycleTest` — kırıldı (K-18, K-19, K-20); canlı R5: UPDATE/DELETE/TRUNCATE her rolde reddedildi, satırlar yerinde | PASS |
+
+UI: S00…S21 agent-captured (web, açık/koyu, 44 görüntü), judged by yunusemretapan at SHIP, 2026-11-21. Geçici durumlar
+(yükleniyor, kaydediliyor, ağ hatası, çok fazla deneme, kabul sonrası yönlenme) bileşen testleriyle kanıtlı, görüntüsü yok.
+
 ## Definition of Done
-- [ ] Every acceptance criterion mapped to proof (test or reproducible observation)
-- [ ] `scripts/check` green
-- [ ] Independent review done; real findings fixed, noise rejected with written rationale, deferred ones in `specs/backlog.md`
-- [ ] Docs / ADRs updated if behavior or architecture changed
-- [ ] Spec moved to `specs/done/` (it becomes immutable there)
+- [x] Every acceptance criterion mapped to proof (test or reproducible observation)
+- [x] `scripts/check` green
+- [x] Independent review done; real findings fixed, noise rejected with written rationale, deferred ones in `specs/backlog.md`
+- [x] Docs / ADRs updated if behavior or architecture changed
+- [x] Spec moved to `specs/done/` (it becomes immutable there)
 
 ## Scorecard (fill at ship — honest numbers make the process improvable)
 | Metric | Value |
 |---|---|
-| Spec revisions | |
-| Fix rounds | |
-| Review findings: real / noise / deferred | |
-| Regressions introduced | |
-| Bugs escaped to production | |
+| Spec revisions | 0 |
+| Fix rounds | 2 |
+| Review findings: real / noise / deferred | 7 / 3 / 3 (review 1: 6 real, 2 noise, 1 defer → B-18; review 2: 1 real, 1 noise; review 3: temiz; VERIFY: 2 defer → B-19, B-20, 1 mevcut B-17) |
+| Regressions introduced | 0 |
+| Bugs escaped to production | 0 |
