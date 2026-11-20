@@ -15,6 +15,16 @@ export type StaffDetail = components['schemas']['StaffDetail'];
 export type InvitationLink = components['schemas']['InvitationLink'];
 export type InvitationInfo = components['schemas']['InvitationInfo'];
 export type AcceptedInvitation = components['schemas']['AcceptedInvitation'];
+// spec 0005
+export type AcademicStructure = components['schemas']['AcademicStructure'];
+export type TermView = components['schemas']['TermView'];
+export type CampusView = components['schemas']['CampusView'];
+export type GradeLevelView = components['schemas']['GradeLevelView'];
+export type TermBody = components['schemas']['TermBody'];
+export type ClassGroupBody = components['schemas']['ClassGroupBody'];
+export type ClassGroupView = components['schemas']['ClassGroupView'];
+export type ClassGroupList = components['schemas']['ClassGroupList'];
+export type MoveDirection = components['schemas']['MoveBody']['direction'];
 
 /** Spec 0001: no answer within 5 seconds means "unreachable". */
 export const STATUS_TIMEOUT_MS = 5_000;
@@ -37,6 +47,16 @@ export const ERROR_CODES = {
   lastAdmin: 'IDENTITY_LAST_ADMIN',
   selfChange: 'IDENTITY_SELF_CHANGE',
   staffState: 'IDENTITY_STAFF_STATE',
+  // spec 0005
+  academicNameTaken: 'ACADEMIC_NAME_TAKEN',
+  termOverlap: 'ACADEMIC_TERM_OVERLAP',
+  lastCampus: 'ACADEMIC_LAST_CAMPUS',
+  activeTerm: 'ACADEMIC_ACTIVE_TERM',
+  inUse: 'ACADEMIC_IN_USE',
+  gradeLevelLimit: 'ACADEMIC_GRADE_LEVEL_LIMIT',
+  gradeLevelsNotEmpty: 'ACADEMIC_GRADE_LEVELS_NOT_EMPTY',
+  cannotMove: 'ACADEMIC_CANNOT_MOVE',
+  noTerm: 'ACADEMIC_NO_TERM',
 } as const;
 
 export class ApiError extends Error {
@@ -118,6 +138,27 @@ export interface ApiClient {
   // --- invitation link (spec 0004), no session ---
   getInvitation(token: string, signal?: AbortSignal): Promise<InvitationInfo>;
   acceptInvitation(token: string, password: string): Promise<AcceptedInvitation>;
+  // spec 0005 — academic structure (administrators)
+  getAcademicStructure(signal?: AbortSignal): Promise<AcademicStructure>;
+  createCampus(name: string): Promise<AcademicStructure>;
+  renameCampus(campusId: string, name: string): Promise<AcademicStructure>;
+  deleteCampus(campusId: string): Promise<AcademicStructure>;
+  createTerm(body: TermBody): Promise<AcademicStructure>;
+  updateTerm(termId: string, body: TermBody): Promise<AcademicStructure>;
+  activateTerm(termId: string): Promise<AcademicStructure>;
+  deleteTerm(termId: string): Promise<AcademicStructure>;
+  createGradeLevel(name: string): Promise<AcademicStructure>;
+  addStandardGradeLevels(): Promise<AcademicStructure>;
+  renameGradeLevel(gradeLevelId: string, name: string): Promise<AcademicStructure>;
+  moveGradeLevel(gradeLevelId: string, direction: MoveDirection): Promise<AcademicStructure>;
+  deleteGradeLevel(gradeLevelId: string): Promise<AcademicStructure>;
+  listClassGroups(
+    query: { termId?: string; campusId?: string },
+    signal?: AbortSignal,
+  ): Promise<ClassGroupList>;
+  createClassGroup(body: ClassGroupBody): Promise<ClassGroupView>;
+  updateClassGroup(classGroupId: string, body: ClassGroupBody): Promise<ClassGroupView>;
+  deleteClassGroup(classGroupId: string): Promise<void>;
 }
 
 export function createApiClient(
@@ -363,6 +404,157 @@ export function createApiClient(
     acceptInvitation(token, password) {
       return open(undefined, (combined) =>
         client.POST('/api/v1/invitations/accept', { body: { token, password }, signal: combined }),
+      );
+    },
+
+    getAcademicStructure(signal) {
+      return signedIn(signal, (headers, combined) =>
+        client.GET('/api/v1/academic-structure', { headers, signal: combined }),
+      );
+    },
+
+    createCampus(name) {
+      return signedIn(undefined, (headers, combined) =>
+        client.POST('/api/v1/academic-structure/campuses', { headers, body: { name }, signal: combined }),
+      );
+    },
+
+    renameCampus(campusId, name) {
+      return signedIn(undefined, (headers, combined) =>
+        client.PUT('/api/v1/academic-structure/campuses/{campusId}', {
+          headers,
+          params: { path: { campusId } },
+          body: { name },
+          signal: combined,
+        }),
+      );
+    },
+
+    deleteCampus(campusId) {
+      return signedIn(undefined, (headers, combined) =>
+        client.DELETE('/api/v1/academic-structure/campuses/{campusId}', {
+          headers,
+          params: { path: { campusId } },
+          signal: combined,
+        }),
+      );
+    },
+
+    createTerm(body) {
+      return signedIn(undefined, (headers, combined) =>
+        client.POST('/api/v1/academic-structure/terms', { headers, body, signal: combined }),
+      );
+    },
+
+    updateTerm(termId, body) {
+      return signedIn(undefined, (headers, combined) =>
+        client.PUT('/api/v1/academic-structure/terms/{termId}', {
+          headers,
+          params: { path: { termId } },
+          body,
+          signal: combined,
+        }),
+      );
+    },
+
+    activateTerm(termId) {
+      return signedIn(undefined, (headers, combined) =>
+        client.POST('/api/v1/academic-structure/terms/{termId}/activation', {
+          headers,
+          params: { path: { termId } },
+          signal: combined,
+        }),
+      );
+    },
+
+    deleteTerm(termId) {
+      return signedIn(undefined, (headers, combined) =>
+        client.DELETE('/api/v1/academic-structure/terms/{termId}', {
+          headers,
+          params: { path: { termId } },
+          signal: combined,
+        }),
+      );
+    },
+
+    createGradeLevel(name) {
+      return signedIn(undefined, (headers, combined) =>
+        client.POST('/api/v1/academic-structure/grade-levels', { headers, body: { name }, signal: combined }),
+      );
+    },
+
+    addStandardGradeLevels() {
+      return signedIn(undefined, (headers, combined) =>
+        client.POST('/api/v1/academic-structure/grade-levels/standard', { headers, signal: combined }),
+      );
+    },
+
+    renameGradeLevel(gradeLevelId, name) {
+      return signedIn(undefined, (headers, combined) =>
+        client.PUT('/api/v1/academic-structure/grade-levels/{gradeLevelId}', {
+          headers,
+          params: { path: { gradeLevelId } },
+          body: { name },
+          signal: combined,
+        }),
+      );
+    },
+
+    moveGradeLevel(gradeLevelId, direction) {
+      return signedIn(undefined, (headers, combined) =>
+        client.POST('/api/v1/academic-structure/grade-levels/{gradeLevelId}/move', {
+          headers,
+          params: { path: { gradeLevelId } },
+          body: { direction },
+          signal: combined,
+        }),
+      );
+    },
+
+    deleteGradeLevel(gradeLevelId) {
+      return signedIn(undefined, (headers, combined) =>
+        client.DELETE('/api/v1/academic-structure/grade-levels/{gradeLevelId}', {
+          headers,
+          params: { path: { gradeLevelId } },
+          signal: combined,
+        }),
+      );
+    },
+
+    listClassGroups({ termId, campusId }, signal) {
+      return signedIn(signal, (headers, combined) =>
+        client.GET('/api/v1/academic-structure/class-groups', {
+          headers,
+          params: { query: { ...(termId ? { termId } : {}), ...(campusId ? { campusId } : {}) } },
+          signal: combined,
+        }),
+      );
+    },
+
+    createClassGroup(body) {
+      return signedIn(undefined, (headers, combined) =>
+        client.POST('/api/v1/academic-structure/class-groups', { headers, body, signal: combined }),
+      );
+    },
+
+    updateClassGroup(classGroupId, body) {
+      return signedIn(undefined, (headers, combined) =>
+        client.PUT('/api/v1/academic-structure/class-groups/{classGroupId}', {
+          headers,
+          params: { path: { classGroupId } },
+          body,
+          signal: combined,
+        }),
+      );
+    },
+
+    async deleteClassGroup(classGroupId) {
+      await signedIn(undefined, (headers, combined) =>
+        client.DELETE('/api/v1/academic-structure/class-groups/{classGroupId}', {
+          headers,
+          params: { path: { classGroupId } },
+          signal: combined,
+        }),
       );
     },
   };
