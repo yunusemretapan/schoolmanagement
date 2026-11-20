@@ -1,7 +1,6 @@
 package com.schoolos.persistence.identity;
 
 import com.schoolos.application.features.identity.constants.IdentityErrorCodes;
-import com.schoolos.application.features.identity.ports.AuditLog;
 import com.schoolos.application.features.identity.ports.InvitationRepository;
 import com.schoolos.application.features.identity.ports.LoginIdentityRepository;
 import com.schoolos.application.features.identity.ports.SessionRepository;
@@ -11,8 +10,8 @@ import com.schoolos.application.features.identity.ports.TenantRepository;
 import com.schoolos.application.features.identity.ports.UserRepository;
 import com.schoolos.application.features.identity.rules.StaffSearchTerm;
 import com.schoolos.core.crosscutting.exceptions.BusinessException;
+import com.schoolos.core.crosscutting.text.NameFold;
 import com.schoolos.domain.identity.AccountStatus;
-import com.schoolos.domain.identity.AuditEvent;
 import com.schoolos.domain.identity.Invitation;
 import com.schoolos.domain.identity.LoginIdentity;
 import com.schoolos.domain.identity.Session;
@@ -310,18 +309,6 @@ final class JpaIdentityRepositories {
         }
     }
 
-    @Repository
-    static class Audit implements AuditLog {
-
-        @PersistenceContext
-        private EntityManager em;
-
-        @Override
-        public void append(AuditEvent event) {
-            em.persist(new AuditEventEntity(event));
-        }
-    }
-
     /**
      * Staff of the bound tenant: users (tenant filter + RLS) joined with their login identity. JPQL only, so the
      * tenant filter applies (docs/conventions.md, Known traps).
@@ -340,8 +327,7 @@ final class JpaIdentityRepositories {
                 + " where i.tenantId = u.tenantId and (" + HAS_ROLE.formatted("ADMIN") + " or "
                 + HAS_ROLE.formatted("TEACHER") + " or " + HAS_ROLE.formatted("ACCOUNTANT") + ")";
         /** {@link StaffSearchTerm#fold} in JPQL: the Turkish I letters become {@code i} before {@code lower}. */
-        private static final String FOLDED_NAME =
-                "lower(replace(replace(replace(u.fullName, 'İ', 'i'), 'I', 'i'), 'ı', 'i'))";
+        private static final String FOLDED_NAME = NameFold.jpql("u.fullName");
 
         private static final String SEARCH = " and (" + FOLDED_NAME + " like :text escape '\\'"
                 + " or i.email like :text escape '\\' or i.phone like :digits)";

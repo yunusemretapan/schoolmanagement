@@ -1,6 +1,6 @@
 package com.schoolos.application.features.identity.rules;
 
-import java.util.Locale;
+import com.schoolos.core.crosscutting.text.NameFold;
 import java.util.Optional;
 
 /**
@@ -25,13 +25,9 @@ public record StaffSearchTerm(String text, String phoneDigits) {
         return Optional.of(new StaffSearchTerm(fold(trimmed), phoneDigits(trimmed)));
     }
 
-    /**
-     * Case folding both sides agree on (spec 0004 review 1, L-1): the Turkish I letters (I, İ, ı, i) all become
-     * {@code i} first, then the rest is lower-cased. Java's and PostgreSQL's {@code lower} disagree on these letters
-     * (PostgreSQL's depends on the collation), so the database adapter applies the same replacements in its query.
-     */
+    /** The shared name folding (spec 0004 review 1 L-1, now {@link NameFold}: spec 0005 plan R4). */
     public static String fold(String value) {
-        return value.replace('İ', 'i').replace('I', 'i').replace('ı', 'i').toLowerCase(Locale.ROOT);
+        return NameFold.fold(value);
     }
 
     private static String phoneDigits(String raw) {
