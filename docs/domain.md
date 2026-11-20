@@ -27,6 +27,10 @@ multi-tenant okul işletim sistemi. Velinin kullandığı mobil uygulama satış
 | Teslim alabilecek kişi | `AuthorizedPickup` | Öğrenciyi okuldan alabilecek kişi; hesabı olmak zorunda değil. | Veli |
 | Kullanıcı | `User` | Giriş yapan kişi; birden fazla rolü olabilir (ör. öğretmen + veli). | Rol |
 | Rol | `Role` | Kurucu/Yönetici, Öğretmen, Veli, Muhasebe (Faz 1); Öğrenci, Rehber öğretmen (Faz 2). | Kullanıcı |
+| Personel | `Staff` | En az bir personel rolü (Kurucu/Yönetici, Öğretmen, Muhasebe) taşıyan kullanıcı; yönetici yönetir (spec 0004). | Veli |
+| Hesap durumu | `AccountStatus` | Davet bekliyor (şifre yok), aktif, pasif. Yalnızca aktif hesap giriş yapar; hesap silinmez, pasifleştirilir. | Rol |
+| Davet | `Invitation` | Personelin şifresini kendisinin belirlediği tek kullanımlık, 72 saatlik bağlantı; yönetici kendi kanalıyla iletir. | Onay formu |
+| Değişiklik kaydı | `AuditEvent` | Kim, kime, ne yaptı, ne zaman: değiştirilemez, silinemez (BR-6). | — |
 | Yoklama | `AttendanceRecord` | Bir ders/gün için öğrencinin var/yok/geç durumu. | Devamsızlık |
 | Devamsızlık | `Absence` | Yoklamada "yok" olarak işaretlenmiş kayıt. | Yoklama |
 | Duyuru | `Announcement` | Çoklu, tek yönlü mesaj; kapsamı kurum/şube/sınıf/öğrenci; okundu bilgisi tutulur. | Mesaj |

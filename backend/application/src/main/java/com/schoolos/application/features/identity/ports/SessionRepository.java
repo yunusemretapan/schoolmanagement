@@ -1,6 +1,7 @@
 package com.schoolos.application.features.identity.ports;
 
 import com.schoolos.domain.identity.Session;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -15,4 +16,7 @@ public interface SessionRepository {
     void create(Session session);
 
     void update(Session session);
+
+    /** Ends every open session of the account at once, on every device (spec 0004, Req. 8). */
+    void revokeAllForUser(UUID userId, Instant now);
 }

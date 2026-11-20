@@ -17,7 +17,9 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
 - **B-1** — BR-1 tenant izolasyonu, PostgreSQL RLS ve Flyway migration davranışı otomatik testle kanıtlanmıyor
   (yalnızca unit test kararı) — Source: bootstrap 2026-11-17 — Severity: high (sensitive area: tenant izolasyonu)
   — Recommendation: Kapı 1'den (pilotta gerçek çocuk verisi) önce hassas alanlar için küçük bir Testcontainers seti
-  (ADR 0003, seçenek C) — Deferred by: ürün sahibi, 2026-11-17, yalnızca unit test tercihi
+  (ADR 0003, seçenek C) — Deferred by: ürün sahibi, 2026-11-17, yalnızca unit test tercihi. Not (spec 0004, plan R3, R5):
+  `audit_events`'in değiştirilemezliği (tetikleyici), personel değişikliklerindeki kurum satırı kilidi ve dizi sorguları da
+  unit testle kanıtlanmıyor; VERIFY'da yerel Postgres gözlemiyle gösterilir
 - **B-2** — e2e aday yolculukları: "veli taksit öder → makbuz oluşur", "öğretmen yoklama alır → veliye bildirim"
   — Source: bootstrap 2026-11-17 — Severity: low — Recommendation: ihtiyaç doğarsa ADR ile, bütçe ≤ 2 yolculuk / 5 dk,
   Playwright `--workers=1` — Deferred by: ürün sahibi, 2026-11-17, e2e şimdilik yok
@@ -54,7 +56,9 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
   davranış bug raporu olur — Deferred by: yunusemretapan, 2026-11-18, emülatör kurulumu sonraya bırakıldı
 - **B-15** — Güvenlik olaylarının (başarılı/başarısız giriş, kilitlenme, oturum zinciri iptali) kalıcı kaydı yok; yalnızca ID içeren
   uygulama logu var — Source: spec 0003, self-critique (G4) — Severity: low — Recommendation: audit log (BR-6) spec'iyle birlikte
-  append-only güvenlik olayı kaydı — Deferred by: yunusemretapan, 2026-11-19, audit log spec'ine bırakıldı
+  append-only güvenlik olayı kaydı — Deferred by: yunusemretapan, 2026-11-19, audit log spec'ine bırakıldı. Not (spec 0004):
+  append-only `audit_events` tablosu kuruldu ve personel yönetimi olaylarını yazıyor; giriş, kilitlenme ve oturum zinciri
+  iptali olayları hâlâ yazılmıyor
 - **B-16** — Giriş rate limit'i tek sunucunun belleğinde ve kaynak olarak `remoteAddr` kullanıyor: birden çok sunucuda sayaç
   bölünür; ters vekil (reverse proxy) arkasında tüm kullanıcılar vekilin adresini paylaşır — Source: spec 0003, plan R4
   (`backend/webapi/.../security/InMemorySourceRateLimiter.java`) — Severity: medium — Recommendation: canlıya çıkıştan önce
@@ -64,3 +68,18 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
   üretiyor; iç ayrıntı sızmıyor — Source: spec 0003, VERIFY round 1 (F-1; `backend/webapi/.../errors/GlobalExceptionHandler.java`)
   — Severity: low — Recommendation: okunamayan gövdeyi 400 `VALIDATION_FAILED`'e eşle, 4xx'i ERROR'a yazma; bir webapi testiyle
   — Deferred by: yunusemretapan, 2026-11-20, spec 0001'den beri var, spec dışı
+- **B-18** — Personel araması terimi (ad, e-posta, telefon parçası) adres satırında `GET /api/v1/staff?q=` ile gidiyor; ters
+  vekil veya erişim loglarına kişisel veri düşebilir (docs/security.md "log'da kişisel veri yok"); uygulamada erişim logu yok —
+  Source: spec 0004, review round 1 (L-2; `backend/webapi/.../controllers/StaffController.java`) — Severity: low —
+  Recommendation: dağıtım spec'inde vekil loglarından query string'i at ya da aramayı POST gövdesine taşı — Deferred by:
+  yunusemretapan, 2026-11-20, erişim logu dağıtımla gelir
+- **B-19** — Davet kabulünde `invitations.used_at` işaretlemesi hiçbir testle kanıtlanmıyor: işaretleme silinince bütün testler
+  yeşil kalıyor; davranış başka yoldan korunuyor (kabulden sonra hesap aktif, kapı yalnızca davet bekleyen hesabı kabul ediyor)
+  — Source: spec 0004, VERIFY round 1 (Info-1, K-21; `AcceptInvitationCommandHandler`) — Severity: low — Recommendation:
+  `AcceptInvitationCommandHandlerTest`'e kabul edilen davetin `usedAt`'ının dolduğunu doğrulayan bir test — Deferred by:
+  yunusemretapan, 2026-11-21, davranış korunuyor, yalnızca test açığı
+- **B-20** — README'deki yerel geliştirme akışında (`npm run dev -w @schoolos/web` + dev profili) web'den giriş 403 "Invalid
+  CORS request" alıyor: Vite proxy Origin başlığını iletiyor, dev CORS yalnızca 8081'e izinli — Source: spec 0004, VERIFY
+  round 1 (Info-3; spec 0003 CORS yapılandırması) — Severity: low — Recommendation: dev profilinde Vite kökenini izinli
+  listeye ekle ya da proxy'de Origin'i yeniden yaz; README'yi güncelle — Deferred by: yunusemretapan, 2026-11-21, spec dışı,
+  geliştirici ortamı

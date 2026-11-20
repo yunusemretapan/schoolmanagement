@@ -188,4 +188,25 @@ class LoginCommandHandlerTest {
                 .doesNotContain("ayse")
                 .doesNotContain(PASSWORD);
     }
+
+    /** Spec 0004, Req. 6 and 8 / AC-6, AC-8: invited and deactivated accounts get the general refusal. */
+    @Test
+    void invitedAndDeactivatedAccountsAreRefusedLikeAWrongPassword() {
+        AuthOutcome.Refused expected = new AuthOutcome.Refused(IdentityErrorCodes.INVALID_CREDENTIALS);
+        fx.identities.put(
+                teacherGuardian.id(), fx.identities.get(teacherGuardian.id()).deactivated());
+
+        assertThat(login("ayse@ornek.test", PASSWORD)).isEqualTo(expected);
+
+        fx.identities.put(
+                teacherGuardian.id(), fx.identities.get(teacherGuardian.id()).reactivated());
+        assertThat(login("ayse@ornek.test", PASSWORD)).isInstanceOf(AuthOutcome.Issued.class);
+
+        fx.identities.put(
+                teacherGuardian.id(),
+                com.schoolos.domain.identity.LoginIdentity.invited(
+                        teacherGuardian.id(), teacherGuardian.tenantId(), "ayse@ornek.test", null));
+        assertThat(login("ayse@ornek.test", PASSWORD)).isEqualTo(expected);
+        assertThat(login("ayse@ornek.test", "")).isEqualTo(expected);
+    }
 }

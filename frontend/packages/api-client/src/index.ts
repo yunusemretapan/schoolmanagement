@@ -7,6 +7,14 @@ export type CurrentUser = components['schemas']['CurrentUserResponse'];
 export type Role = components['schemas']['Role'];
 export type ClientType = components['schemas']['ClientType'];
 type TokenResponse = components['schemas']['TokenResponse'];
+export type AccountStatus = components['schemas']['AccountStatus'];
+export type StaffBody = components['schemas']['StaffBody'];
+export type StaffSummary = components['schemas']['StaffSummary'];
+export type StaffPage = components['schemas']['StaffPage'];
+export type StaffDetail = components['schemas']['StaffDetail'];
+export type InvitationLink = components['schemas']['InvitationLink'];
+export type InvitationInfo = components['schemas']['InvitationInfo'];
+export type AcceptedInvitation = components['schemas']['AcceptedInvitation'];
 
 /** Spec 0001: no answer within 5 seconds means "unreachable". */
 export const STATUS_TIMEOUT_MS = 5_000;
@@ -21,12 +29,22 @@ export const ERROR_CODES = {
   rateLimited: 'IDENTITY_RATE_LIMITED',
   validationFailed: 'VALIDATION_FAILED',
   timeout: 'TIMEOUT',
+  notFound: 'NOT_FOUND',
+  forbidden: 'AUTH_FORBIDDEN',
+  // spec 0004
+  identifierTaken: 'IDENTITY_IDENTIFIER_TAKEN',
+  identifierLocked: 'IDENTITY_IDENTIFIER_LOCKED',
+  lastAdmin: 'IDENTITY_LAST_ADMIN',
+  selfChange: 'IDENTITY_SELF_CHANGE',
+  staffState: 'IDENTITY_STAFF_STATE',
 } as const;
 
 export class ApiError extends Error {
   constructor(
     readonly status: number | undefined,
     readonly code: string | undefined,
+    /** VALIDATION_FAILED only: field → error code. */
+    readonly fieldErrors: Readonly<Record<string, string>> = {},
   ) {
     super(code ?? (status === undefined ? 'NETWORK_ERROR' : `HTTP_${status}`));
     this.name = 'ApiError';
@@ -89,6 +107,17 @@ export interface ApiClient {
   restoreSession(): Promise<boolean>;
   logout(): Promise<void>;
   getMe(signal?: AbortSignal): Promise<CurrentUser>;
+  // --- staff management (spec 0004), administrators only ---
+  listStaff(query: { q?: string; page?: number }, signal?: AbortSignal): Promise<StaffPage>;
+  getStaff(staffId: string, signal?: AbortSignal): Promise<StaffDetail>;
+  inviteStaff(body: StaffBody): Promise<InvitationLink>;
+  updateStaff(staffId: string, body: StaffBody): Promise<StaffDetail>;
+  renewInvitation(staffId: string): Promise<InvitationLink>;
+  deactivateStaff(staffId: string): Promise<StaffDetail>;
+  reactivateStaff(staffId: string): Promise<StaffDetail>;
+  // --- invitation link (spec 0004), no session ---
+  getInvitation(token: string, signal?: AbortSignal): Promise<InvitationInfo>;
+  acceptInvitation(token: string, password: string): Promise<AcceptedInvitation>;
 }
 
 export function createApiClient(
@@ -177,9 +206,36 @@ export function createApiClient(
       throw new ApiError(401, ERROR_CODES.sessionExpired);
     }
     if (result.data === undefined && result.response.status !== 204) {
-      throw new ApiError(result.response.status, (result.error as ProblemDetails | undefined)?.code);
+      throw problem(result.response.status, result.error);
     }
     return result.data as T;
+  }
+
+  /** A signed-in call with the usual time limit. */
+  function signedIn<T>(
+    signal: AbortSignal | undefined,
+    call: (
+      headers: Record<string, string>,
+      signal: AbortSignal,
+    ) => Promise<{ data?: T; error?: unknown; response: Response }>,
+  ): Promise<T> {
+    return withTimeout(LOGIN_TIMEOUT_MS, signal, (combined) =>
+      authorized((headers) => call(headers, combined)),
+    );
+  }
+
+  /** A call without a session (the invitation link): no token, no refresh. */
+  function open<T>(
+    signal: AbortSignal | undefined,
+    call: (signal: AbortSignal) => Promise<{ data?: T; error?: unknown; response: Response }>,
+  ): Promise<T> {
+    return withTimeout(LOGIN_TIMEOUT_MS, signal, async (combined) => {
+      const { data, error, response } = await call(combined);
+      if (data === undefined) {
+        throw problem(response.status, error);
+      }
+      return data;
+    });
   }
 
   return {
@@ -234,7 +290,87 @@ export function createApiClient(
         authorized((headers) => client.GET('/api/v1/me', { headers, signal: combined })),
       );
     },
+
+    listStaff({ q, page }, signal) {
+      return signedIn(signal, (headers, combined) =>
+        client.GET('/api/v1/staff', {
+          headers,
+          params: { query: { ...(q ? { q } : {}), page: page ?? 0 } },
+          signal: combined,
+        }),
+      );
+    },
+
+    getStaff(staffId, signal) {
+      return signedIn(signal, (headers, combined) =>
+        client.GET('/api/v1/staff/{staffId}', { headers, params: { path: { staffId } }, signal: combined }),
+      );
+    },
+
+    inviteStaff(body) {
+      return signedIn(undefined, (headers, combined) =>
+        client.POST('/api/v1/staff', { headers, body, signal: combined }),
+      );
+    },
+
+    updateStaff(staffId, body) {
+      return signedIn(undefined, (headers, combined) =>
+        client.PUT('/api/v1/staff/{staffId}', {
+          headers,
+          params: { path: { staffId } },
+          body,
+          signal: combined,
+        }),
+      );
+    },
+
+    renewInvitation(staffId) {
+      return signedIn(undefined, (headers, combined) =>
+        client.POST('/api/v1/staff/{staffId}/invitation', {
+          headers,
+          params: { path: { staffId } },
+          signal: combined,
+        }),
+      );
+    },
+
+    deactivateStaff(staffId) {
+      return signedIn(undefined, (headers, combined) =>
+        client.POST('/api/v1/staff/{staffId}/deactivation', {
+          headers,
+          params: { path: { staffId } },
+          signal: combined,
+        }),
+      );
+    },
+
+    reactivateStaff(staffId) {
+      return signedIn(undefined, (headers, combined) =>
+        client.POST('/api/v1/staff/{staffId}/reactivation', {
+          headers,
+          params: { path: { staffId } },
+          signal: combined,
+        }),
+      );
+    },
+
+    getInvitation(token, signal) {
+      return open(signal, (combined) =>
+        client.POST('/api/v1/invitations/lookup', { body: { token }, signal: combined }),
+      );
+    },
+
+    acceptInvitation(token, password) {
+      return open(undefined, (combined) =>
+        client.POST('/api/v1/invitations/accept', { body: { token, password }, signal: combined }),
+      );
+    },
   };
+}
+
+function problem(status: number, error: unknown): ApiError {
+  const details = error as ProblemDetails | undefined;
+  return new ApiError(status, details?.code, details?.errors ?? {});
 }
 
 /** setTimeout-based (not AbortSignal.timeout) so tests can drive it with fake timers. */

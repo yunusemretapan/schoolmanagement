@@ -98,6 +98,127 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The institution's staff, searched and paged (spec 0004). Administrators only. */
+        get: operations["listStaff"];
+        put?: never;
+        /** Invite a staff member; returns the one-time link's token (spec 0004). */
+        post: operations["inviteStaff"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff/{staffId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One staff member (spec 0004). Another institution's id answers like an unknown one. */
+        get: operations["getStaff"];
+        /** Name and staff roles; e-mail and phone only while invited (spec 0004). A Veli role is kept. */
+        put: operations["updateStaff"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff/{staffId}/invitation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** A new 72-hour link for an invited account; the old one stops working. */
+        post: operations["renewInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff/{staffId}/deactivation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Deactivate: every session ends at once, the account stays (spec 0004). */
+        post: operations["deactivateStaff"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff/{staffId}/reactivation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reactivate: active with the old password, or invited again (spec 0004). */
+        post: operations["reactivateStaff"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invitations/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Whom a link invites (spec 0004). Public: the token is the credential. */
+        post: operations["getInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invitations/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set the password from a link (spec 0004). Public; no automatic sign-in. */
+        post: operations["acceptInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -128,6 +249,70 @@ export interface components {
         };
         /** @enum {string} */
         Role: "ADMIN" | "TEACHER" | "GUARDIAN" | "ACCOUNTANT";
+        /** @enum {string} */
+        AccountStatus: "INVITED" | "ACTIVE" | "INACTIVE";
+        StaffBody: {
+            fullName: string;
+            email?: string | null;
+            phone?: string | null;
+            /** @description Staff roles only (ADMIN, TEACHER, ACCOUNTANT); GUARDIAN is refused. */
+            roles: components["schemas"]["Role"][];
+        };
+        StaffSummary: {
+            /** Format: uuid */
+            id: string;
+            fullName: string;
+            email: string | null;
+            phone: string | null;
+            roles: components["schemas"]["Role"][];
+            status: components["schemas"]["AccountStatus"];
+        };
+        StaffPage: {
+            items: components["schemas"]["StaffSummary"][];
+            page: number;
+            pageSize: number;
+            total: number;
+        };
+        StaffDetail: {
+            /** Format: uuid */
+            id: string;
+            fullName: string;
+            email: string | null;
+            phone: string | null;
+            roles: components["schemas"]["Role"][];
+            status: components["schemas"]["AccountStatus"];
+            /**
+             * Format: date-time
+             * @description Set while a usable invitation link exists.
+             */
+            invitationExpiresAt: string | null;
+            /** @description The caller's own account. */
+            self: boolean;
+            /** @description The institution's only active administrator. */
+            lastActiveAdmin: boolean;
+        };
+        InvitationLink: {
+            /** Format: uuid */
+            staffId: string;
+            /** @description The web app builds <origin>/davet#<token>; shown once, never stored by the server. */
+            token: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        InvitationLookupRequest: {
+            token: string;
+        };
+        InvitationAcceptRequest: {
+            token: string;
+            password: string;
+        };
+        InvitationInfo: {
+            fullName: string;
+            institutionName: string;
+        };
+        AcceptedInvitation: {
+            identifier: string;
+        };
         SystemStatusResponse: {
             /** @enum {string} */
             status: "UP";
@@ -300,6 +485,298 @@ export interface operations {
                 };
             };
             /** @description 401 AUTH_UNAUTHENTICATED. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    listStaff: {
+        parameters: {
+            query?: {
+                /** @description Part of a name, e-mail or phone number (any spelling). */
+                q?: string;
+                /** @description Counts from 0; 50 per page. */
+                page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of staff. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffPage"];
+                };
+            };
+            /** @description 400 VALIDATION_FAILED, 401 AUTH_UNAUTHENTICATED, 403 AUTH_FORBIDDEN. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    inviteStaff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffBody"];
+            };
+        };
+        responses: {
+            /** @description Invited. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationLink"];
+                };
+            };
+            /** @description 400 VALIDATION_FAILED, 401, 403, 422 IDENTITY_IDENTIFIER_TAKEN (wherever it is used). */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    getStaff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staffId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The staff member. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffDetail"];
+                };
+            };
+            /** @description 401 AUTH_UNAUTHENTICATED, 403 AUTH_FORBIDDEN (not an administrator), 404 NOT_FOUND. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    updateStaff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staffId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffBody"];
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffDetail"];
+                };
+            };
+            /** @description 400 VALIDATION_FAILED, 401, 403, 404, 422 IDENTITY_IDENTIFIER_TAKEN | IDENTITY_IDENTIFIER_LOCKED | IDENTITY_LAST_ADMIN | IDENTITY_SELF_CHANGE. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    renewInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staffId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description New link. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationLink"];
+                };
+            };
+            /** @description 401, 403, 404, 422 IDENTITY_STAFF_STATE. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    deactivateStaff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staffId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deactivated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffDetail"];
+                };
+            };
+            /** @description 401, 403, 404, 422 IDENTITY_SELF_CHANGE | IDENTITY_LAST_ADMIN | IDENTITY_STAFF_STATE. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    reactivateStaff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staffId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reactivated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffDetail"];
+                };
+            };
+            /** @description 401, 403, 404, 422 IDENTITY_STAFF_STATE. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    getInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvitationLookupRequest"];
+            };
+        };
+        responses: {
+            /** @description Name and institution. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationInfo"];
+                };
+            };
+            /** @description 400 VALIDATION_FAILED, 404 NOT_FOUND (invalid, expired, used or revoked: one answer), 429 IDENTITY_RATE_LIMITED. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    acceptInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvitationAcceptRequest"];
+            };
+        };
+        responses: {
+            /** @description The identifier to sign in with. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcceptedInvitation"];
+                };
+            };
+            /** @description 400 VALIDATION_FAILED (password PASSWORD_TOO_SHORT), 404 NOT_FOUND, 429 IDENTITY_RATE_LIMITED. */
             default: {
                 headers: {
                     [name: string]: unknown;

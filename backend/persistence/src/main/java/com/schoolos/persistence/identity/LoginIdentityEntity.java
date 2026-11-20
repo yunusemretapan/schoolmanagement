@@ -1,8 +1,11 @@
 package com.schoolos.persistence.identity;
 
+import com.schoolos.domain.identity.AccountStatus;
 import com.schoolos.domain.identity.LoginIdentity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
@@ -24,7 +27,7 @@ class LoginIdentityEntity {
 
     private String phone;
 
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash")
     private String passwordHash;
 
     @Column(name = "failed_attempts", nullable = false)
@@ -32,6 +35,10 @@ class LoginIdentityEntity {
 
     @Column(name = "locked_until")
     private Instant lockedUntil;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AccountStatus status;
 
     protected LoginIdentityEntity() {}
 
@@ -47,9 +54,10 @@ class LoginIdentityEntity {
         this.passwordHash = identity.passwordHash();
         this.failedAttempts = identity.failedAttempts();
         this.lockedUntil = identity.lockedUntil();
+        this.status = identity.status();
     }
 
     LoginIdentity toDomain() {
-        return new LoginIdentity(userId, tenantId, email, phone, passwordHash, failedAttempts, lockedUntil);
+        return new LoginIdentity(userId, tenantId, email, phone, passwordHash, failedAttempts, lockedUntil, status);
     }
 }

@@ -13,4 +13,12 @@ public record UserAccount(UUID id, UUID tenantId, String fullName, Set<Role> rol
         }
         roles = Set.copyOf(roles);
     }
+
+    public UserAccount withFullName(String newFullName) {
+        return new UserAccount(id, tenantId, newFullName, roles, createdAt);
+    }
+
+    public UserAccount withRoles(Set<Role> newRoles) {
+        return new UserAccount(id, tenantId, fullName, newRoles, createdAt);
+    }
 }

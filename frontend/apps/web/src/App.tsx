@@ -6,10 +6,16 @@ import { ApiProvider } from './api/ApiProvider';
 import { AppearanceProvider } from './appearance/AppearanceProvider';
 import { AuthProvider } from './auth/AuthProvider';
 import { LOGIN_PATH, RequireAuth } from './auth/RequireAuth';
+import { RequireRole } from './auth/RequireRole';
 import type { SessionExpiry } from './auth/sessionExpiry';
 import { LoginScreen } from './features/auth/LoginScreen';
 import { DesignShowcase } from './features/design/DesignShowcase';
 import { HomeScreen } from './features/home/HomeScreen';
+import { AcceptInvitationScreen } from './features/invitation/AcceptInvitationScreen';
+import { InviteStaffScreen } from './features/staff/InviteStaffScreen';
+import { INVITATION_PATH } from './features/staff/invitationLink';
+import { StaffDetailScreen } from './features/staff/StaffDetailScreen';
+import { StaffListScreen } from './features/staff/StaffListScreen';
 import { StatusScreen } from './features/system/StatusScreen';
 import './i18n';
 
@@ -53,6 +59,37 @@ export function AppRoutes() {
           </RequireAuth>
         }
       />
+      <Route
+        path="/personel"
+        element={
+          <RequireAuth>
+            <RequireRole role="ADMIN">
+              <StaffListScreen />
+            </RequireRole>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/personel/davet"
+        element={
+          <RequireAuth>
+            <RequireRole role="ADMIN">
+              <InviteStaffScreen />
+            </RequireRole>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/personel/:staffId"
+        element={
+          <RequireAuth>
+            <RequireRole role="ADMIN">
+              <StaffDetailScreen />
+            </RequireRole>
+          </RequireAuth>
+        }
+      />
+      <Route path={INVITATION_PATH} element={<AcceptInvitationScreen />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

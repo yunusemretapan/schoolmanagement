@@ -8,6 +8,9 @@ export const LOGIN_PATH = '/giris';
 /** Where the login screen sends the user back to after signing in (spec 0003, flow "korumalı adres"). */
 export interface ReturnState {
   from?: string;
+  /** After an accepted invitation (spec 0004, G2): the identifier to fill in, and the confirmation to show. */
+  identifier?: string;
+  invitationAccepted?: boolean;
 }
 
 /**

@@ -30,7 +30,8 @@ export function LoginScreen() {
   const { status, expired, signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as ReturnState | null)?.from ?? '/';
+  const returned = location.state as ReturnState | null;
+  const from = returned?.from ?? '/';
   const ids = {
     identifier: useId(),
     password: useId(),
@@ -39,7 +40,7 @@ export function LoginScreen() {
     passwordError: useId(),
   };
 
-  const [identifier, setIdentifier] = useState('');
+  const [identifier, setIdentifier] = useState(returned?.identifier ?? '');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<LoginFieldErrors>({});
@@ -83,6 +84,11 @@ export function LoginScreen() {
           </div>
         </header>
 
+        {returned?.invitationAccepted === true && formError === null && (
+          <p role="status" className="mb-md rounded-md bg-sunken p-sm text-sm text-ink">
+            {t('auth.invitationAccepted')}
+          </p>
+        )}
         {expired && formError === null && (
           <p role="status" className="mb-md rounded-md bg-sunken p-sm text-sm text-ink">
             {t('auth.sessionExpired')}

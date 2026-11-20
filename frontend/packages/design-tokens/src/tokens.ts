@@ -128,6 +128,8 @@ export const tokens = {
     labelColumn: 120,
     /** How far the showcase motion example travels. */
     motionDemoTravel: 64,
+    /** A full-screen overlay's distance from the viewport edges (spec 0004 confirmation dialog). */
+    overlayInset: 0,
   },
   /** Stacking order (z-index). */
   layer: {

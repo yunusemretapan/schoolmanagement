@@ -9,5 +9,13 @@ public interface UserRepository {
 
     Optional<UserAccount> findById(UUID userId);
 
+    /**
+     * Whether the account is in the bound tenant, without loading it: the tenant check that comes before any lock on
+     * a global row (spec 0004 review 2, L2-1).
+     */
+    boolean exists(UUID userId);
+
     void create(UserAccount user);
+
+    void update(UserAccount user);
 }

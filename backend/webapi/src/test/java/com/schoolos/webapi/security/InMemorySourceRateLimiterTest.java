@@ -66,4 +66,17 @@ class InMemorySourceRateLimiterTest {
         clock.advance(Duration.ofSeconds(1));
         assertThat(limiter.tryAcquire("203.0.113.7")).isTrue();
     }
+
+    /** Spec 0004, G4 / AC-5: invitation tries use their own bucket ("invitation:" + source, InvitationGate). */
+    @Test
+    void invitationTriesAndSignInsOfOneSourceAreCountedApart() {
+        for (int i = 0; i < 20; i++) {
+            assertThat(limiter.tryAcquire("invitation:203.0.113.7")).isTrue();
+        }
+        assertThat(limiter.tryAcquire("invitation:203.0.113.7")).isFalse();
+        assertThat(limiter.tryAcquire("203.0.113.7")).isTrue();
+
+        clock.advance(Duration.ofMinutes(1));
+        assertThat(limiter.tryAcquire("invitation:203.0.113.7")).isTrue();
+    }
 }

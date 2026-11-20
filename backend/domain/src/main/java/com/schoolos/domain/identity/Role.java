@@ -9,5 +9,10 @@ public enum Role {
     /** Veli. */
     GUARDIAN,
     /** Muhasebe / İdari personel. */
-    ACCOUNTANT
+    ACCOUNTANT;
+
+    /** Personel rolleri: the ones staff management assigns; Veli is linked through student records (spec 0004). */
+    public boolean isStaff() {
+        return this != GUARDIAN;
+    }
 }

@@ -51,6 +51,10 @@ public class SecurityConfig {
     public static final String LOGIN_PATH = "/api/v1/auth/login";
     public static final String REFRESH_PATH = "/api/v1/auth/refresh";
     public static final String LOGOUT_PATH = "/api/v1/auth/logout";
+    /** The invitation link's open door (spec 0004, Req. 5, 6): the link itself is the credential. */
+    public static final String INVITATION_LOOKUP_PATH = "/api/v1/invitations/lookup";
+
+    public static final String INVITATION_ACCEPT_PATH = "/api/v1/invitations/accept";
 
     @Bean
     SecurityFilterChain apiSecurity(HttpSecurity http, TokenService tokens, SessionValidator sessions)
@@ -65,7 +69,13 @@ public class SecurityConfig {
                 .anonymous(anonymous -> anonymous.disable())
                 .authorizeHttpRequests(requests -> requests.requestMatchers(HttpMethod.GET, STATUS_PATH)
                         .permitAll()
-                        .requestMatchers(HttpMethod.POST, LOGIN_PATH, REFRESH_PATH, LOGOUT_PATH)
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                LOGIN_PATH,
+                                REFRESH_PATH,
+                                LOGOUT_PATH,
+                                INVITATION_LOOKUP_PATH,
+                                INVITATION_ACCEPT_PATH)
                         .permitAll()
                         .anyRequest()
                         .authenticated())

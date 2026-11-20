@@ -8,6 +8,8 @@ package com.schoolos.core.security;
 public enum Permission {
     /** Read one's own account (name, institution, roles). */
     SELF_READ,
+    /** List, invite and change the institution's staff and their roles (spec 0004; Kurucu/Yönetici only). */
+    STAFF_MANAGE,
     /** Create institutions and their first accounts (operator tool and dev seed only). */
     PLATFORM_OPERATOR
 }

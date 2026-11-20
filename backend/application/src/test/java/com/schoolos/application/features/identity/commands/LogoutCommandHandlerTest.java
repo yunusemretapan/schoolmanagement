@@ -22,7 +22,8 @@ class LogoutCommandHandlerTest {
 
     private final IdentityFixture fx = new IdentityFixture();
     private final LogoutCommandHandler handler = new LogoutCommandHandler(fx.sessionRepository(), fx.clock);
-    private final SessionActivityChecker checker = new SessionActivityChecker(fx.sessionRepository());
+    private final SessionActivityChecker checker = new SessionActivityChecker(
+            fx.sessionRepository(), fx.identityRepository(), fx.userRepository(), fx.transactions, fx.tenantSession());
 
     private final UserAccount admin =
             fx.seedUser("Örnek Koleji", "Kurucu", "kurucu@ornek.test", null, "Ornek-Sifre-2026", Role.ADMIN);
@@ -30,6 +31,10 @@ class LogoutCommandHandlerTest {
     @AfterEach
     void clearUser() {
         CurrentUserHolder.clear();
+    }
+
+    private boolean isActive(UUID sessionId) {
+        return checker.currentRoles(sessionId, admin.tenantId()).isPresent();
     }
 
     private UUID open(ClientType type) {
@@ -50,8 +55,8 @@ class LogoutCommandHandlerTest {
         handler.handle(new LogoutCommand(null));
 
         assertThat(fx.sessions.get(laptop).revokedAt()).isEqualTo(fx.clock.instant());
-        assertThat(checker.isActive(laptop)).isFalse();
-        assertThat(checker.isActive(phone)).isTrue();
+        assertThat(isActive(laptop)).isFalse();
+        assertThat(isActive(phone)).isTrue();
     }
 
     @Test
@@ -61,7 +66,7 @@ class LogoutCommandHandlerTest {
 
         handler.handle(new LogoutCommand(RefreshTokens.format(laptop, "current")));
 
-        assertThat(checker.isActive(laptop)).isFalse();
+        assertThat(isActive(laptop)).isFalse();
     }
 
     @Test
@@ -73,11 +78,11 @@ class LogoutCommandHandlerTest {
         handler.handle(new LogoutCommand("garbage"));
         handler.handle(new LogoutCommand(null));
 
-        assertThat(checker.isActive(laptop)).isTrue();
+        assertThat(isActive(laptop)).isTrue();
     }
 
     @Test
     void unknownSessionsAreNotActive() {
-        assertThat(checker.isActive(UUID.randomUUID())).isFalse();
+        assertThat(isActive(UUID.randomUUID())).isFalse();
     }
 }

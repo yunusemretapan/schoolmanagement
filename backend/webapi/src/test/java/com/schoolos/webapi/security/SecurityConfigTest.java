@@ -73,4 +73,20 @@ class SecurityConfigTest {
                 .perform(get("/api/v1/me").header("Authorization", "Basic " + token))
                 .andExpect(status().isUnauthorized());
     }
+
+    /** Spec 0004, Req. 5, 6: the invitation link's two calls are open; the link is the credential. */
+    @Test
+    void invitationLookupAndAcceptAreOpen() throws Exception {
+        web.mvc.perform(post("/api/v1/invitations/lookup")).andExpect(status().isOk());
+        web.mvc.perform(post("/api/v1/invitations/accept")).andExpect(status().isOk());
+    }
+
+    /** Spec 0004, AC-1: staff management stays behind the door, and only POST invitation calls are open. */
+    @Test
+    void staffManagementAndOtherInvitationCallsNeedASession() throws Exception {
+        web.mvc.perform(get("/api/v1/staff")).andExpect(status().isUnauthorized());
+        web.mvc.perform(post("/api/v1/staff")).andExpect(status().isUnauthorized());
+        web.mvc.perform(get("/api/v1/invitations/lookup")).andExpect(status().isUnauthorized());
+        web.mvc.perform(post("/api/v1/invitations/other")).andExpect(status().isUnauthorized());
+    }
 }

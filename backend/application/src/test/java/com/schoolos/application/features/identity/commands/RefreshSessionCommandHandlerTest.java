@@ -38,7 +38,13 @@ class RefreshSessionCommandHandlerTest {
     };
 
     private final RefreshSessionCommandHandler handler = new RefreshSessionCommandHandler(
-            fx.sessionRepository(), fx.userRepository(), tokens, fx.tenantSession(), fx.secrets, fx.clock);
+            fx.sessionRepository(),
+            fx.identityRepository(),
+            fx.userRepository(),
+            tokens,
+            fx.tenantSession(),
+            fx.secrets,
+            fx.clock);
 
     private final UserAccount guardian =
             fx.seedUser("Örnek Koleji", "Veli Kaya", "veli@ornek.test", null, "Ornek-Sifre-2026", Role.GUARDIAN);
@@ -134,6 +140,15 @@ class RefreshSessionCommandHandlerTest {
         String token = openSession(ClientType.WEB);
         UUID id = RefreshTokens.parse(token).orElseThrow().sessionId();
         fx.sessions.put(id, fx.sessions.get(id).revoked(fx.clock.instant()));
+        assertThat(refresh(token)).isEqualTo(EXPIRED);
+    }
+
+    /** Spec 0004, Req. 8 / AC-8: even a session that was somehow left open stops refreshing. */
+    @Test
+    void aDeactivatedAccountCannotRefresh() {
+        String token = openSession(ClientType.MOBILE);
+        fx.identities.put(guardian.id(), fx.identities.get(guardian.id()).deactivated());
+
         assertThat(refresh(token)).isEqualTo(EXPIRED);
     }
 }

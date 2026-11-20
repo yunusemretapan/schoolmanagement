@@ -1,13 +1,22 @@
 package com.schoolos.application.features.identity;
 
+import com.schoolos.application.features.identity.ports.AuditLog;
+import com.schoolos.application.features.identity.ports.InvitationRepository;
 import com.schoolos.application.features.identity.ports.LoginIdentityRepository;
 import com.schoolos.application.features.identity.ports.SecretGenerator;
 import com.schoolos.application.features.identity.ports.SessionRepository;
+import com.schoolos.application.features.identity.ports.StaffDirectory;
+import com.schoolos.application.features.identity.ports.TenantLock;
 import com.schoolos.application.features.identity.ports.TenantRepository;
 import com.schoolos.application.features.identity.ports.UserRepository;
+import com.schoolos.application.features.identity.rules.StaffSearchTerm;
 import com.schoolos.core.application.behaviors.TenantSessionPort;
+import com.schoolos.core.application.behaviors.TransactionPort;
 import com.schoolos.core.crosscutting.ids.IdGenerator;
 import com.schoolos.core.security.PasswordHasher;
+import com.schoolos.domain.identity.AccountStatus;
+import com.schoolos.domain.identity.AuditEvent;
+import com.schoolos.domain.identity.Invitation;
 import com.schoolos.domain.identity.LoginIdentity;
 import com.schoolos.domain.identity.Role;
 import com.schoolos.domain.identity.Session;
@@ -19,6 +28,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +36,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * In-memory ports for the identity feature. Tenant-bound reads (users, tenants) behave like the Hibernate filter and
@@ -40,8 +52,15 @@ public final class IdentityFixture {
     public final Map<UUID, UserAccount> users = new HashMap<>();
     public final Map<UUID, Tenant> tenants = new HashMap<>();
     public final Map<UUID, Session> sessions = new HashMap<>();
+    public final Map<UUID, Invitation> invitations = new HashMap<>();
+    /** The audit log; {@link #auditLog()} only ever appends to it. */
+    public final List<AuditEvent> audit = new ArrayList<>();
+
     public final List<UUID> bindings = new ArrayList<>();
-    /** Row locks the handlers asked for, in order ("identity:<value>", "session:<id>"): review 1, M-1. */
+    /**
+     * Row locks the handlers asked for, in order ("identity:<value or user id>", "session:<id>", "invitation:<id>",
+     * "invitations-of:<user id>", "tenant:<id>"), and "rule:last-admin" when the last-admin rule was checked: review 1, M-1; plan 0004, R3.
+     */
     public final List<String> locks = new ArrayList<>();
 
     private final AtomicInteger idCounter = new AtomicInteger();
@@ -67,6 +86,18 @@ public final class IdentityFixture {
 
     public TenantSessionPort tenantSession() {
         return bindings::add;
+    }
+
+    /** Work runs directly, in the caller's thread. */
+    public final TransactionPort transactions = new TransactionPort() {
+        @Override
+        public <T> T inTransaction(Supplier<T> work) {
+            return work.get();
+        }
+    };
+
+    public TenantLock tenantLock() {
+        return tenantId -> locks.add("tenant:" + tenantId);
     }
 
     public Optional<UUID> boundTenant() {
@@ -102,6 +133,17 @@ public final class IdentityFixture {
             }
 
             @Override
+            public Optional<LoginIdentity> findByUserId(UUID userId) {
+                return Optional.ofNullable(identities.get(userId));
+            }
+
+            @Override
+            public Optional<LoginIdentity> lockByUserId(UUID userId) {
+                locks.add("identity:" + userId);
+                return findByUserId(userId);
+            }
+
+            @Override
             public void create(LoginIdentity identity) {
                 identities.put(identity.userId(), identity);
             }
@@ -122,9 +164,22 @@ public final class IdentityFixture {
             }
 
             @Override
+            public boolean exists(UUID userId) {
+                return findById(userId).isPresent();
+            }
+
+            @Override
             public void create(UserAccount user) {
                 if (!boundTenant().map(user.tenantId()::equals).orElse(false)) {
                     throw new IllegalStateException("RLS WITH CHECK would refuse this insert");
+                }
+                users.put(user.id(), user);
+            }
+
+            @Override
+            public void update(UserAccount user) {
+                if (findById(user.id()).isEmpty()) {
+                    throw new IllegalStateException("RLS would hide this row");
                 }
                 users.put(user.id(), user);
             }
@@ -170,6 +225,99 @@ public final class IdentityFixture {
             @Override
             public void update(Session session) {
                 sessions.put(session.id(), session);
+            }
+
+            @Override
+            public void revokeAllForUser(UUID userId, Instant now) {
+                sessions.replaceAll((id, s) -> s.userId().equals(userId) && !s.isRevoked() ? s.revoked(now) : s);
+            }
+        };
+    }
+
+    public InvitationRepository invitationRepository() {
+        return new InvitationRepository() {
+            @Override
+            public Optional<Invitation> findById(UUID invitationId) {
+                return Optional.ofNullable(invitations.get(invitationId));
+            }
+
+            @Override
+            public Optional<Invitation> lockById(UUID invitationId) {
+                locks.add("invitation:" + invitationId);
+                return findById(invitationId);
+            }
+
+            @Override
+            public Optional<Invitation> findUsableForUser(UUID userId, Instant now) {
+                return invitations.values().stream()
+                        .filter(i -> i.userId().equals(userId) && i.isUsable(now))
+                        .max(Comparator.comparing(Invitation::createdAt));
+            }
+
+            @Override
+            public void create(Invitation invitation) {
+                invitations.put(invitation.id(), invitation);
+            }
+
+            @Override
+            public void update(Invitation invitation) {
+                invitations.put(invitation.id(), invitation);
+            }
+
+            @Override
+            public void revokeOpenForUser(UUID userId, Instant now) {
+                locks.add("invitations-of:" + userId);
+                invitations.replaceAll((id, i) ->
+                        i.userId().equals(userId) && i.usedAt() == null && i.revokedAt() == null ? i.revoked(now) : i);
+            }
+        };
+    }
+
+    /** Append only, and only into the bound tenant (RLS WITH CHECK). */
+    public AuditLog auditLog() {
+        return event -> {
+            if (!boundTenant().map(event.tenantId()::equals).orElse(false)) {
+                throw new IllegalStateException("RLS WITH CHECK would refuse this insert");
+            }
+            audit.add(event);
+        };
+    }
+
+    /** Same rules as the database adapter: bound tenant only, staff roles only, ordered by name then id. */
+    public StaffDirectory staffDirectory() {
+        return new StaffDirectory() {
+            @Override
+            public Page search(Optional<StaffSearchTerm> term, int page, int pageSize) {
+                List<Row> all = staffRows()
+                        .filter(r -> term.map(t -> t.matches(
+                                        r.user().fullName(),
+                                        r.identity().email(),
+                                        r.identity().phone()))
+                                .orElse(true))
+                        .sorted(Comparator.comparing((Row r) -> r.user().fullName())
+                                .thenComparing(r -> r.user().id()))
+                        .toList();
+                List<Row> slice = all.stream()
+                        .skip((long) page * pageSize)
+                        .limit(pageSize)
+                        .toList();
+                return new Page(slice, all.size());
+            }
+
+            @Override
+            public long countActiveAdmins() {
+                locks.add("rule:last-admin");
+                return staffRows()
+                        .filter(r -> r.user().roles().contains(Role.ADMIN))
+                        .filter(r -> r.identity().status() == AccountStatus.ACTIVE)
+                        .count();
+            }
+
+            private Stream<Row> staffRows() {
+                return users.values().stream()
+                        .filter(u -> boundTenant().map(u.tenantId()::equals).orElse(false))
+                        .filter(u -> u.roles().stream().anyMatch(Role::isStaff))
+                        .map(u -> new Row(u, identities.get(u.id())));
             }
         };
     }

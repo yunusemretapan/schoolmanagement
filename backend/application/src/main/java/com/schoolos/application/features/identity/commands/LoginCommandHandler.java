@@ -26,7 +26,8 @@ import java.util.Optional;
 /**
  * Spec 0003, Req. 2–6. Unknown identifier, wrong password and locked account all end in the same refusal
  * (Req. 4); a password is hashed in every case so the answer takes as long either way. Only after the password
- * matched does the transaction bind to the user's tenant to read their roles.
+ * matched does the transaction bind to the user's tenant to read their roles. An invited or deactivated account is
+ * refused the same way (spec 0004, Req. 6, 8).
  */
 public final class LoginCommandHandler implements RequestHandler<LoginCommand, AuthOutcome> {
 
@@ -86,7 +87,7 @@ public final class LoginCommandHandler implements RequestHandler<LoginCommand, A
             return REFUSED;
         }
         LoginIdentity identity = found.get();
-        if (LoginAttemptPolicy.isLocked(identity, now)) {
+        if (!identity.canSignIn() || LoginAttemptPolicy.isLocked(identity, now)) {
             passwords.matches(command.password(), timingDecoy);
             return REFUSED;
         }
