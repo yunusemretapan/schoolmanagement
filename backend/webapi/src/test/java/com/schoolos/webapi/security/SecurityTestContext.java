@@ -7,8 +7,10 @@ import com.schoolos.core.security.TokenService;
 import jakarta.servlet.Filter;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.context.annotation.Bean;
@@ -36,11 +38,15 @@ final class SecurityTestContext implements AutoCloseable {
     /** Sessions the stand-in validator treats as open; tests add and remove ids. */
     static final Set<UUID> OPEN_SESSIONS = new HashSet<>();
 
+    /** The account's current roles per session, as the database would answer; TEACHER when not set. */
+    static final Map<UUID, Set<String>> CURRENT_ROLES = new HashMap<>();
+
     final AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
     final MockMvc mvc;
 
     SecurityTestContext() {
         OPEN_SESSIONS.clear();
+        CURRENT_ROLES.clear();
         context.setServletContext(new MockServletContext());
         context.getEnvironment()
                 .getPropertySources()
@@ -68,7 +74,9 @@ final class SecurityTestContext implements AutoCloseable {
 
         @Bean
         SessionValidator sessionValidator() {
-            return OPEN_SESSIONS::contains;
+            return (sessionId, tenantId) -> OPEN_SESSIONS.contains(sessionId)
+                    ? Optional.of(CURRENT_ROLES.getOrDefault(sessionId, Set.of("TEACHER")))
+                    : Optional.empty();
         }
     }
 
@@ -96,6 +104,18 @@ final class SecurityTestContext implements AutoCloseable {
             return CurrentUserHolder.current()
                     .map(CurrentUser::tenantId)
                     .map(UUID::toString)
+                    .orElse("none");
+        }
+
+        /** Echoes the permissions the request runs with. */
+        @GetMapping("/api/v1/test/permissions")
+        String permissions() {
+            return CurrentUserHolder.current()
+                    .map(user -> user.permissions().stream()
+                            .map(Enum::name)
+                            .sorted()
+                            .toList()
+                            .toString())
                     .orElse("none");
         }
     }

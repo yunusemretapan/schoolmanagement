@@ -60,6 +60,22 @@ class JwtAuthenticationFilterTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    /** Spec 0004, Req. 7 / AC-7 (plan 0004, R2): the token says TEACHER, the account is ADMIN now. */
+    @Test
+    void permissionsComeFromTheAccountsCurrentRolesNotFromTheToken() throws Exception {
+        SecurityTestContext.CURRENT_ROLES.put(session, Set.of("ADMIN"));
+
+        web.mvc
+                .perform(get("/api/v1/test/permissions").header("Authorization", "Bearer " + tokenForA))
+                .andExpect(content().string("[SELF_READ, STAFF_MANAGE]"));
+
+        SecurityTestContext.CURRENT_ROLES.put(session, Set.of("TEACHER"));
+
+        web.mvc
+                .perform(get("/api/v1/test/permissions").header("Authorization", "Bearer " + tokenForA))
+                .andExpect(content().string("[SELF_READ]"));
+    }
+
     @Test
     void currentUserIsClearedAfterTheRequest() throws Exception {
         web.mvc.perform(get("/api/v1/me").header("Authorization", "Bearer " + tokenForA));

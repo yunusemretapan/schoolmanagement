@@ -43,7 +43,9 @@ public final class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             bearerToken(request)
                     .flatMap(tokens::verify)
-                    .filter(claims -> sessions.isActive(claims.sessionId()))
+                    .flatMap(claims -> sessions.currentRoles(claims.sessionId(), claims.tenantId())
+                            .map(roles -> new AccessClaims(
+                                    claims.userId(), claims.tenantId(), claims.sessionId(), roles, claims.expiresAt())))
                     .ifPresent(JwtAuthenticationFilter::signIn);
             chain.doFilter(request, response);
         } finally {

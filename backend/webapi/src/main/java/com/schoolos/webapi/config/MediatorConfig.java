@@ -82,12 +82,13 @@ public class MediatorConfig {
     @Bean
     RefreshSessionCommandHandler refreshSessionCommandHandler(
             SessionRepository sessions,
+            LoginIdentityRepository identities,
             UserRepository users,
             TokenService tokens,
             TenantSessionPort tenantSession,
             SecretGenerator secrets,
             Clock clock) {
-        return new RefreshSessionCommandHandler(sessions, users, tokens, tenantSession, secrets, clock);
+        return new RefreshSessionCommandHandler(sessions, identities, users, tokens, tenantSession, secrets, clock);
     }
 
     @Bean
@@ -139,7 +140,12 @@ public class MediatorConfig {
     }
 
     @Bean
-    SessionValidator sessionValidator(SessionRepository sessions) {
-        return new SessionActivityChecker(sessions);
+    SessionValidator sessionValidator(
+            SessionRepository sessions,
+            LoginIdentityRepository identities,
+            UserRepository users,
+            TransactionPort transactions,
+            TenantSessionPort tenantSession) {
+        return new SessionActivityChecker(sessions, identities, users, transactions, tenantSession);
     }
 }
