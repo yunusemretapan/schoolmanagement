@@ -5,6 +5,7 @@ import com.schoolos.application.features.identity.ports.LoginIdentityRepository;
 import com.schoolos.core.crosscutting.exceptions.BusinessException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /** Rules for creating an account (spec 0003, Req. 1 and 3; AC-1). */
 public final class IdentityBusinessRules {
@@ -30,6 +31,15 @@ public final class IdentityBusinessRules {
 
     /** Field checks shared by every account-creating command: at least one valid identifier, a long password. */
     public static Map<String, String> checkNewAccount(String email, String phone, String password) {
+        Map<String, String> errors = checkIdentifiers(email, phone);
+        if (password == null || password.length() < MIN_PASSWORD_LENGTH) {
+            errors.put("password", IdentityErrorCodes.PASSWORD_TOO_SHORT);
+        }
+        return errors;
+    }
+
+    /** At least one of e-mail and phone, each valid when given (spec 0003, Req. 2; spec 0004, Req. 4). */
+    public static Map<String, String> checkIdentifiers(String email, String phone) {
         Map<String, String> errors = new HashMap<>();
         boolean hasEmail = email != null && !email.isBlank();
         boolean hasPhone = phone != null && !phone.isBlank();
@@ -42,9 +52,23 @@ public final class IdentityBusinessRules {
         if (hasPhone && PhoneNumberNormalizer.normalize(phone).isEmpty()) {
             errors.put("phone", IdentityErrorCodes.INVALID_IDENTIFIER);
         }
-        if (password == null || password.length() < MIN_PASSWORD_LENGTH) {
-            errors.put("password", IdentityErrorCodes.PASSWORD_TOO_SHORT);
-        }
         return errors;
+    }
+
+    /** The account holding the e-mail or phone, if another than {@code self} holds one (spec 0004, Req. 11). */
+    public void ensureIdentifiersFreeExcept(UUID self, String normalizedEmail, String normalizedPhone) {
+        boolean taken = (normalizedEmail != null
+                        && identities
+                                .findByEmail(normalizedEmail)
+                                .filter(i -> !i.userId().equals(self))
+                                .isPresent())
+                || (normalizedPhone != null
+                        && identities
+                                .findByPhone(normalizedPhone)
+                                .filter(i -> !i.userId().equals(self))
+                                .isPresent());
+        if (taken) {
+            throw new BusinessException(IdentityErrorCodes.IDENTIFIER_TAKEN, "Identifier already in use");
+        }
     }
 }
