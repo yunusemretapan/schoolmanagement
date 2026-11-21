@@ -1,3 +1,4 @@
+import { ApiError, ERROR_CODES } from '@schoolos/api-client';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -75,6 +76,54 @@ describe('GradeLevelsSection (web)', () => {
     await vi.waitFor(() =>
       expect(levels().getByRole('button', { name: '8. sınıf seviyesini aşağı taşı' })).toHaveFocus(),
     );
+  });
+
+  it('a move answered with another order does not take focus later (review 2, L-1)', async () => {
+    const user = userEvent.setup();
+    const three = (order: string[]) =>
+      structure({
+        gradeLevels: order.map((id, i) => ({ id, name: NAMES[id]!, position: i + 1, inUse: false })),
+      });
+    renderApp({
+      api: asAdmin({
+        getAcademicStructure: async () => three([SIXTH, SEVENTH, EIGHTH]),
+        // meanwhile another administrator changed the list: 8. sınıf is not where this move would put it
+        moveGradeLevel: async () => three([SIXTH, SEVENTH, EIGHTH]),
+        deleteGradeLevel: async () => three([SEVENTH, EIGHTH]),
+      }),
+      path: PATH,
+    });
+    await screen.findByRole('heading', { level: 2, name: 'Sınıf seviyeleri' });
+    await user.click(levels().getByRole('button', { name: '8. sınıf seviyesini yukarı taşı' }));
+    await levels().findByText('8. sınıf 2. sıraya taşındı');
+
+    // deleting 6. sınıf brings 8. sınıf to the index that move expected; focus belongs to the heading
+    await user.click(levels().getAllByRole('button', { name: 'Sil' })[0]!);
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Sil' }));
+    await levels().findByText('6. sınıf silindi');
+    const heading = screen.getByRole('heading', { level: 2, name: 'Sınıf seviyeleri' });
+    await vi.waitFor(() => expect(heading).toHaveFocus());
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(heading).toHaveFocus();
+  });
+
+  it('a refused move keeps focus on the pressed button and says why (review 2, I-1)', async () => {
+    const user = userEvent.setup();
+    renderApp({
+      api: asAdmin({
+        moveGradeLevel: async () => {
+          throw new ApiError(422, ERROR_CODES.cannotMove);
+        },
+      }),
+      path: PATH,
+    });
+    await screen.findByRole('heading', { level: 2, name: 'Sınıf seviyeleri' });
+    const pressed = levels().getByRole('button', { name: '8. sınıf seviyesini yukarı taşı' });
+
+    await user.click(pressed);
+
+    expect(await levels().findByRole('alert')).toBeInTheDocument();
+    await vi.waitFor(() => expect(pressed).toHaveFocus());
   });
 
   it('with no levels the standard list is offered and adds fourteen; afterwards it is not offered', async () => {

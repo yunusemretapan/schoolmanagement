@@ -18,6 +18,16 @@ export const MAX_GRADE_LEVELS = 50;
 
 type Direction = 'UP' | 'DOWN';
 
+interface PendingMove {
+  id: string;
+  direction: Direction;
+  /** The index the level should have after the move. */
+  to: number;
+  outcome: 'pending' | 'moved' | 'refused';
+  /** Whether the server's answer put the level at `to`; otherwise the move takes no focus at all. */
+  landed?: boolean;
+}
+
 /**
  * Spec 0005, Req. 5 / AC-5: the institution's ordered levels; the standard list while there are none; move up/down
  * (the ends cannot move further) with the new place announced.
@@ -36,30 +46,53 @@ export function GradeLevelsSection({
   const [editing, setEditing] = useState<string | null>(null);
   const levels = structure.gradeLevels;
   const list = useRef<HTMLOListElement>(null);
-  const moved = useRef<{ id: string; direction: Direction; to: number } | null>(null);
+  const moved = useRef<PendingMove | null>(null);
+  const [settled, setSettled] = useState(0);
 
   // Review 1, M-1: a move disables the buttons (busy) and may disable the pressed one for good (an end), so focus is
-  // put back on the moved level's button — the other one when this one can no longer move. It waits until the list
-  // shows the level at its new place (the structure arrives a render after the request ends).
+  // put back on the moved level's button — the other one when this one can no longer move. The structure arrives a
+  // render after the request ends, so a move the server answered with the level at its new place waits for the list
+  // to show it; any other answer uses the move up at once (review 2, L-1: an unexpected order, e.g. another
+  // administrator's change, must not take focus later). A refusal puts focus back on the pressed button (review 2,
+  // I-1).
   useEffect(() => {
     const target = moved.current;
-    if (busy || target === null || list.current === null) return;
-    if (levels.findIndex((level) => level.id === target.id) !== target.to) return;
+    if (busy || target === null || list.current === null || target.outcome === 'pending') return;
     const button = (direction: Direction) =>
       list.current?.querySelector<HTMLButtonElement>(`[data-move="${target.id}:${direction}"]`);
+    if (target.outcome === 'refused' || !target.landed) {
+      moved.current = null;
+      if (target.outcome === 'refused') button(target.direction)?.focus();
+      return;
+    }
+    if (levels.findIndex((level) => level.id === target.id) !== target.to) return;
+    moved.current = null;
     const same = button(target.direction);
     (same && !same.disabled ? same : button(target.direction === 'UP' ? 'DOWN' : 'UP'))?.focus();
-    moved.current = null;
-  }, [busy, levels]);
+  }, [busy, levels, settled]);
 
   const move = (id: string, direction: Direction, name: string, index: number) => {
-    moved.current = { id, direction, to: direction === 'UP' ? index - 1 : index + 1 };
-    void run(async () => apply(await api.moveGradeLevel(id, direction)), {
-      kind: 'saved',
-      key: 'academic.levels.moved',
-      values: { name, position: direction === 'UP' ? index : index + 2 },
-    }).then((refused) => {
-      if (refused !== undefined) moved.current = null;
+    const pending: PendingMove = {
+      id,
+      direction,
+      to: direction === 'UP' ? index - 1 : index + 1,
+      outcome: 'pending',
+    };
+    moved.current = pending;
+    void run(
+      async () => {
+        const next = await api.moveGradeLevel(id, direction);
+        pending.landed = next.gradeLevels.findIndex((level) => level.id === id) === pending.to;
+        apply(next);
+      },
+      {
+        kind: 'saved',
+        key: 'academic.levels.moved',
+        values: { name, position: direction === 'UP' ? index : index + 2 },
+      },
+    ).then((refused) => {
+      pending.outcome = refused === undefined ? 'moved' : 'refused';
+      setSettled((n) => n + 1);
     });
   };
 
