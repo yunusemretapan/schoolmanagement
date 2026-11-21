@@ -19,7 +19,9 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
   — Recommendation: Kapı 1'den (pilotta gerçek çocuk verisi) önce hassas alanlar için küçük bir Testcontainers seti
   (ADR 0003, seçenek C) — Deferred by: ürün sahibi, 2026-11-17, yalnızca unit test tercihi. Not (spec 0004, plan R3, R5):
   `audit_events`'in değiştirilemezliği (tetikleyici), personel değişikliklerindeki kurum satırı kilidi ve dizi sorguları da
-  unit testle kanıtlanmıyor; VERIFY'da yerel Postgres gözlemiyle gösterilir
+  unit testle kanıtlanmıyor; VERIFY'da yerel Postgres gözlemiyle gösterilir. Not (spec 0005, plan R3): akademik yapı
+  tablolarının RLS'i, katlanmış ad benzersiz indeksleri, bileşik kurum yabancı anahtarları, `academic_settings` kilidi ve
+  V4'ün mevcut kurumlara şube eklemesi de unit testle kanıtlanmıyor
 - **B-2** — e2e aday yolculukları: "veli taksit öder → makbuz oluşur", "öğretmen yoklama alır → veliye bildirim"
   — Source: bootstrap 2026-11-17 — Severity: low — Recommendation: ihtiyaç doğarsa ADR ile, bütçe ≤ 2 yolculuk / 5 dk,
   Playwright `--workers=1` — Deferred by: ürün sahibi, 2026-11-17, e2e şimdilik yok

@@ -35,8 +35,8 @@ frontend/
 
 | Module | Single responsibility | Owns |
 |---|---|---|
-| `institution` | Kurum, şube, dönem, sınıf, sınıf seviyesi, ders programı | Akademik yapı, kurum ayarları |
-| `identity` | Giriş, oturum (cihaz başına dönen yenileme zinciri), kilitleme, kurum açma (operatör); kullanıcı hesabı, rol ve hesap durumu, personel daveti ve yönetimi (ADR 0005) | Kullanıcı hesapları ve rolleri, giriş kimlikleri, oturumlar, davet bağlantıları, değişiklik kaydı (`audit_events`, append-only); `login_identities`, `sessions` ve `invitations` bilinçli olarak tenant'sız/RLS'siz (plan 0003, R1; plan 0004, R4) |
+| `institution` | Kurum, şube, dönem, sınıf, sınıf seviyesi, ders programı | Akademik yapı (spec 0005: şube, dönem, sınıf seviyesi, sınıf), kurum başına `academic_settings` satırı (aktif dönem; her yazmanın önce kilitlediği satır: plan 0005, R3), kurum ayarları |
+| `identity` | Giriş, oturum (cihaz başına dönen yenileme zinciri), kilitleme, kurum açma (operatör; `TenantProvisioned` yayınlar); kullanıcı hesabı, rol ve hesap durumu, personel daveti ve yönetimi (ADR 0005) | Kullanıcı hesapları ve rolleri, giriş kimlikleri, oturumlar, davet bağlantıları; `login_identities`, `sessions` ve `invitations` bilinçli olarak tenant'sız/RLS'siz (plan 0003, R1; plan 0004, R4) |
 | `people` | Öğrenci, veli kaydı, kardeş bağlantısı, teslim alabilecek kişi, içe aktarma; veli hesabının öğrenciye bağı (hesabın kendisi `identity`'de: ADR 0005) | Kişi kayıtları |
 | `attendance` | Yoklama ve devamsızlık | Yoklama kayıtları |
 | `communication` | Duyuru, mesaj, onay formu, dosya/fotoğraf paylaşımı, bildirim gönderimi | İletişim kayıtları, okundu bilgisi |
@@ -50,7 +50,13 @@ frontend/
 ## Communication rules
 - Controller → yalnızca Mediator'a command/query gönderir.
 - Modüller arası senkron okuma: diğer modülün **query**'si üzerinden. Modüller arası yan etki: **domain event**
-  (ör. `attendance` → `AbsenceRecorded` → `communication` bildirimi gönderir).
+  (ör. `attendance` → `AbsenceRecorded` → `communication` bildirimi gönderir). Bugünkü mekanizma süreç içi ve senkron:
+  `core-application/events` (`DomainEventPublisher`, `DomainEventHandler`); olay yayıncının işleminde ve bağlı kurumunda
+  işlenir, handler hatası isteği geri alır (ADR 0006). İlk olay: `identity` → `TenantProvisioned` → `institution` ilk
+  şubeyi açar (spec 0005).
+- Değişiklik kaydı modüllerden bağımsızdır: `core-application/audit` (`AuditLog`, `AuditEntry`: yapan, hedef türü +
+  kimliği (+ kişisel olmayan kayıtta adı), işlem, değişen alanlar, zaman); adaptör `persistence/audit` (plan 0005, R1).
+  Her modül bu porta yazar; `identity` kendi `AuditEvent`'ini `IdentityAuditLog` ile çevirir.
 - Dış servis çağrısı yalnızca `application`'daki port arayüzü üzerinden; implementasyon `infrastructure`'da.
 - Her tenant'a bağlı tablo `tenant_id` taşır; Hibernate tenant filtresi (uygulama) + PostgreSQL RLS
   (veritabanı) birlikte uygulanır (BR-1). İstisna: `tenants` tablosunun kendisi `tenant_id` taşımaz; yalnızca RLS ile korunur ve
