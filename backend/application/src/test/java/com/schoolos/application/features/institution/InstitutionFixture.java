@@ -214,6 +214,7 @@ public final class InstitutionFixture {
     private final class Campuses implements CampusRepository {
         @Override
         public List<Campus> list() {
+            ops.add("read:campuses");
             return campuses.values().stream().filter(c -> mine(c.tenantId())).toList();
         }
 
@@ -256,6 +257,7 @@ public final class InstitutionFixture {
     private final class Terms implements TermRepository {
         @Override
         public List<Term> list() {
+            ops.add("read:terms");
             return terms.values().stream()
                     .filter(t -> mine(t.tenantId()))
                     .sorted(Comparator.comparing(Term::startsOn).reversed())
