@@ -59,7 +59,7 @@ public final class InstitutionFixture {
     public final Map<UUID, GradeLevel> levels = new LinkedHashMap<>();
     public final Map<UUID, ClassGroup> groups = new LinkedHashMap<>();
     public final List<AuditEntry> audit = new ArrayList<>();
-    /** "lock" for the settings row, "check:<rule>" for each rule read, in call order. */
+    /** "lock" for the settings row, "check:<rule>" for each rule read, "read:<record>" for each lookup, in order. */
     public final List<String> ops = new ArrayList<>();
 
     public final Clock clock = Clock.fixed(Instant.parse("2026-11-21T09:00:00Z"), ZoneOffset.UTC);
@@ -219,6 +219,7 @@ public final class InstitutionFixture {
 
         @Override
         public Optional<Campus> findById(UUID id) {
+            ops.add("read:campus");
             return Optional.ofNullable(campuses.get(id)).filter(c -> mine(c.tenantId()));
         }
 
@@ -263,6 +264,7 @@ public final class InstitutionFixture {
 
         @Override
         public Optional<Term> findById(UUID id) {
+            ops.add("read:term");
             return Optional.ofNullable(terms.get(id)).filter(t -> mine(t.tenantId()));
         }
 
@@ -308,6 +310,7 @@ public final class InstitutionFixture {
 
         @Override
         public Optional<GradeLevel> findById(UUID id) {
+            ops.add("read:level");
             return Optional.ofNullable(levels.get(id)).filter(l -> mine(l.tenantId()));
         }
 
@@ -360,6 +363,7 @@ public final class InstitutionFixture {
 
         @Override
         public Optional<ClassGroup> findById(UUID id) {
+            ops.add("read:group");
             return Optional.ofNullable(groups.get(id)).filter(g -> mine(g.tenantId()));
         }
 
