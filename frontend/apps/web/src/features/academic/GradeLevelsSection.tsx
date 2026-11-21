@@ -1,5 +1,5 @@
 import type { AcademicStructure } from '@schoolos/api-client';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApi } from '../../api/ApiProvider';
 import { NAME_MAX } from './academicSchema';
@@ -15,6 +15,8 @@ import {
 } from './academicUi';
 
 export const MAX_GRADE_LEVELS = 50;
+
+type Direction = 'UP' | 'DOWN';
 
 /**
  * Spec 0005, Req. 5 / AC-5: the institution's ordered levels; the standard list while there are none; move up/down
@@ -33,6 +35,33 @@ export function GradeLevelsSection({
   const heading = useHeading();
   const [editing, setEditing] = useState<string | null>(null);
   const levels = structure.gradeLevels;
+  const list = useRef<HTMLOListElement>(null);
+  const moved = useRef<{ id: string; direction: Direction; to: number } | null>(null);
+
+  // Review 1, M-1: a move disables the buttons (busy) and may disable the pressed one for good (an end), so focus is
+  // put back on the moved level's button — the other one when this one can no longer move. It waits until the list
+  // shows the level at its new place (the structure arrives a render after the request ends).
+  useEffect(() => {
+    const target = moved.current;
+    if (busy || target === null || list.current === null) return;
+    if (levels.findIndex((level) => level.id === target.id) !== target.to) return;
+    const button = (direction: Direction) =>
+      list.current?.querySelector<HTMLButtonElement>(`[data-move="${target.id}:${direction}"]`);
+    const same = button(target.direction);
+    (same && !same.disabled ? same : button(target.direction === 'UP' ? 'DOWN' : 'UP'))?.focus();
+    moved.current = null;
+  }, [busy, levels]);
+
+  const move = (id: string, direction: Direction, name: string, index: number) => {
+    moved.current = { id, direction, to: direction === 'UP' ? index - 1 : index + 1 };
+    void run(async () => apply(await api.moveGradeLevel(id, direction)), {
+      kind: 'saved',
+      key: 'academic.levels.moved',
+      values: { name, position: direction === 'UP' ? index : index + 2 },
+    }).then((refused) => {
+      if (refused !== undefined) moved.current = null;
+    });
+  };
 
   const save = (call: () => Promise<AcademicStructure>, key: string, name: string) =>
     run(async () => apply(await call()), { kind: 'saved', key, values: { name } });
@@ -58,7 +87,7 @@ export function GradeLevelsSection({
           </button>
         </div>
       ) : (
-        <ol className="flex flex-col gap-sm">
+        <ol ref={list} className="flex flex-col gap-sm">
           {levels.map((level, index) => (
             <li key={level.id} className="flex flex-wrap items-center gap-sm border-t border-line pt-sm">
               {editing === level.id ? (
@@ -85,14 +114,9 @@ export function GradeLevelsSection({
                   <button
                     type="button"
                     disabled={busy || index === 0}
+                    data-move={`${level.id}:UP`}
                     aria-label={t('academic.levels.moveUpNamed', { name: level.name })}
-                    onClick={() =>
-                      void run(async () => apply(await api.moveGradeLevel(level.id, 'UP')), {
-                        kind: 'saved',
-                        key: 'academic.levels.moved',
-                        values: { name: level.name, position: index },
-                      })
-                    }
+                    onClick={() => move(level.id, 'UP', level.name, index)}
                     className={SECONDARY}
                   >
                     {t('academic.levels.moveUp')}
@@ -100,14 +124,9 @@ export function GradeLevelsSection({
                   <button
                     type="button"
                     disabled={busy || index === levels.length - 1}
+                    data-move={`${level.id}:DOWN`}
                     aria-label={t('academic.levels.moveDownNamed', { name: level.name })}
-                    onClick={() =>
-                      void run(async () => apply(await api.moveGradeLevel(level.id, 'DOWN')), {
-                        kind: 'saved',
-                        key: 'academic.levels.moved',
-                        values: { name: level.name, position: index + 2 },
-                      })
-                    }
+                    onClick={() => move(level.id, 'DOWN', level.name, index)}
                     className={SECONDARY}
                   >
                     {t('academic.levels.moveDown')}

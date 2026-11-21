@@ -2,9 +2,12 @@ import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { renderApp } from '../../test/renderApp';
-import { asAdmin, EIGHTH, EMPTY, MERKEZ, PATH, SEVENTH, structure } from './academicFixtures';
+import { asAdmin, EIGHTH, EMPTY, id, MERKEZ, PATH, SEVENTH, structure } from './academicFixtures';
 
 /** Spec 0005, Req. 5 / AC-5: the ordered list, its ends, the standard list. */
+
+const SIXTH = id(19);
+const NAMES: Record<string, string> = { [SIXTH]: '6. sınıf', [SEVENTH]: '7. sınıf', [EIGHTH]: '8. sınıf' };
 
 const levels = () =>
   within(screen.getByRole('heading', { level: 2, name: 'Sınıf seviyeleri' }).closest('section')!);
@@ -40,6 +43,38 @@ describe('GradeLevelsSection (web)', () => {
     const items = levels().getAllByRole('listitem');
     expect(items[0]).toHaveTextContent('8. sınıf');
     expect(items[1]).toHaveTextContent('7. sınıf');
+  });
+
+  it('after a move focus stays on the moved level, on its other button once it reaches an end', async () => {
+    const user = userEvent.setup();
+    const three = (order: string[]) =>
+      structure({
+        gradeLevels: order.map((id, i) => ({ id, name: NAMES[id]!, position: i + 1, inUse: false })),
+      });
+    const moveGradeLevel = vi
+      .fn()
+      .mockResolvedValueOnce(three([SIXTH, EIGHTH, SEVENTH]))
+      .mockResolvedValueOnce(three([EIGHTH, SIXTH, SEVENTH]));
+    renderApp({
+      api: asAdmin({
+        getAcademicStructure: async () => three([SIXTH, SEVENTH, EIGHTH]),
+        moveGradeLevel,
+      }),
+      path: PATH,
+    });
+    await screen.findByRole('heading', { level: 2, name: 'Sınıf seviyeleri' });
+
+    await user.click(levels().getByRole('button', { name: '8. sınıf seviyesini yukarı taşı' }));
+    await levels().findByText('8. sınıf 2. sıraya taşındı');
+    await vi.waitFor(() =>
+      expect(levels().getByRole('button', { name: '8. sınıf seviyesini yukarı taşı' })).toHaveFocus(),
+    );
+
+    await user.keyboard('{Enter}');
+    await levels().findByText('8. sınıf 1. sıraya taşındı');
+    await vi.waitFor(() =>
+      expect(levels().getByRole('button', { name: '8. sınıf seviyesini aşağı taşı' })).toHaveFocus(),
+    );
   });
 
   it('with no levels the standard list is offered and adds fourteen; afterwards it is not offered', async () => {
