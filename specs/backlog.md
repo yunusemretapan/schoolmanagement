@@ -85,3 +85,9 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
   round 1 (Info-3; spec 0003 CORS yapılandırması) — Severity: low — Recommendation: dev profilinde Vite kökenini izinli
   listeye ekle ya da proxy'de Origin'i yeniden yaz; README'yi güncelle — Deferred by: yunusemretapan, 2026-11-21, spec dışı,
   geliştirici ortamı
+- **B-21** — Ad uzunluğu Java/JS'de UTF-16 birimiyle, PostgreSQL'de (`length`/`left`) kod noktasıyla ölçülüyor: 60. karakter
+  civarında emoji/astral karakter taşıyan kurum adından V4 ya da kurum açılışı olayıyla oluşan şube adı uygulamanın ölçüsüyle 60'ı
+  aşabilir (aynı adla yeniden adlandırma "En çok 60 karakter" alır) ve olay yolu vekil çifti bölebilir — Source: spec 0005,
+  REVIEW round 1 (I-2; `AcademicInput.name`, `academicSchema.ts`, `CreateDefaultCampusOnTenantProvisioned.campusName`,
+  V4__academic_structure.sql) — Severity: low — Recommendation: ad ölçümünü kod noktasıyla yap (`codePointCount` /
+  `[...str].length`), kesmeyi `offsetByCodePoints` ile — Deferred by: yunusemretapan, 2026-11-21, pilotta gerekmiyor
