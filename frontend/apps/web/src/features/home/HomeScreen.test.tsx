@@ -42,6 +42,24 @@ describe('HomeScreen (web)', () => {
     expect(getMe).toHaveBeenCalledTimes(2);
   });
 
+  it('an administrator sees the staff and academic structure links; others do not (spec 0004, 0005 AC-1)', async () => {
+    renderApp({ api: signedIn({ getMe: async () => ({ ...ME, roles: ['ADMIN'] }) }) });
+
+    expect(await screen.findByRole('link', { name: 'Akademik yapı' })).toHaveAttribute(
+      'href',
+      '/akademik-yapi',
+    );
+    expect(screen.getByRole('link', { name: 'Personel' })).toHaveAttribute('href', '/personel');
+  });
+
+  it('a teacher sees neither administrator link', async () => {
+    renderApp({ api: signedIn() });
+
+    expect(await screen.findByRole('link', { name: 'Sistem durumu' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Akademik yapı' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Personel' })).toBeNull();
+  });
+
   it('links to the status screen and the design showcase', async () => {
     renderApp({ api: signedIn() });
 

@@ -19,7 +19,9 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
   — Recommendation: Kapı 1'den (pilotta gerçek çocuk verisi) önce hassas alanlar için küçük bir Testcontainers seti
   (ADR 0003, seçenek C) — Deferred by: ürün sahibi, 2026-11-17, yalnızca unit test tercihi. Not (spec 0004, plan R3, R5):
   `audit_events`'in değiştirilemezliği (tetikleyici), personel değişikliklerindeki kurum satırı kilidi ve dizi sorguları da
-  unit testle kanıtlanmıyor; VERIFY'da yerel Postgres gözlemiyle gösterilir
+  unit testle kanıtlanmıyor; VERIFY'da yerel Postgres gözlemiyle gösterilir. Not (spec 0005, plan R3): akademik yapı
+  tablolarının RLS'i, katlanmış ad benzersiz indeksleri, bileşik kurum yabancı anahtarları, `academic_settings` kilidi ve
+  V4'ün mevcut kurumlara şube eklemesi de unit testle kanıtlanmıyor
 - **B-2** — e2e aday yolculukları: "veli taksit öder → makbuz oluşur", "öğretmen yoklama alır → veliye bildirim"
   — Source: bootstrap 2026-11-17 — Severity: low — Recommendation: ihtiyaç doğarsa ADR ile, bütçe ≤ 2 yolculuk / 5 dk,
   Playwright `--workers=1` — Deferred by: ürün sahibi, 2026-11-17, e2e şimdilik yok
@@ -83,3 +85,29 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
   round 1 (Info-3; spec 0003 CORS yapılandırması) — Severity: low — Recommendation: dev profilinde Vite kökenini izinli
   listeye ekle ya da proxy'de Origin'i yeniden yaz; README'yi güncelle — Deferred by: yunusemretapan, 2026-11-21, spec dışı,
   geliştirici ortamı
+- **B-21** — Ad uzunluğu Java/JS'de UTF-16 birimiyle, PostgreSQL'de (`length`/`left`) kod noktasıyla ölçülüyor: 60. karakter
+  civarında emoji/astral karakter taşıyan kurum adından V4 ya da kurum açılışı olayıyla oluşan şube adı uygulamanın ölçüsüyle 60'ı
+  aşabilir (aynı adla yeniden adlandırma "En çok 60 karakter" alır) ve olay yolu vekil çifti bölebilir — Source: spec 0005,
+  REVIEW round 1 (I-2; `AcademicInput.name`, `academicSchema.ts`, `CreateDefaultCampusOnTenantProvisioned.campusName`,
+  V4__academic_structure.sql) — Severity: low — Recommendation: ad ölçümünü kod noktasıyla yap (`codePointCount` /
+  `[...str].length`), kesmeyi `offsetByCodePoints` ile — Deferred by: yunusemretapan, 2026-11-21, pilotta gerekmiyor
+- **B-22** — Dönem ve sınıf seviyesi adlarının 60/61 sınırı ile şube/seviye yeniden adlandırma ve sınıf güncelleme
+  doğrulayıcıları hiçbir backend testiyle kanıtlanmıyor: sınır 61'e çekilince bütün testler yeşil kalıyor; davranış gerçek
+  API'de doğru (60 → 201, 61 → 400) — Source: spec 0005, VERIFY round 1 (F-1, K-10; `InstitutionValidators`,
+  `InstitutionValidatorsTest`) — Severity: low — Recommendation: her ad doğrulayıcısı için 60/61 (sınıf 20/21) parametreli
+  test — Deferred by: yunusemretapan, 2026-11-21, düzeltme turları bitti; davranış gerçek API gözlemiyle kanıtlı
+- **B-23** — Seviye taşıma, yeniden adlandırma ve silme, açık dönem aktifleştirme, dönem silme ve standart liste değişiklik
+  kayıtları hiçbir testle kanıtlanmıyor: bu kayıtlar kapatılınca 184 application testi yeşil kalıyor; davranış gerçek
+  veritabanında doğru — Source: spec 0005, VERIFY round 1 (F-2, K-15; `InstitutionCommandHandlersTest` everyChange…) —
+  Severity: low — Recommendation: everyChange… dizisine bu işlemleri ekle — Deferred by: yunusemretapan, 2026-11-21, düzeltme turları bitti;
+  davranış gerçek DB gözlemiyle kanıtlı
+- **B-24** — Eşzamanlı değişiklik yüzünden reddedilen seviye taşımasından sonra liste yenilenmiyor, eski sırayı gösteriyor
+  — Source: spec 0005, VERIFY round 1 (F-3; `GradeLevelsSection.tsx` ret yolu) — Severity: low — Recommendation: ret
+  sonrası akademik yapıyı yeniden yükle — Deferred by: yunusemretapan, 2026-11-21, kriter ihlali değil
+- **B-25** — Sunucu ret mesajı (bölüm uyarısı ve alan mesajı) alanlar temizlendikten ve başka bölümler kaydedildikten
+  sonra da ekranda kalıyor — Source: spec 0005, VERIFY round 1 (F-4; `academicUi.tsx` `useAction`) — Severity: low —
+  Recommendation: alan değişince alan mesajını, başarılı kayıtta bölüm mesajını temizle — Deferred by: yunusemretapan, 2026-11-21, kriter
+  ihlali değil
+- **B-26** — İkinci şube silinince sınıf formundaki şube alanının kaybolduğu hiçbir testle doğrulanmıyor (yalnızca istek
+  parametresi) — Source: spec 0005, VERIFY round 1 (F-6; `ClassGroupsSection.test.tsx`) — Severity: low —
+  Recommendation: geri dönüş testine şube alanının yokluğunu ekle — Deferred by: yunusemretapan, 2026-11-21, tarayıcıda gözlendi

@@ -10,6 +10,8 @@ public enum Permission {
     SELF_READ,
     /** List, invite and change the institution's staff and their roles (spec 0004; Kurucu/Yönetici only). */
     STAFF_MANAGE,
+    /** See and change the institution's campuses, terms, grade levels and class groups (spec 0005; Kurucu/Yönetici). */
+    ACADEMIC_STRUCTURE_MANAGE,
     /** Create institutions and their first accounts (operator tool and dev seed only). */
     PLATFORM_OPERATOR
 }

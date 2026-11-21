@@ -34,11 +34,28 @@ export function fakeApi(overrides: Partial<ApiClient> = {}): ApiClient {
     reactivateStaff: notStubbed,
     getInvitation: notStubbed,
     acceptInvitation: notStubbed,
+    getAcademicStructure: notStubbed,
+    createCampus: notStubbed,
+    renameCampus: notStubbed,
+    deleteCampus: notStubbed,
+    createTerm: notStubbed,
+    updateTerm: notStubbed,
+    activateTerm: notStubbed,
+    deleteTerm: notStubbed,
+    createGradeLevel: notStubbed,
+    addStandardGradeLevels: notStubbed,
+    renameGradeLevel: notStubbed,
+    moveGradeLevel: notStubbed,
+    deleteGradeLevel: notStubbed,
+    listClassGroups: notStubbed,
+    createClassGroup: notStubbed,
+    updateClassGroup: notStubbed,
+    deleteClassGroup: notStubbed,
     ...overrides,
   };
 }
 
-/** Staff and invitation calls (spec 0004) fail loudly unless a test stubs them. */
+/** Staff, invitation (spec 0004) and academic structure (spec 0005) calls fail loudly unless a test stubs them. */
 async function notStubbed(): Promise<never> {
   throw new Error('not stubbed in this test');
 }

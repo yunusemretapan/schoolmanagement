@@ -42,8 +42,13 @@
 - Login'de kaynak başına rate limit (dakikada 20) ve hesap başına kilitleme (5 hata → 15 dk); hatalı giriş, olmayan hesap ve
   kilitli hesap aynı yanıtı alır (spec 0003).
 - Audit log (BR-6): append-only tablo (`audit_events`: tetikleyici UPDATE/DELETE/TRUNCATE'i her rolde reddeder; tenant'lı,
-  RLS). Spec 0004 personel değişikliklerini yazar (kim, kime, ne, ne zaman; şifre, bağlantı ve iletişim bilgisi yazılmaz);
-  öğrenci kaydı görüntüleme kendi spec'inde eklenir.
+  RLS). Kayıt modüller arası ortaktır (`core-application/audit`, plan 0005 R1): hedef türü + kimliği; kişi yalnızca
+  kimliğiyle, akademik yapı gibi kişisel olmayan kayıt adıyla da yazılır. Spec 0004 personel değişikliklerini (kim, kime,
+  ne, ne zaman; şifre, bağlantı ve iletişim bilgisi yazılmaz), spec 0005 akademik yapı değişikliklerini yazar; öğrenci
+  kaydı görüntüleme kendi spec'inde eklenir.
+- Akademik yapı (spec 0005): yalnızca Kurucu/Yönetici (`ACADEMIC_STRUCTURE_MANAGE`) okur ve yazar. Sınıf satırı şube,
+  dönem ve seviyeyi kurumla birlikte gösterir (bileşik yabancı anahtar): veritabanı da başka kurumun kaydına bağlanmayı
+  reddeder. Başka kurumun kaydı ile bilinmeyen kimlik aynı 404'ü alır.
 
 ## Dependencies
 - Yeni kütüphane: spec/planda gerekçe + insan onayı.

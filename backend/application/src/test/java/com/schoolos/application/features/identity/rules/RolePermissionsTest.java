@@ -14,7 +14,10 @@ class RolePermissionsTest {
             assertThat(RolePermissions.forRoleNames(List.of(role))).containsExactly(Permission.SELF_READ);
         }
         assertThat(RolePermissions.forRoleNames(List.of("ADMIN")))
-                .containsExactlyInAnyOrder(Permission.SELF_READ, Permission.STAFF_MANAGE); // spec 0004, AC-1
+                .containsExactlyInAnyOrder(
+                        Permission.SELF_READ,
+                        Permission.STAFF_MANAGE, // spec 0004, AC-1
+                        Permission.ACADEMIC_STRUCTURE_MANAGE); // spec 0005, AC-1
     }
 
     @Test

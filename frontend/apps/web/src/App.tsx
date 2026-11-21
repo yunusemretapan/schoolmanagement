@@ -8,6 +8,7 @@ import { AuthProvider } from './auth/AuthProvider';
 import { LOGIN_PATH, RequireAuth } from './auth/RequireAuth';
 import { RequireRole } from './auth/RequireRole';
 import type { SessionExpiry } from './auth/sessionExpiry';
+import { ACADEMIC_PATH, AcademicStructureScreen } from './features/academic/AcademicStructureScreen';
 import { LoginScreen } from './features/auth/LoginScreen';
 import { DesignShowcase } from './features/design/DesignShowcase';
 import { HomeScreen } from './features/home/HomeScreen';
@@ -85,6 +86,16 @@ export function AppRoutes() {
           <RequireAuth>
             <RequireRole role="ADMIN">
               <StaffDetailScreen />
+            </RequireRole>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path={ACADEMIC_PATH}
+        element={
+          <RequireAuth>
+            <RequireRole role="ADMIN">
+              <AcademicStructureScreen />
             </RequireRole>
           </RequireAuth>
         }

@@ -32,6 +32,7 @@ import com.schoolos.application.features.identity.queries.GetCurrentUserQueryHan
 import com.schoolos.application.features.identity.queries.GetInvitationQueryHandler;
 import com.schoolos.application.features.identity.queries.GetStaffQueryHandler;
 import com.schoolos.application.features.identity.queries.ListStaffQueryHandler;
+import com.schoolos.application.features.identity.rules.IdentityAuditLog;
 import com.schoolos.application.features.identity.rules.InvitationGate;
 import com.schoolos.application.features.identity.rules.SessionActivityChecker;
 import com.schoolos.application.features.identity.rules.StaffRules;
@@ -43,6 +44,7 @@ import com.schoolos.core.application.behaviors.TenantSessionPort;
 import com.schoolos.core.application.behaviors.TransactionBehavior;
 import com.schoolos.core.application.behaviors.TransactionPort;
 import com.schoolos.core.application.behaviors.ValidationBehavior;
+import com.schoolos.core.application.events.DomainEventPublisher;
 import com.schoolos.core.application.mediator.Mediator;
 import com.schoolos.core.application.mediator.RequestHandler;
 import com.schoolos.core.crosscutting.ids.IdGenerator;
@@ -128,8 +130,10 @@ public class MediatorConfig {
             TenantSessionPort tenantSession,
             PasswordHasher passwords,
             IdGenerator ids,
-            Clock clock) {
-        return new ProvisionTenantCommandHandler(tenants, users, identities, tenantSession, passwords, ids, clock);
+            Clock clock,
+            DomainEventPublisher events) {
+        return new ProvisionTenantCommandHandler(
+                tenants, users, identities, tenantSession, passwords, ids, clock, events);
     }
 
     @Bean
@@ -159,6 +163,12 @@ public class MediatorConfig {
     }
 
     // --- staff management (spec 0004) ---
+
+    /** The identity module's audit records go into the shared audit log (spec 0005, plan R1). */
+    @Bean
+    AuditLog identityAuditLog(com.schoolos.core.application.audit.AuditLog shared) {
+        return new IdentityAuditLog(shared);
+    }
 
     @Bean
     StaffRules staffRules(StaffDirectory directory) {

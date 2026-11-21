@@ -219,6 +219,215 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/academic-structure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Terms (newest first), campuses, grade levels in order and the active term (spec 0005). */
+        get: operations["getAcademicStructure"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic-structure/campuses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a campus; the name is unique in the institution (spec 0005, Req. 3). */
+        post: operations["createCampus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic-structure/campuses/{campusId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Rename a campus. Another institution's id answers like an unknown one. */
+        put: operations["renameCampus"];
+        post?: never;
+        /** Delete an unused campus; the last one stays (spec 0005, Req. 9). */
+        delete: operations["deleteCampus"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic-structure/terms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a term; no day shared with another term; the first one becomes active (Req. 4). */
+        post: operations["createTerm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic-structure/terms/{termId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Change a term's name and dates, without overlapping another term. */
+        put: operations["updateTerm"];
+        post?: never;
+        /** Delete an unused term that is not the active one (Req. 9). */
+        delete: operations["deleteTerm"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic-structure/terms/{termId}/activation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Make this the active term; the previous one stops being active. */
+        post: operations["activateTerm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic-structure/grade-levels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a grade level at the end; at most 50 (Req. 5). */
+        post: operations["createGradeLevel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic-structure/grade-levels/standard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Anaokulu, 1.-12. sınıf, Hazırlık: only while there are no grade levels. */
+        post: operations["addStandardGradeLevels"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic-structure/grade-levels/{gradeLevelId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Rename a grade level. */
+        put: operations["renameGradeLevel"];
+        post?: never;
+        /** Delete an unused grade level; the ones after it move up. */
+        delete: operations["deleteGradeLevel"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic-structure/grade-levels/{gradeLevelId}/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Swap with the neighbour above or below; the ends cannot move further. */
+        post: operations["moveGradeLevel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic-structure/class-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Class groups of a term (default: the active term), by grade level order then name. */
+        get: operations["listClassGroups"];
+        put?: never;
+        /** Add a class group; the only campus and the active term are the defaults (Req. 6). */
+        post: operations["createClassGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic-structure/class-groups/{classGroupId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Change a class group's name and grade level; its campus and term never change. */
+        put: operations["updateClassGroup"];
+        post?: never;
+        /** Delete a class group. */
+        delete: operations["deleteClassGroup"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -312,6 +521,88 @@ export interface components {
         };
         AcceptedInvitation: {
             identifier: string;
+        };
+        NameBody: {
+            /** @description Trimmed; at most 60 characters. */
+            name: string;
+        };
+        TermBody: {
+            name: string;
+            /** Format: date */
+            startsOn: string;
+            /** Format: date */
+            endsOn: string;
+        };
+        MoveBody: {
+            /** @enum {string} */
+            direction: "UP" | "DOWN";
+        };
+        ClassGroupBody: {
+            /** @description Trimmed; at most 20 characters. */
+            name: string;
+            /** Format: uuid */
+            gradeLevelId: string;
+            /**
+             * Format: uuid
+             * @description Creation only; may be left out while the institution has one campus.
+             */
+            campusId?: string | null;
+            /**
+             * Format: uuid
+             * @description Creation only; defaults to the active term.
+             */
+            termId?: string | null;
+        };
+        AcademicStructure: {
+            /** Format: uuid */
+            activeTermId: string | null;
+            terms: components["schemas"]["TermView"][];
+            campuses: components["schemas"]["CampusView"][];
+            gradeLevels: components["schemas"]["GradeLevelView"][];
+        };
+        TermView: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: date */
+            startsOn: string;
+            /** Format: date */
+            endsOn: string;
+            active: boolean;
+            /** @description Class groups belong to it, so it cannot be deleted. */
+            inUse: boolean;
+        };
+        CampusView: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            inUse: boolean;
+        };
+        GradeLevelView: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            position: number;
+            inUse: boolean;
+        };
+        ClassGroupView: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: uuid */
+            campusId: string;
+            /** Format: uuid */
+            termId: string;
+            /** Format: uuid */
+            gradeLevelId: string;
+        };
+        ClassGroupList: {
+            /**
+             * Format: uuid
+             * @description null while the institution has no term.
+             */
+            termId: string | null;
+            items: components["schemas"]["ClassGroupView"][];
         };
         SystemStatusResponse: {
             /** @enum {string} */
@@ -777,6 +1068,556 @@ export interface operations {
                 };
             };
             /** @description 400 VALIDATION_FAILED (password PASSWORD_TOO_SHORT), 404 NOT_FOUND, 429 IDENTITY_RATE_LIMITED. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    getAcademicStructure: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The structure. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicStructure"];
+                };
+            };
+            /** @description 401 AUTH_UNAUTHENTICATED, 403 AUTH_FORBIDDEN (not an administrator). */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    createCampus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NameBody"];
+            };
+        };
+        responses: {
+            /** @description The structure after the change. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicStructure"];
+                };
+            };
+            /** @description 400 VALIDATION_FAILED, 401, 403, 422 ACADEMIC_NAME_TAKEN. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    renameCampus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campusId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NameBody"];
+            };
+        };
+        responses: {
+            /** @description The structure after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicStructure"];
+                };
+            };
+            /** @description 400 VALIDATION_FAILED, 401, 403, 404 NOT_FOUND, 422 ACADEMIC_NAME_TAKEN. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    deleteCampus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campusId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The structure after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicStructure"];
+                };
+            };
+            /** @description 401, 403, 404 NOT_FOUND, 422 ACADEMIC_LAST_CAMPUS | ACADEMIC_IN_USE. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    createTerm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TermBody"];
+            };
+        };
+        responses: {
+            /** @description The structure after the change. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicStructure"];
+                };
+            };
+            /** @description 400 VALIDATION_FAILED (endsOn END_NOT_AFTER_START | TOO_LONG, OUT_OF_RANGE), 401, 403, 422 ACADEMIC_NAME_TAKEN | ACADEMIC_TERM_OVERLAP. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    updateTerm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                termId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TermBody"];
+            };
+        };
+        responses: {
+            /** @description The structure after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicStructure"];
+                };
+            };
+            /** @description 400 VALIDATION_FAILED, 401, 403, 404 NOT_FOUND, 422 ACADEMIC_NAME_TAKEN | ACADEMIC_TERM_OVERLAP. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    deleteTerm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                termId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The structure after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicStructure"];
+                };
+            };
+            /** @description 401, 403, 404 NOT_FOUND, 422 ACADEMIC_ACTIVE_TERM | ACADEMIC_IN_USE. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    activateTerm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                termId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The structure after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicStructure"];
+                };
+            };
+            /** @description 401, 403, 404 NOT_FOUND. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    createGradeLevel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NameBody"];
+            };
+        };
+        responses: {
+            /** @description The structure after the change. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicStructure"];
+                };
+            };
+            /** @description 400 VALIDATION_FAILED, 401, 403, 422 ACADEMIC_NAME_TAKEN | ACADEMIC_GRADE_LEVEL_LIMIT. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    addStandardGradeLevels: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The structure after the change. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicStructure"];
+                };
+            };
+            /** @description 401, 403, 422 ACADEMIC_GRADE_LEVELS_NOT_EMPTY. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    renameGradeLevel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gradeLevelId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NameBody"];
+            };
+        };
+        responses: {
+            /** @description The structure after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicStructure"];
+                };
+            };
+            /** @description 400 VALIDATION_FAILED, 401, 403, 404 NOT_FOUND, 422 ACADEMIC_NAME_TAKEN. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    deleteGradeLevel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gradeLevelId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The structure after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicStructure"];
+                };
+            };
+            /** @description 401, 403, 404 NOT_FOUND, 422 ACADEMIC_IN_USE. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    moveGradeLevel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gradeLevelId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MoveBody"];
+            };
+        };
+        responses: {
+            /** @description The structure after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicStructure"];
+                };
+            };
+            /** @description 401, 403, 404 NOT_FOUND, 422 ACADEMIC_CANNOT_MOVE. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    listClassGroups: {
+        parameters: {
+            query?: {
+                termId?: string;
+                campusId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The class groups. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassGroupList"];
+                };
+            };
+            /** @description 401, 403, 404 NOT_FOUND (unknown term or campus). */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    createClassGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClassGroupBody"];
+            };
+        };
+        responses: {
+            /** @description The class group. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassGroupView"];
+                };
+            };
+            /** @description 400 VALIDATION_FAILED (campusId NOT_NULL with several campuses), 401, 403, 404 NOT_FOUND, 422 ACADEMIC_NAME_TAKEN | ACADEMIC_NO_TERM. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    updateClassGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classGroupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClassGroupBody"];
+            };
+        };
+        responses: {
+            /** @description The class group. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassGroupView"];
+                };
+            };
+            /** @description 400 VALIDATION_FAILED, 401, 403, 404 NOT_FOUND, 422 ACADEMIC_NAME_TAKEN. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    deleteClassGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classGroupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 401, 403, 404 NOT_FOUND. */
             default: {
                 headers: {
                     [name: string]: unknown;

@@ -21,7 +21,8 @@ multi-tenant okul işletim sistemi. Velinin kullandığı mobil uygulama satış
 | Şube | `Campus` | Kurumun fiziksel yerleşkesi (kampüs). | Sınıf |
 | Sınıf | `ClassGroup` | Öğrenci grubu (ör. 7/A; MEB dilindeki "şube"). Bir şubeye ve döneme bağlı. Arayüzde "7/A şubesi" etiketi kullanılabilir; kodda ve spec'lerde yalnızca bu anlam geçerli. | Sınıf seviyesi |
 | Sınıf seviyesi | `GradeLevel` | Kademe (7. sınıf, hazırlık, anaokulu 5 yaş). | Sınıf |
-| Dönem | `Term` | Akademik yıl veya yarıyıl; ücret ve ders programı döneme bağlı. | — |
+| Dönem | `Term` | Akademik yıl (başlangıç ve bitiş günü dahil; spec 0005: kurumda iki dönem aynı günü paylaşmaz, en çok 731 gün); yarıyıl alt dönemi henüz yok. Ücret ve ders programı döneme bağlı. | — |
+| Aktif dönem | `AcademicSettings.activeTermId` | Kurumun şu an çalıştığı dönem; dönem varken tam bir tanedir, yönetici seçer, sistem tarihe bakıp değiştirmez (spec 0005). Ekranların varsayılan dönemi. | Bugünü kapsayan dönem |
 | Öğrenci | `Student` | Kuruma kayıtlı çocuk/kursiyer. | Kullanıcı |
 | Veli | `Guardian` | Öğrenciye yasal/yetkili bağlı kişi. Bir öğrencinin birden çok velisi olabilir; kardeşli veli tek hesapla tüm çocuklarını görür. | Teslim alabilecek kişi |
 | Teslim alabilecek kişi | `AuthorizedPickup` | Öğrenciyi okuldan alabilecek kişi; hesabı olmak zorunda değil. | Veli |

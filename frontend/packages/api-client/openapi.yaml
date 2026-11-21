@@ -353,6 +353,457 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/academic-structure:
+    get:
+      operationId: getAcademicStructure
+      summary: 'Terms (newest first), campuses, grade levels in order and the active term (spec 0005).'
+      security:
+        - bearer: []
+      responses:
+        '200':
+          description: The structure.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicStructure'
+        default:
+          description: 401 AUTH_UNAUTHENTICATED, 403 AUTH_FORBIDDEN (not an administrator).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/academic-structure/campuses:
+    post:
+      operationId: createCampus
+      summary: 'Add a campus; the name is unique in the institution (spec 0005, Req. 3).'
+      security:
+        - bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NameBody'
+      responses:
+        '201':
+          description: The structure after the change.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicStructure'
+        default:
+          description: 400 VALIDATION_FAILED, 401, 403, 422 ACADEMIC_NAME_TAKEN.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/academic-structure/campuses/{campusId}:
+    put:
+      operationId: renameCampus
+      summary: "Rename a campus. Another institution's id answers like an unknown one."
+      security:
+        - bearer: []
+      parameters:
+        - name: campusId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NameBody'
+      responses:
+        '200':
+          description: The structure after the change.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicStructure'
+        default:
+          description: 400 VALIDATION_FAILED, 401, 403, 404 NOT_FOUND, 422 ACADEMIC_NAME_TAKEN.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+    delete:
+      operationId: deleteCampus
+      summary: 'Delete an unused campus; the last one stays (spec 0005, Req. 9).'
+      security:
+        - bearer: []
+      parameters:
+        - name: campusId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The structure after the change.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicStructure'
+        default:
+          description: 401, 403, 404 NOT_FOUND, 422 ACADEMIC_LAST_CAMPUS | ACADEMIC_IN_USE.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/academic-structure/terms:
+    post:
+      operationId: createTerm
+      summary: 'Add a term; no day shared with another term; the first one becomes active (Req. 4).'
+      security:
+        - bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TermBody'
+      responses:
+        '201':
+          description: The structure after the change.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicStructure'
+        default:
+          description: 400 VALIDATION_FAILED (endsOn END_NOT_AFTER_START | TOO_LONG, OUT_OF_RANGE), 401, 403, 422 ACADEMIC_NAME_TAKEN | ACADEMIC_TERM_OVERLAP.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/academic-structure/terms/{termId}:
+    put:
+      operationId: updateTerm
+      summary: "Change a term's name and dates, without overlapping another term."
+      security:
+        - bearer: []
+      parameters:
+        - name: termId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TermBody'
+      responses:
+        '200':
+          description: The structure after the change.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicStructure'
+        default:
+          description: 400 VALIDATION_FAILED, 401, 403, 404 NOT_FOUND, 422 ACADEMIC_NAME_TAKEN | ACADEMIC_TERM_OVERLAP.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+    delete:
+      operationId: deleteTerm
+      summary: 'Delete an unused term that is not the active one (Req. 9).'
+      security:
+        - bearer: []
+      parameters:
+        - name: termId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The structure after the change.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicStructure'
+        default:
+          description: 401, 403, 404 NOT_FOUND, 422 ACADEMIC_ACTIVE_TERM | ACADEMIC_IN_USE.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/academic-structure/terms/{termId}/activation:
+    post:
+      operationId: activateTerm
+      summary: 'Make this the active term; the previous one stops being active.'
+      security:
+        - bearer: []
+      parameters:
+        - name: termId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The structure after the change.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicStructure'
+        default:
+          description: 401, 403, 404 NOT_FOUND.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/academic-structure/grade-levels:
+    post:
+      operationId: createGradeLevel
+      summary: 'Add a grade level at the end; at most 50 (Req. 5).'
+      security:
+        - bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NameBody'
+      responses:
+        '201':
+          description: The structure after the change.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicStructure'
+        default:
+          description: 400 VALIDATION_FAILED, 401, 403, 422 ACADEMIC_NAME_TAKEN | ACADEMIC_GRADE_LEVEL_LIMIT.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/academic-structure/grade-levels/standard:
+    post:
+      operationId: addStandardGradeLevels
+      summary: 'Anaokulu, 1.-12. sınıf, Hazırlık: only while there are no grade levels.'
+      security:
+        - bearer: []
+      responses:
+        '201':
+          description: The structure after the change.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicStructure'
+        default:
+          description: 401, 403, 422 ACADEMIC_GRADE_LEVELS_NOT_EMPTY.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/academic-structure/grade-levels/{gradeLevelId}:
+    put:
+      operationId: renameGradeLevel
+      summary: 'Rename a grade level.'
+      security:
+        - bearer: []
+      parameters:
+        - name: gradeLevelId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NameBody'
+      responses:
+        '200':
+          description: The structure after the change.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicStructure'
+        default:
+          description: 400 VALIDATION_FAILED, 401, 403, 404 NOT_FOUND, 422 ACADEMIC_NAME_TAKEN.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+    delete:
+      operationId: deleteGradeLevel
+      summary: 'Delete an unused grade level; the ones after it move up.'
+      security:
+        - bearer: []
+      parameters:
+        - name: gradeLevelId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The structure after the change.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicStructure'
+        default:
+          description: 401, 403, 404 NOT_FOUND, 422 ACADEMIC_IN_USE.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/academic-structure/grade-levels/{gradeLevelId}/move:
+    post:
+      operationId: moveGradeLevel
+      summary: 'Swap with the neighbour above or below; the ends cannot move further.'
+      security:
+        - bearer: []
+      parameters:
+        - name: gradeLevelId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoveBody'
+      responses:
+        '200':
+          description: The structure after the change.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicStructure'
+        default:
+          description: 401, 403, 404 NOT_FOUND, 422 ACADEMIC_CANNOT_MOVE.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/academic-structure/class-groups:
+    get:
+      operationId: listClassGroups
+      summary: 'Class groups of a term (default: the active term), by grade level order then name.'
+      security:
+        - bearer: []
+      parameters:
+        - name: termId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: campusId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The class groups.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassGroupList'
+        default:
+          description: 401, 403, 404 NOT_FOUND (unknown term or campus).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+    post:
+      operationId: createClassGroup
+      summary: 'Add a class group; the only campus and the active term are the defaults (Req. 6).'
+      security:
+        - bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassGroupBody'
+      responses:
+        '201':
+          description: The class group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassGroupView'
+        default:
+          description: 400 VALIDATION_FAILED (campusId NOT_NULL with several campuses), 401, 403, 404 NOT_FOUND, 422 ACADEMIC_NAME_TAKEN | ACADEMIC_NO_TERM.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/v1/academic-structure/class-groups/{classGroupId}:
+    put:
+      operationId: updateClassGroup
+      summary: "Change a class group's name and grade level; its campus and term never change."
+      security:
+        - bearer: []
+      parameters:
+        - name: classGroupId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassGroupBody'
+      responses:
+        '200':
+          description: The class group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassGroupView'
+        default:
+          description: 400 VALIDATION_FAILED, 401, 403, 404 NOT_FOUND, 422 ACADEMIC_NAME_TAKEN.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+    delete:
+      operationId: deleteClassGroup
+      summary: 'Delete a class group.'
+      security:
+        - bearer: []
+      parameters:
+        - name: classGroupId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted.
+        default:
+          description: 401, 403, 404 NOT_FOUND.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
 components:
   securitySchemes:
     bearer:
@@ -542,6 +993,153 @@ components:
       properties:
         identifier:
           type: string
+    NameBody:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name:
+          type: string
+          description: Trimmed; at most 60 characters.
+    TermBody:
+      type: object
+      additionalProperties: false
+      required: [name, startsOn, endsOn]
+      properties:
+        name:
+          type: string
+        startsOn:
+          type: string
+          format: date
+        endsOn:
+          type: string
+          format: date
+    MoveBody:
+      type: object
+      additionalProperties: false
+      required: [direction]
+      properties:
+        direction:
+          type: string
+          enum: [UP, DOWN]
+    ClassGroupBody:
+      type: object
+      additionalProperties: false
+      required: [name, gradeLevelId]
+      properties:
+        name:
+          type: string
+          description: Trimmed; at most 20 characters.
+        gradeLevelId:
+          type: string
+          format: uuid
+        campusId:
+          type: [string, 'null']
+          format: uuid
+          description: Creation only; may be left out while the institution has one campus.
+        termId:
+          type: [string, 'null']
+          format: uuid
+          description: Creation only; defaults to the active term.
+    AcademicStructure:
+      type: object
+      additionalProperties: false
+      required: [activeTermId, terms, campuses, gradeLevels]
+      properties:
+        activeTermId:
+          type: [string, 'null']
+          format: uuid
+        terms:
+          type: array
+          items:
+            $ref: '#/components/schemas/TermView'
+        campuses:
+          type: array
+          items:
+            $ref: '#/components/schemas/CampusView'
+        gradeLevels:
+          type: array
+          items:
+            $ref: '#/components/schemas/GradeLevelView'
+    TermView:
+      type: object
+      additionalProperties: false
+      required: [id, name, startsOn, endsOn, active, inUse]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        startsOn:
+          type: string
+          format: date
+        endsOn:
+          type: string
+          format: date
+        active:
+          type: boolean
+        inUse:
+          type: boolean
+          description: Class groups belong to it, so it cannot be deleted.
+    CampusView:
+      type: object
+      additionalProperties: false
+      required: [id, name, inUse]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        inUse:
+          type: boolean
+    GradeLevelView:
+      type: object
+      additionalProperties: false
+      required: [id, name, position, inUse]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        position:
+          type: integer
+        inUse:
+          type: boolean
+    ClassGroupView:
+      type: object
+      additionalProperties: false
+      required: [id, name, campusId, termId, gradeLevelId]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        campusId:
+          type: string
+          format: uuid
+        termId:
+          type: string
+          format: uuid
+        gradeLevelId:
+          type: string
+          format: uuid
+    ClassGroupList:
+      type: object
+      additionalProperties: false
+      required: [termId, items]
+      properties:
+        termId:
+          type: [string, 'null']
+          format: uuid
+          description: null while the institution has no term.
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClassGroupView'
     SystemStatusResponse:
       type: object
       additionalProperties: false

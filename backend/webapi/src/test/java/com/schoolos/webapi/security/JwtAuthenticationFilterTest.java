@@ -67,7 +67,8 @@ class JwtAuthenticationFilterTest {
 
         web.mvc
                 .perform(get("/api/v1/test/permissions").header("Authorization", "Bearer " + tokenForA))
-                .andExpect(content().string("[SELF_READ, STAFF_MANAGE]"));
+                .andExpect(
+                        content().string("[ACADEMIC_STRUCTURE_MANAGE, SELF_READ, STAFF_MANAGE]")); // spec 0005 adds one
 
         SecurityTestContext.CURRENT_ROLES.put(session, Set.of("TEACHER"));
 
