@@ -104,6 +104,11 @@ describe('AcademicStructureScreen (web)', () => {
 
     expect(await terms.findByRole('alert')).toHaveTextContent('Bu tarihler başka bir dönemle çakışıyor');
     expect(terms.getByLabelText('Dönem adı')).toHaveValue('Yaz');
+    // review 1, L-5: the refusal is also tied to the field
+    expect(terms.getByLabelText('Başlangıç tarihi')).toHaveAttribute('aria-invalid', 'true');
+    expect(terms.getByLabelText('Başlangıç tarihi')).toHaveAccessibleDescription(
+      'Bu tarihler başka bir dönemle çakışıyor',
+    );
   });
 
   it('another term becomes active and the change is announced', async () => {
@@ -221,5 +226,8 @@ describe('AcademicStructureScreen (web)', () => {
     await user.click(campuses.getByRole('button', { name: 'Şube ekle' }));
 
     expect(await campuses.findByRole('alert')).toHaveTextContent('Bu ad zaten kullanılıyor');
+    // review 1, L-5: the refusal is also tied to the field
+    expect(campuses.getByLabelText('Yeni şube adı')).toHaveAttribute('aria-invalid', 'true');
+    expect(campuses.getByLabelText('Yeni şube adı')).toHaveAccessibleDescription('Bu ad zaten kullanılıyor');
   });
 });

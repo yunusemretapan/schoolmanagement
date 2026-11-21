@@ -2,14 +2,7 @@ import type { AcademicStructure, TermBody, TermView } from '@schoolos/api-client
 import { useId, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApi } from '../../api/ApiProvider';
-import {
-  EARLIEST,
-  formatDay,
-  LATEST,
-  serverFieldErrors,
-  termErrors,
-  type FieldErrors,
-} from './academicSchema';
+import { EARLIEST, formatDay, LATEST, formFieldErrors, termErrors, type FieldErrors } from './academicSchema';
 import {
   DeleteButton,
   INPUT,
@@ -49,7 +42,7 @@ function TermForm({ initial, submitLabel, busy, onSubmit, onCancel }: TermFormPr
     setErrors(found);
     if (Object.keys(found).length > 0) return;
     const refused = await onSubmit({ ...form, name: form.name.trim() });
-    setErrors(serverFieldErrors(refused));
+    setErrors(formFieldErrors(refused));
     if (refused === undefined && !initial) setForm({ name: '', startsOn: '', endsOn: '' });
   }
 

@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useId, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApi } from '../../api/ApiProvider';
-import { CLASS_NAME_MAX, nameError, serverFieldErrors, type FieldErrors } from './academicSchema';
+import { CLASS_NAME_MAX, formFieldErrors, nameError, type FieldErrors } from './academicSchema';
 import {
   DeleteButton,
   INPUT,
@@ -73,7 +73,7 @@ function GroupFields({
     setErrors(found);
     if (Object.keys(found).length > 0) return;
     const refused = await onSubmit({ name: form.name.trim(), gradeLevelId, campusId });
-    setErrors(serverFieldErrors(refused, CLASS_NAME_MAX));
+    setErrors(formFieldErrors(refused, CLASS_NAME_MAX));
     if (refused === undefined && !initial) setForm({ ...blank, gradeLevelId });
   }
 

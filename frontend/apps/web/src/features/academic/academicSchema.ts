@@ -66,6 +66,21 @@ export function serverFieldErrors(error: unknown, nameMax = NAME_MAX): FieldErro
   return errors;
 }
 
+/**
+ * What a form shows under its fields after a refusal: the server's field codes, and the two business refusals that
+ * belong to a field — a taken name under the name, an overlap under the start date (spec 0005, Accessibility;
+ * review 1, L-5). The section still announces the refusal.
+ */
+export function formFieldErrors(error: unknown, nameMax = NAME_MAX): FieldErrors {
+  if (error instanceof ApiError && error.code === ERROR_CODES.academicNameTaken) {
+    return { name: 'academic.errors.nameTaken' };
+  }
+  if (error instanceof ApiError && error.code === ERROR_CODES.termOverlap) {
+    return { startsOn: 'academic.errors.termOverlap' };
+  }
+  return serverFieldErrors(error, nameMax);
+}
+
 /** API error → i18n key of the message the academic screen shows (spec 0005, UX states). */
 export function academicErrorKey(error: unknown): string {
   if (error instanceof ApiError) {

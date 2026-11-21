@@ -2,7 +2,7 @@ import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { INPUT, PRIMARY, SECONDARY } from '../staff/StaffFields';
-import { academicErrorKey, nameError, serverFieldErrors } from './academicSchema';
+import { academicErrorKey, formFieldErrors, nameError } from './academicSchema';
 
 export { INPUT, PRIMARY, SECONDARY };
 
@@ -83,7 +83,7 @@ export function NameForm({ label, initial = '', max, submitLabel, busy, onSubmit
     setError(found);
     if (found) return;
     const refused = await onSubmit(value.trim());
-    setError(serverFieldErrors(refused, max).name);
+    setError(formFieldErrors(refused, max).name);
     if (refused === undefined && !initial) setValue('');
   }
 

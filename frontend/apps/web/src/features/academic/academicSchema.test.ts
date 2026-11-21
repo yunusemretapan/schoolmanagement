@@ -1,6 +1,6 @@
 import { ApiError, ERROR_CODES } from '@schoolos/api-client';
 import { describe, expect, it } from 'vitest';
-import { daysInclusive, nameError, serverFieldErrors, termErrors } from './academicSchema';
+import { daysInclusive, formFieldErrors, nameError, serverFieldErrors, termErrors } from './academicSchema';
 
 /** Spec 0005, Req. 4, 7 / AC-4, AC-7: the same limits as the server, before anything is sent. */
 describe('academicSchema', () => {
@@ -35,5 +35,18 @@ describe('academicSchema', () => {
       endsOn: 'academic.errors.termTooLong',
     });
     expect(serverFieldErrors(new ApiError(422, ERROR_CODES.termOverlap))).toEqual({});
+  });
+
+  it('a taken name and an overlap are shown under their field (review 1, L-5)', () => {
+    expect(formFieldErrors(new ApiError(422, ERROR_CODES.academicNameTaken))).toEqual({
+      name: 'academic.errors.nameTaken',
+    });
+    expect(formFieldErrors(new ApiError(422, ERROR_CODES.termOverlap))).toEqual({
+      startsOn: 'academic.errors.termOverlap',
+    });
+    expect(formFieldErrors(new ApiError(400, ERROR_CODES.validationFailed, { name: 'SIZE' }), 20)).toEqual({
+      name: 'academic.errors.tooLong20',
+    });
+    expect(formFieldErrors(new ApiError(422, ERROR_CODES.lastCampus))).toEqual({});
   });
 });
