@@ -78,24 +78,35 @@ describe('GradeLevelsSection (web)', () => {
     );
   });
 
-  it('a move answered with another order does not take focus later (review 2, L-1)', async () => {
+  it('a move answered with another order focuses the level at once, never later (review 2–3, L-1)', async () => {
     const user = userEvent.setup();
     const three = (order: string[]) =>
       structure({
         gradeLevels: order.map((id, i) => ({ id, name: NAMES[id]!, position: i + 1, inUse: false })),
       });
+    let resolve: (value: ReturnType<typeof three>) => void = () => {};
+    const answer = new Promise<ReturnType<typeof three>>((done) => {
+      resolve = done;
+    });
     renderApp({
       api: asAdmin({
         getAcademicStructure: async () => three([SIXTH, SEVENTH, EIGHTH]),
         // meanwhile another administrator changed the list: 8. sınıf is not where this move would put it
-        moveGradeLevel: async () => three([SIXTH, SEVENTH, EIGHTH]),
+        moveGradeLevel: () => answer,
         deleteGradeLevel: async () => three([SEVENTH, EIGHTH]),
       }),
       path: PATH,
     });
     await screen.findByRole('heading', { level: 2, name: 'Sınıf seviyeleri' });
     await user.click(levels().getByRole('button', { name: '8. sınıf seviyesini yukarı taşı' }));
+    // a browser drops focus from the button disabled while busy; jsdom does not, so the test does
+    (document.activeElement as HTMLElement).blur();
+    resolve(three([SIXTH, SEVENTH, EIGHTH]));
     await levels().findByText('8. sınıf 2. sıraya taşındı');
+    // review 3, L-1: focus still lands on the level, where the server put it
+    await vi.waitFor(() =>
+      expect(levels().getByRole('button', { name: '8. sınıf seviyesini yukarı taşı' })).toHaveFocus(),
+    );
 
     // deleting 6. sınıf brings 8. sınıf to the index that move expected; focus belongs to the heading
     await user.click(levels().getAllByRole('button', { name: 'Sil' })[0]!);
@@ -109,18 +120,18 @@ describe('GradeLevelsSection (web)', () => {
 
   it('a refused move keeps focus on the pressed button and says why (review 2, I-1)', async () => {
     const user = userEvent.setup();
-    renderApp({
-      api: asAdmin({
-        moveGradeLevel: async () => {
-          throw new ApiError(422, ERROR_CODES.cannotMove);
-        },
-      }),
-      path: PATH,
+    let refuse: () => void = () => {};
+    const answer = new Promise<never>((_, fail) => {
+      refuse = () => fail(new ApiError(422, ERROR_CODES.cannotMove));
     });
+    renderApp({ api: asAdmin({ moveGradeLevel: () => answer }), path: PATH });
     await screen.findByRole('heading', { level: 2, name: 'Sınıf seviyeleri' });
     const pressed = levels().getByRole('button', { name: '8. sınıf seviyesini yukarı taşı' });
 
     await user.click(pressed);
+    // a browser drops focus from the button disabled while busy; jsdom does not, so the test does
+    pressed.blur();
+    refuse();
 
     expect(await levels().findByRole('alert')).toBeInTheDocument();
     await vi.waitFor(() => expect(pressed).toHaveFocus());
