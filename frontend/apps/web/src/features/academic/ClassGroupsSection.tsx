@@ -57,6 +57,11 @@ function GroupFields({
   const blank = { name: '', gradeLevelId: structure.gradeLevels[0]?.id ?? '', campusId: '' };
   const [form, setForm] = useState<GroupForm>(initial ?? blank);
   const [errors, setErrors] = useState<FieldErrors>({});
+  // review 1, L-1: a level or campus deleted meanwhile falls back to what the select shows
+  const gradeLevelId = structure.gradeLevels.some((level) => level.id === form.gradeLevelId)
+    ? form.gradeLevelId
+    : (structure.gradeLevels[0]?.id ?? '');
+  const campusId = structure.campuses.some((campus) => campus.id === form.campusId) ? form.campusId : '';
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -64,12 +69,12 @@ function GroupFields({
     const found: FieldErrors = {};
     const name = nameError(form.name, CLASS_NAME_MAX);
     if (name) found.name = name;
-    if (chooseCampus && form.campusId === '') found.campusId = 'academic.errors.chooseCampus';
+    if (chooseCampus && campusId === '') found.campusId = 'academic.errors.chooseCampus';
     setErrors(found);
     if (Object.keys(found).length > 0) return;
-    const refused = await onSubmit({ ...form, name: form.name.trim() });
+    const refused = await onSubmit({ name: form.name.trim(), gradeLevelId, campusId });
     setErrors(serverFieldErrors(refused, CLASS_NAME_MAX));
-    if (refused === undefined && !initial) setForm({ ...blank, gradeLevelId: form.gradeLevelId });
+    if (refused === undefined && !initial) setForm({ ...blank, gradeLevelId });
   }
 
   const describedBy = (field: string) => (errors[field] === undefined ? undefined : `${id}-${field}-error`);
@@ -95,7 +100,7 @@ function GroupFields({
         </label>
         <select
           id={`${id}-level`}
-          value={form.gradeLevelId}
+          value={gradeLevelId}
           onChange={(event) => setForm({ ...form, gradeLevelId: event.target.value })}
           className={INPUT}
         >
@@ -113,7 +118,7 @@ function GroupFields({
           </label>
           <select
             id={`${id}-campus`}
-            value={form.campusId}
+            value={campusId}
             onChange={(event) => setForm({ ...form, campusId: event.target.value })}
             aria-invalid={errors.campusId !== undefined}
             aria-describedby={describedBy('campusId')}
@@ -153,13 +158,16 @@ export function ClassGroupsSection({ structure }: { structure: AcademicStructure
   const termSelectId = useId();
   const campusSelectId = useId();
   const { busy, message, run } = useAction();
-  const [termId, setTermId] = useState('');
-  const [campusId, setCampusId] = useState('');
+  const [pickedTerm, setTermId] = useState('');
+  const [pickedCampus, setCampusId] = useState('');
   const [editing, setEditing] = useState<string | null>(null);
   const severalCampuses = structure.campuses.length > 1;
+  // review 1, L-1: a picked term or campus deleted meanwhile falls back to the active term / all campuses
+  const campusId = structure.campuses.some((campus) => campus.id === pickedCampus) ? pickedCampus : '';
   const filter = severalCampuses ? campusId : '';
   const ready = structure.terms.length > 0 && structure.gradeLevels.length > 0;
   // the active term until the administrator picks another (it may appear after this section was first shown)
+  const termId = structure.terms.some((term) => term.id === pickedTerm) ? pickedTerm : '';
   const selectedTerm = termId || structure.activeTermId || '';
 
   const groups = useQuery<ClassGroupList>({
