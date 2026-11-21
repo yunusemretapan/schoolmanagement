@@ -279,7 +279,7 @@ public final class IdentityFixture {
         };
     }
 
-    /** Append only, and only into the bound tenant (RLS WITH CHECK). */
+    /** Records each published event with the tenant bound when it was published (ADR 0006: same transaction). */
     public DomainEventPublisher eventPublisher() {
         return event -> {
             events.add(event);
@@ -287,6 +287,7 @@ public final class IdentityFixture {
         };
     }
 
+    /** Append only, and only into the bound tenant (RLS WITH CHECK). */
     public AuditLog auditLog() {
         return event -> {
             if (!boundTenant().map(event.tenantId()::equals).orElse(false)) {
