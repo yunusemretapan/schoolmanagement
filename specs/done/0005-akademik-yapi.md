@@ -1,6 +1,6 @@
 # Spec 0005 — Akademik yapı
 
-- Status: In progress
+- Status: Shipped
 - Mode: lite
 - Plan: `specs/plans/0005-plan.md`
 - Self-critique: done
@@ -98,41 +98,41 @@ içe aktarma, yeni döneme sınıf aktarma.
   arşivleme (yalnızca silme), sınıf kontenjanı, mobil uygulamada akademik yapı, değişiklik kaydı ekranı.
 
 ## Acceptance criteria
-- [ ] AC-1 — Yetki: Öğretmen, Muhasebe ve Veli rolüyle şube, dönem, seviye ve sınıf okuma, ekleme, değiştirme ve silme
+- [x] AC-1 — Yetki: Öğretmen, Muhasebe ve Veli rolüyle şube, dönem, seviye ve sınıf okuma, ekleme, değiştirme ve silme
   istekleri reddedilir; bu kullanıcılarda "Akademik yapı" bağlantısı görünmez ve adres doğrudan açılırsa "yetkisiz"
   durumu gösterilir; oturumsuz istek reddedilir.
-- [ ] AC-2 — Kurum sınırı: A kurumunun yöneticisi B kurumunun şube, dönem, seviye ve sınıflarını listelerde görmez; B'nin
+- [x] AC-2 — Kurum sınırı: A kurumunun yöneticisi B kurumunun şube, dönem, seviye ve sınıflarını listelerde görmez; B'nin
   bir kaydına doğrudan yapılan görüntüleme, değiştirme ve silme istekleri, var olmayan kayıtla aynı yanıtı alır; A'da
   B'nin şubesi, dönemi veya seviyesiyle sınıf ekleme veya sınıfı B'nin seviyesine taşıma reddedilir ve hiçbir kayıt
   değişmez.
-- [ ] AC-3 — Şube: yeni açılan kurumda kurum adıyla bir şube kendiliğinden vardır; spec'ten önce açılmış her kurumda bir
+- [x] AC-3 — Şube: yeni açılan kurumda kurum adıyla bir şube kendiliğinden vardır; spec'ten önce açılmış her kurumda bir
   şube vardır; yönetici şube ekler ve adını değiştirir; aynı ad (büyük/küçük harf ve Türkçe I farkıyla, baş/son
   boşlukla) reddedilir; tek şube varken sınıf formu ve listesi şube göstermez, ikinci şube eklenince gösterir, ikinci şube silinince yine
   göstermez; 61 karakterlik kurum adıyla açılan kurumun şubesi ilk 60 karakteri alır.
-- [ ] AC-4 — Dönem: geçerli dönem eklenir ve kurumun ilk dönemiyse aktif olur; bitişi başlangıcıyla aynı gün veya
+- [x] AC-4 — Dönem: geçerli dönem eklenir ve kurumun ilk dönemiyse aktif olur; bitişi başlangıcıyla aynı gün veya
   önce olan dönem reddedilir; 731 günlük dönem kabul, 732 günlük ret; 2000-01-01 ve 2100-12-31 kabul, 1999-12-31 ve
   2101-01-01 ret; mevcut bir dönemle bir gün bile çakışan aralık (ekleme ve tarih değiştirmede, sınıfı olan dönemde de)
   reddedilir, bir dönemin bitişinden sonraki gün başlayan dönem kabul edilir; aynı ad reddedilir; yönetici aktif dönemi
   (geçmiş veya gelecek bir dönemle) değiştirince önceki dönem aktif olmaktan çıkar ve kurumda tek aktif dönem kalır;
   iki yönetici aynı anda çakışan dönem veya aynı adlı kayıt eklediğinde biri kabul edilir, diğeri kural yanıtıyla
   reddedilir.
-- [ ] AC-5 — Sınıf seviyesi: seviye eklenir, adı ve sırası değiştirilir; aynı ad reddedilir; liste boşken "Standart
+- [x] AC-5 — Sınıf seviyesi: seviye eklenir, adı ve sırası değiştirilir; aynı ad reddedilir; liste boşken "Standart
   listeyi ekle" 14 seviyeyi doğru sırayla ekler, liste boş değilken bu işlem sunulmaz ve istekle yapılırsa reddedilir;
   sıra değişikliği ekrana ve sonraki listelere yansır; ilk seviyede "Yukarı taşı", son seviyede "Aşağı taşı" devre
   dışıdır; 50. seviye kabul, 51. ret.
-- [ ] AC-6 — Sınıf: sınıf ad, seviye, şube ve dönemle eklenir, şube tekse kendiliğinden o şubeye, dönem verilmezse aktif
+- [x] AC-6 — Sınıf: sınıf ad, seviye, şube ve dönemle eklenir, şube tekse kendiliğinden o şubeye, dönem verilmezse aktif
   döneme bağlanır; aktif olmayan bir döneme de sınıf eklenir; aynı şube ve dönemde aynı ad reddedilir, başka dönemde veya şubede kabul edilir; adı ve seviyesi
   değişir, dönemi ve şubesi değiştirilemez; liste seçilen dönemin sınıflarını seviye sırası ve ada göre gösterir, çok
   şubede şubeye göre süzer.
-- [ ] AC-7 — Ad sınırları: baş/son boşluklar atılır; boş veya yalnız boşluk ad reddedilir; şube/dönem/seviye adında 60
+- [x] AC-7 — Ad sınırları: baş/son boşluklar atılır; boş veya yalnız boşluk ad reddedilir; şube/dönem/seviye adında 60
   karakter kabul, 61 ret; sınıf adında 20 kabul, 21 ret; arayüzde istek gönderilmeden alan mesajı gösterilir.
-- [ ] AC-8 — Silme: kullanılmayan şube, dönem, seviye ve sınıf onaydan sonra silinir; onay penceresinde vazgeçmek
+- [x] AC-8 — Silme: kullanılmayan şube, dönem, seviye ve sınıf onaydan sonra silinir; onay penceresinde vazgeçmek
   hiçbir şeyi değiştirmez; kurumun son şubesi, aktif dönem ve sınıfı olan şube/dönem/seviye silinemez, arayüzde nedeni
   yazılır ve istekle denendiğinde reddedilir.
-- [ ] AC-9 — Ekran durumları: akademik yapı ekranının yükleniyor, hazır, her bölümün boş (yönlendirme metniyle), hata +
+- [x] AC-9 — Ekran durumları: akademik yapı ekranının yükleniyor, hazır, her bölümün boş (yönlendirme metniyle), hata +
   tekrar dene durumları; formların gönderiliyor (çift gönderim yok), reddedildi (ad kullanılıyor, tarih çakışıyor), ağ
   hatası (girilenler korunur) ve kaydedildi (duyurulan mesaj) durumları gösterilir.
-- [ ] AC-10 — Değişiklik kaydı: şube, dönem, seviye ve sınıf ekleme, değiştirme, sıra değişikliği, aktif dönem
+- [x] AC-10 — Değişiklik kaydı: şube, dönem, seviye ve sınıf ekleme, değiştirme, sıra değişikliği, aktif dönem
   değişikliği ve silme her biri yapan, kayıt (tür, kimlik, ad), işlem, değişen alan adları ve zamanla bir değişiklik
   kaydı üretir; reddedilen istek kayıt
   üretmez; kayıtlar değiştirilemez ve silinemez.
@@ -160,21 +160,21 @@ B-1'in otomatik test açığı açık kalır. Ayrıntı ve triage: `specs/plans/
 | AC-9 | `AcademicStructureScreen.test.tsx`, `ClassGroupsSection.test.tsx`; ekran görüntüleri (boş, yükleniyor, hata + tekrar dene, reddedildi, ağ hatası) | PASS |
 | AC-10 | `InstitutionCommandHandlersTest`, `AuditEntryTest`, `IdentityAuditLogTest` — kırıldı (K-16; K-15 yeşil kaldı: B-23); canlı her kabul edilen değişiklik bir kayıt, ret kayıtsız, değiştirilemez | PASS |
 
-UI: S01…S19 agent-captured (web, açık/koyu, 19 görüntü), judged by yunusemretapan at SHIP. "Gönderiliyor" durumu
+UI: S01…S19 agent-captured (web, açık/koyu, 19 görüntü), judged by yunusemretapan at SHIP, 2026-11-21. "Gönderiliyor" durumu
 bileşen testiyle kanıtlı, görüntüsü yok. WCAG AA kontrast ölçülmedi; gerçek ekran okuyucuyla denenmedi.
 
 ## Definition of Done
-- [ ] Every acceptance criterion mapped to proof (test or reproducible observation)
-- [ ] `scripts/check` green
-- [ ] Independent review done; real findings fixed, noise rejected with written rationale, deferred ones in `specs/backlog.md`
-- [ ] Docs / ADRs updated if behavior or architecture changed
-- [ ] Spec moved to `specs/done/` (it becomes immutable there)
+- [x] Every acceptance criterion mapped to proof (test or reproducible observation)
+- [x] `scripts/check` green
+- [x] Independent review done; real findings fixed, noise rejected with written rationale, deferred ones in `specs/backlog.md`
+- [x] Docs / ADRs updated if behavior or architecture changed
+- [x] Spec moved to `specs/done/` (it becomes immutable there)
 
 ## Scorecard (fill at ship — honest numbers make the process improvable)
 | Metric | Value |
 |---|---|
-| Spec revisions | |
-| Fix rounds | |
-| Review findings: real / noise / deferred | |
-| Regressions introduced | |
-| Bugs escaped to production | |
+| Spec revisions | 0 |
+| Fix rounds | 3 |
+| Review findings: real / noise / deferred | 11 / 6 / 6 (review 1: 7 real, 2 noise, 1 defer → B-21; review 2: 3 real, 1 noise; review 3: 1 real, 1 noise; review 4: temiz, 1 noise; VERIFY: 5 defer → B-22…B-26, 1 noise) |
+| Regressions introduced | 0 |
+| Bugs escaped to production | 0 |
