@@ -95,7 +95,8 @@
     "loading": "Yükleniyor",
     "error": "Bilgileriniz yüklenemedi",
     "retry": "Tekrar dene",
-    "staff": "Personel"
+    "staff": "Personel",
+    "academic": "Akademik yapı"
   },
   "roles": {
     "ADMIN": "Kurucu / Yönetici",
@@ -179,6 +180,97 @@
       "tooShort": "Şifre en az 10 karakter olmalı",
       "mismatch": "Şifreler eşleşmiyor",
       "rateLimited": "Çok fazla deneme yapıldı, biraz sonra tekrar deneyin"
+    }
+  },
+  "academic": {
+    "title": "Akademik yapı",
+    "loadError": "Akademik yapı yüklenemedi",
+    "save": "Kaydet",
+    "saving": "Kaydediliyor…",
+    "cancel": "Vazgeç",
+    "edit": "Düzenle",
+    "delete": "Sil",
+    "confirmTitle": "Kaydı sil",
+    "confirmMessage": "{{name}} silinsin mi?",
+    "added": "{{name}} eklendi",
+    "saved": "Değişiklikler kaydedildi",
+    "deleted": "{{name}} silindi",
+    "terms": {
+      "title": "Dönemler",
+      "add": "Dönem ekle",
+      "range": "{{from}} – {{to}}",
+      "active": "Aktif dönem",
+      "makeActive": "Aktif dönem yap",
+      "activated": "{{name}} aktif dönem oldu",
+      "fields": {
+        "name": "Dönem adı",
+        "startsOn": "Başlangıç tarihi",
+        "endsOn": "Bitiş tarihi"
+      }
+    },
+    "campuses": {
+      "title": "Şubeler",
+      "name": "Şube adı",
+      "addLabel": "Yeni şube adı",
+      "add": "Şube ekle"
+    },
+    "levels": {
+      "title": "Sınıf seviyeleri",
+      "name": "Seviye adı",
+      "addLabel": "Yeni seviye adı",
+      "add": "Seviye ekle",
+      "addStandard": "Standart listeyi ekle",
+      "standardAdded": "Standart liste eklendi",
+      "moveUp": "Yukarı taşı",
+      "moveDown": "Aşağı taşı",
+      "moveUpNamed": "{{name}} seviyesini yukarı taşı",
+      "moveDownNamed": "{{name}} seviyesini aşağı taşı",
+      "moved": "{{name}} {{position}}. sıraya taşındı"
+    },
+    "groups": {
+      "title": "Sınıflar",
+      "add": "Sınıf ekle",
+      "term": "Dönem",
+      "activeOption": "{{name}} (aktif)",
+      "campusFilter": "Şube",
+      "allCampuses": "Tüm şubeler",
+      "chooseCampus": "Şube seçin",
+      "levelAndCampus": "{{level}} · {{campus}}",
+      "loadError": "Sınıflar yüklenemedi",
+      "fields": {
+        "name": "Sınıf adı",
+        "gradeLevel": "Sınıf seviyesi",
+        "campus": "Şube"
+      }
+    },
+    "empty": {
+      "terms": "Henüz dönem yok",
+      "levels": "Henüz sınıf seviyesi yok",
+      "groups": "Bu dönemde henüz sınıf yok",
+      "needTerm": "Önce bir dönem ekleyin",
+      "needLevel": "Önce sınıf seviyesi ekleyin"
+    },
+    "blocked": {
+      "lastCampus": "Kurumun son şubesi silinemez",
+      "activeTerm": "Aktif dönem silinemez",
+      "inUse": "Bu kayda bağlı sınıflar var"
+    },
+    "errors": {
+      "required": "Bu alan zorunlu",
+      "tooLong60": "En çok 60 karakter",
+      "tooLong20": "En çok 20 karakter",
+      "endBeforeStart": "Bitiş tarihi başlangıçtan sonra olmalı",
+      "termTooLong": "Bir dönem en çok 731 gün sürebilir",
+      "dateRange": "Tarih 2000 ile 2100 arasında olmalı",
+      "chooseCampus": "Şube seçin",
+      "nameTaken": "Bu ad zaten kullanılıyor",
+      "termOverlap": "Bu tarihler başka bir dönemle çakışıyor",
+      "levelLimit": "En çok 50 sınıf seviyesi olabilir",
+      "levelsNotEmpty": "Standart liste yalnızca seviye yokken eklenebilir",
+      "cannotMove": "Bu seviye daha fazla taşınamaz",
+      "notFound": "Kayıt bulunamadı; sayfayı yenileyin",
+      "invalid": "Girilen bilgiler geçerli değil",
+      "unexpected": "İşlem yapılamadı"
     }
   }
 }

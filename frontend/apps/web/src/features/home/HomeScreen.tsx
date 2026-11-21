@@ -5,6 +5,7 @@ import { AppearancePanel } from '../../appearance/AppearancePanel';
 import { useAuth } from '../../auth/AuthProvider';
 import { LOGIN_PATH } from '../../auth/RequireAuth';
 import { useMe } from '../../auth/useMe';
+import { ACADEMIC_PATH } from '../academic/AcademicStructureScreen';
 
 const LINK =
   'block rounded-md border border-line px-md py-sm text-md font-medium text-ink outline-focus hover:bg-sunken focus-visible:outline-[length:var(--sos-border-thick)]';
@@ -80,9 +81,14 @@ export function HomeScreen() {
 
         <nav className="flex flex-col gap-sm">
           {me.isSuccess && me.data.roles.includes('ADMIN') && (
-            <Link to="/personel" className={LINK}>
-              {t('home.staff')}
-            </Link>
+            <>
+              <Link to="/personel" className={LINK}>
+                {t('home.staff')}
+              </Link>
+              <Link to={ACADEMIC_PATH} className={LINK}>
+                {t('home.academic')}
+              </Link>
+            </>
           )}
           <Link to="/durum" className={LINK}>
             {t('home.status')}
