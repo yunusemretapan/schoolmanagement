@@ -137,6 +137,32 @@ içe aktarma, yeni döneme sınıf aktarma.
   kaydı üretir; reddedilen istek kayıt
   üretmez; kayıtlar değiştirilemez ve silinemez.
 
+## Evidence
+Review round 1 → fix-1 → round 2 → fix-2 → round 3 → fix-3 → round 4 (temiz), salt okunur reviewer; VERIFY ayrı QA alt
+ajanında (izole worktree, yalnızca dosyalardan) · `CHECK GREEN (full, 10 steps, 335 s) @636b57d` (sonrası yalnızca
+`specs/`). Kasıtlı kırmalar K-1…K-19 worktree'de yapıldı, hiçbiri commit edilmedi (K-10 ve K-15 kırmızıya düşmedi: B-22,
+B-23). Gerçek Postgres gözlemleri (geçici `schoolos_qa5`, worktree'den derlenen jar, Node fetch + psql): eşzamanlı ilk
+dönemler, son iki şubenin eşzamanlı silinmesi, eşzamanlı aynı ad, 50. seviye yarışı (her turda biri 201/200, diğeri 422),
+başka kuruma bağlanma (bileşik FK ve RLS reddi, altı tabloda FORCE), V4 geri doldurması (60 karakter, tek şube + ayar satırı,
+`tenants` FORCE geri açık), değişiklik kaydı (reddedilen istek kayıt bırakmaz, UPDATE/DELETE/TRUNCATE reddi), aynı 404 —
+B-1'in otomatik test açığı açık kalır. Ayrıntı ve triage: `specs/plans/0005-plan.md`.
+
+| Acceptance criterion | Evidence | Status |
+|---|---|---|
+| AC-1 | `RolePermissionsTest`, `AcademicStructureControllerTest` (öğretmen/muhasebe/veli 17 çağrıda 403, oturumsuz 401), web `AcademicStructureScreen.test.tsx`, `HomeScreen.test.tsx` — kırıldı (K-1, K-2, K-17); canlı 403/401, öğretmende bağlantı yok ve istek yok | PASS |
+| AC-2 | `InstitutionCommandHandlersTest` (başka kurum = bilinmeyen kimlik, değişiklik yok; başka kurumun kaydıyla sınıf reddi), controller testi (aynı 404 gövdesi) — kırıldı (K-3); canlı 11/11 aynı 404, bileşik FK + RLS reddi | PASS |
+| AC-3 | `CampusCommandHandlersTest`, `ProvisionTenantCommandHandlerTest`, web `ClassGroupsSection.test.tsx` — kırıldı (K-12); canlı V4 geri doldurması ve olayla açılan şube | PASS |
+| AC-4 | `TermTest`, `InstitutionValidatorsTest`, `TermCommandHandlersTest`, `LockFirstTest`, `FlushNamesTest`, web testleri — kırıldı (K-4…K-8); canlı 731/732, 2000/2100, bir gün çakışma, eşzamanlı dönemler | PASS |
+| AC-5 | `GradeLevelCommandHandlersTest`, `StandardGradeLevelsTest`, web `GradeLevelsSection.test.tsx` — kırıldı (K-9, K-18, K-19); canlı standart liste 14, 50/51 yarışı, gerçek tarayıcıda taşıma ve ret sonrası odak | PASS |
+| AC-6 | `ClassGroupCommandHandlersTest`; canlı tek şube + aktif dönem varsayılanı, aynı ad 422, seviye sırası + ad | PASS |
+| AC-7 | `NameFoldTest`, `InstitutionValidatorsTest`, `academicSchema.test.ts`, web bölüm testleri — kırıldı (K-11; K-10 yeşil kaldı: B-22); canlı her ad için 60/61 ve 20/21, kırpma | PASS |
+| AC-8 | `InstitutionCommandHandlersTest`, `CampusCommandHandlersTest`, web ekran testi — kırıldı (K-12, K-13, K-14); canlı ACTIVE_TERM/IN_USE/LAST_CAMPUS, onay penceresi ve odak | PASS |
+| AC-9 | `AcademicStructureScreen.test.tsx`, `ClassGroupsSection.test.tsx`; ekran görüntüleri (boş, yükleniyor, hata + tekrar dene, reddedildi, ağ hatası) | PASS |
+| AC-10 | `InstitutionCommandHandlersTest`, `AuditEntryTest`, `IdentityAuditLogTest` — kırıldı (K-16; K-15 yeşil kaldı: B-23); canlı her kabul edilen değişiklik bir kayıt, ret kayıtsız, değiştirilemez | PASS |
+
+UI: S01…S19 agent-captured (web, açık/koyu, 19 görüntü), judged by yunusemretapan at SHIP. "Gönderiliyor" durumu
+bileşen testiyle kanıtlı, görüntüsü yok. WCAG AA kontrast ölçülmedi; gerçek ekran okuyucuyla denenmedi.
+
 ## Definition of Done
 - [ ] Every acceptance criterion mapped to proof (test or reproducible observation)
 - [ ] `scripts/check` green

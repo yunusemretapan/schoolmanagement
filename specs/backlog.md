@@ -91,3 +91,23 @@ step 7). Nothing lands here without that decision; noise is rejected in the tria
   REVIEW round 1 (I-2; `AcademicInput.name`, `academicSchema.ts`, `CreateDefaultCampusOnTenantProvisioned.campusName`,
   V4__academic_structure.sql) — Severity: low — Recommendation: ad ölçümünü kod noktasıyla yap (`codePointCount` /
   `[...str].length`), kesmeyi `offsetByCodePoints` ile — Deferred by: yunusemretapan, 2026-11-21, pilotta gerekmiyor
+- **B-22** — Dönem ve sınıf seviyesi adlarının 60/61 sınırı ile şube/seviye yeniden adlandırma ve sınıf güncelleme
+  doğrulayıcıları hiçbir backend testiyle kanıtlanmıyor: sınır 61'e çekilince bütün testler yeşil kalıyor; davranış gerçek
+  API'de doğru (60 → 201, 61 → 400) — Source: spec 0005, VERIFY round 1 (F-1, K-10; `InstitutionValidators`,
+  `InstitutionValidatorsTest`) — Severity: low — Recommendation: her ad doğrulayıcısı için 60/61 (sınıf 20/21) parametreli
+  test — Deferred by: yunusemretapan, 2026-11-21, düzeltme turları bitti; davranış gerçek API gözlemiyle kanıtlı
+- **B-23** — Seviye taşıma, yeniden adlandırma ve silme, açık dönem aktifleştirme, dönem silme ve standart liste değişiklik
+  kayıtları hiçbir testle kanıtlanmıyor: bu kayıtlar kapatılınca 184 application testi yeşil kalıyor; davranış gerçek
+  veritabanında doğru — Source: spec 0005, VERIFY round 1 (F-2, K-15; `InstitutionCommandHandlersTest` everyChange…) —
+  Severity: low — Recommendation: everyChange… dizisine bu işlemleri ekle — Deferred by: yunusemretapan, 2026-11-21, düzeltme turları bitti;
+  davranış gerçek DB gözlemiyle kanıtlı
+- **B-24** — Eşzamanlı değişiklik yüzünden reddedilen seviye taşımasından sonra liste yenilenmiyor, eski sırayı gösteriyor
+  — Source: spec 0005, VERIFY round 1 (F-3; `GradeLevelsSection.tsx` ret yolu) — Severity: low — Recommendation: ret
+  sonrası akademik yapıyı yeniden yükle — Deferred by: yunusemretapan, 2026-11-21, kriter ihlali değil
+- **B-25** — Sunucu ret mesajı (bölüm uyarısı ve alan mesajı) alanlar temizlendikten ve başka bölümler kaydedildikten
+  sonra da ekranda kalıyor — Source: spec 0005, VERIFY round 1 (F-4; `academicUi.tsx` `useAction`) — Severity: low —
+  Recommendation: alan değişince alan mesajını, başarılı kayıtta bölüm mesajını temizle — Deferred by: yunusemretapan, 2026-11-21, kriter
+  ihlali değil
+- **B-26** — İkinci şube silinince sınıf formundaki şube alanının kaybolduğu hiçbir testle doğrulanmıyor (yalnızca istek
+  parametresi) — Source: spec 0005, VERIFY round 1 (F-6; `ClassGroupsSection.test.tsx`) — Severity: low —
+  Recommendation: geri dönüş testine şube alanının yokluğunu ekle — Deferred by: yunusemretapan, 2026-11-21, tarayıcıda gözlendi
